@@ -52,6 +52,8 @@ DEFINE_SPADES_SETTING(cg_countryIsSet, "0");
 
 namespace spades {
 	namespace gui {
+		using client::ModelRenderParam;
+
 		MainScreenUI::MainScreenUI(client::IRenderer* renderer, client::IAudioDevice* audioDevice,
 		                           client::FontManager* fontManager, MainScreenHelper* helper)
 		    : renderer(renderer),
