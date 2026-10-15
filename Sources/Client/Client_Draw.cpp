@@ -733,14 +733,14 @@ namespace spades {
 			Player::HitBoxes hb = player.GetHitBoxes(false);
 			const auto& headObb = hb.head;
 			std::array<Vector3, 8> corners = {{
-				headObb.m * Vector3(0.0F, 0.0F, 0.0F),
-				headObb.m * Vector3(1.0F, 0.0F, 0.0F),
-				headObb.m * Vector3(1.0F, 1.0F, 0.0F),
-				headObb.m * Vector3(0.0F, 1.0F, 0.0F),
-				headObb.m * Vector3(0.0F, 0.0F, 1.0F),
-				headObb.m * Vector3(1.0F, 0.0F, 1.0F),
-				headObb.m * Vector3(1.0F, 1.0F, 1.0F),
-				headObb.m * Vector3(0.0F, 1.0F, 1.0F)
+				(headObb.m * Vector3(0.0F, 0.0F, 0.0F)).GetXYZ(),
+				(headObb.m * Vector3(1.0F, 0.0F, 0.0F)).GetXYZ(),
+				(headObb.m * Vector3(1.0F, 1.0F, 0.0F)).GetXYZ(),
+				(headObb.m * Vector3(0.0F, 1.0F, 0.0F)).GetXYZ(),
+				(headObb.m * Vector3(0.0F, 0.0F, 1.0F)).GetXYZ(),
+				(headObb.m * Vector3(1.0F, 0.0F, 1.0F)).GetXYZ(),
+				(headObb.m * Vector3(1.0F, 1.0F, 1.0F)).GetXYZ(),
+				(headObb.m * Vector3(0.0F, 1.0F, 1.0F)).GetXYZ()
 			}};
 
 			float left = std::numeric_limits<float>::max();
@@ -830,7 +830,7 @@ namespace spades {
 
 				// Visible-only ESP check
 				bool isVisible = true;
-				if (cg_espVisibleOnly > 0 && map) {
+				if (static_cast<int>(cg_espVisibleOnly) > 0 && map) {
 					const auto& eye = lastSceneDef.viewOrigin;
 					const auto& toPlayer = p.GetEye() - eye;
 					const float dist = toPlayer.GetLength();
@@ -842,11 +842,11 @@ namespace spades {
 					}
 				}
 
-				if (!isVisible && cg_espVisibleOnly == 1)
+				if (!isVisible && static_cast<int>(cg_espVisibleOnly) == 1)
 					continue; // Hide completely when occluded behind walls
 
 				auto color = GetPlayerColor(p);
-				if (!isVisible && cg_espVisibleOnly == 2) {
+				if (!isVisible && static_cast<int>(cg_espVisibleOnly) == 2) {
 					// Dimmed occluded mode: show at low brightness/alpha
 					color.x *= 0.35F;
 					color.y *= 0.35F;
@@ -2774,7 +2774,7 @@ namespace spades {
 				if (cg_stats)
 					DrawStats();
 
-				if (cg_showFpsMs)
+				if (static_cast<bool>(cg_showFpsMs))
 					DrawFpsMsOverlay();
 			}
 
@@ -3018,7 +3018,7 @@ namespace spades {
 		void Client::DrawFpsMsOverlay() {
 			SPADES_MARK_FUNCTION();
 
-			if (!cg_showFpsMs)
+			if (!static_cast<bool>(cg_showFpsMs))
 				return;
 
 			static float lastUpdateTime = -1.0F;
