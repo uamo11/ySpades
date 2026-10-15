@@ -1018,18 +1018,10 @@ int main(int argc, char** argv) {
 			SPLog("Starting demo replay: %s", g_replayDemoPath.c_str());
 			spades::StartDemoReplay(g_replayDemoPath);
 		} else if (!g_autoconnect) {
-			if (spades::g_openModsTab || spades::g_tryMod ||
-			    !((int)cl_showStartupWindow != 0 || splashWindow->IsStartupScreenRequested())) {
-				splashWindow.reset();
+			splashWindow.reset();
 
-				SPLog("Starting main screen");
-				spades::StartMainScreen();
-			} else {
-				splashWindow.reset();
-
-				SPLog("Starting startup window");
-				::spades::gui::StartupScreen::Run();
-			}
+			SPLog("Starting main screen");
+			spades::StartMainScreen();
 		} else {
 			splashWindow.reset();
 
