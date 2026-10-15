@@ -37,7 +37,6 @@ SPADES_SETTING(cg_countryIsSet);
 
 namespace spades {
 	namespace gui {
-		using ui::Button;
 		using ui::Field;
 		using ui::Label;
 		using ui::ListView;
@@ -46,14 +45,14 @@ namespace spades {
 		using ui::UIElement;
 		using ui::UIManager;
 
-		class SelectCountryItem : public ui::ButtonBase {
+		class SelectFlagCard : public ui::ButtonBase {
 			SelectCountryScreen* screen;
 			CountryInfo info;
 			FlagIconRenderer* flagRenderer;
 
 		public:
-			SelectCountryItem(UIManager* manager, SelectCountryScreen* screen,
-			                  CountryInfo info, FlagIconRenderer* flagRenderer)
+			SelectFlagCard(UIManager* manager, SelectCountryScreen* screen,
+			               CountryInfo info, FlagIconRenderer* flagRenderer)
 			    : ui::ButtonBase(manager),
 			      screen(screen),
 			      info(std::move(info)),
@@ -63,45 +62,76 @@ namespace spades {
 
 			void Render() override {
 				client::IRenderer& r = GetManager().GetRenderer();
-				client::IFont* font = GetFont();
 				Vector2 pos = GetScreenPosition();
 				Vector2 sz = size;
 
 				bool isSelected = (screen != nullptr && info.code == cg_country);
 
-				Vector4 bgcolor(0.0F, 0.0F, 0.0F, 0.0F);
+				// Card background
+				Vector4 bg = MakeVector4(0.07F, 0.09F, 0.13F, 0.90F);
 				if (isSelected) {
-					bgcolor = MakeVector4(0.18F, 0.42F, 0.78F, 0.55F);
+					bg = MakeVector4(0.16F, 0.36F, 0.68F, 0.95F);
 				} else if (pressed && hover) {
-					bgcolor = MakeVector4(1.0F, 1.0F, 1.0F, 0.25F);
+					bg = MakeVector4(0.22F, 0.30F, 0.44F, 0.95F);
 				} else if (hover) {
-					bgcolor = MakeVector4(1.0F, 1.0F, 1.0F, 0.12F);
+					bg = MakeVector4(0.13F, 0.19F, 0.29F, 0.90F);
 				}
 
-				if (bgcolor.w > 0.0F) {
-					SetColorNP(r, bgcolor);
-					r.DrawImage(nullptr, AABB2(pos.x + 1.0F, pos.y + 1.0F, sz.x - 2.0F, sz.y - 2.0F));
+				SetColorNP(r, bg);
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, sz.y));
+
+				// Border line
+				Vector4 borderColor = MakeVector4(0.22F, 0.28F, 0.38F, 0.45F);
+				float borderThick = 1.0F;
+				if (isSelected) {
+					borderColor = MakeVector4(0.38F, 0.75F, 1.0F, 1.0F);
+					borderThick = 2.0F;
+				} else if (hover) {
+					borderColor = MakeVector4(0.55F, 0.82F, 1.0F, 0.9F);
 				}
 
-				// Draw country flag icon
-				if (flagRenderer) {
-					flagRenderer->DrawIcon(info.code,
-					                       MakeVector2(pos.x + 18.0F, pos.y + sz.y * 0.5F));
-				}
+				SetColorNP(r, borderColor);
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, borderThick));
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y + sz.y - borderThick, sz.x, borderThick));
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y, borderThick, sz.y));
+				r.DrawImage(nullptr, AABB2(pos.x + sz.x - borderThick, pos.y, borderThick, sz.y));
 
-				if (font) {
-					Vector4 textColor = isSelected ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F)
-					                               : MakeVector4(0.92F, 0.92F, 0.92F, 0.9F);
-					font->Draw(info.name, MakeVector2(pos.x + 36.0F, pos.y + (sz.y - 14.0F) * 0.5F),
-					           1.0F, textColor);
+				// Large Flag (56x38 px)
+				float flagW = 56.0F;
+				float flagH = 38.0F;
+				float flagX = pos.x + (sz.x - flagW) * 0.5F;
+				float flagY = pos.y + (sz.y - flagH) * 0.5F;
+				AABB2 flagRect(flagX, flagY, flagW, flagH);
 
-					std::string codeTag = "[" + info.code + "]";
-					float codeW = font->Measure(codeTag).x;
-					font->Draw(codeTag,
-					           MakeVector2(pos.x + sz.x - codeW - 12.0F, pos.y + (sz.y - 14.0F) * 0.5F),
-					           1.0F, MakeVector4(0.65F, 0.65F, 0.65F, 0.75F));
+				if (info.code == "NONE" || info.code.empty()) {
+					// Draw Empty Flag (crisp white banner with flagpole)
+					// White fabric body
+					SetColorNP(r, MakeVector4(0.92F, 0.93F, 0.95F, 1.0F));
+					r.DrawImage(nullptr, flagRect);
+
+					// Fabric border outline
+					SetColorNP(r, MakeVector4(0.40F, 0.45F, 0.55F, 0.65F));
+					r.DrawImage(nullptr, AABB2(flagRect.min.x, flagRect.min.y, flagW, 1.0F));
+					r.DrawImage(nullptr, AABB2(flagRect.min.x, flagRect.max.y - 1.0F, flagW, 1.0F));
+					r.DrawImage(nullptr, AABB2(flagRect.min.x, flagRect.min.y, 1.0F, flagH));
+					r.DrawImage(nullptr, AABB2(flagRect.max.x - 1.0F, flagRect.min.y, 1.0F, flagH));
+
+					// Flagpole on left edge
+					SetColorNP(r, MakeVector4(0.70F, 0.72F, 0.78F, 0.9F));
+					r.DrawImage(nullptr, AABB2(flagRect.min.x - 3.0F, flagRect.min.y - 2.0F, 2.0F, flagH + 6.0F));
+
+					// Golden finial on top of pole
+					SetColorNP(r, MakeVector4(0.95F, 0.80F, 0.25F, 1.0F));
+					r.DrawImage(nullptr, AABB2(flagRect.min.x - 4.0F, flagRect.min.y - 4.0F, 4.0F, 3.0F));
+				} else if (flagRenderer) {
+					flagRenderer->DrawIcon(info.code, flagRect);
 				}
 			}
+		};
+
+		class SelectCountryRow : public ui::UIElement {
+		public:
+			SelectCountryRow(UIManager* manager) : ui::UIElement(manager) {}
 		};
 
 		class SelectCountryListModel : public ui::ListViewModel {
@@ -109,34 +139,59 @@ namespace spades {
 			SelectCountryScreen* screen;
 			const std::vector<CountryInfo>& items;
 			FlagIconRenderer* flagRenderer;
+			int numCols;
+			float cardW;
+			float cardH;
+			float cardGap;
 
 		public:
 			SelectCountryListModel(UIManager* manager, SelectCountryScreen* screen,
 			                       const std::vector<CountryInfo>& items,
-			                       FlagIconRenderer* flagRenderer)
+			                       FlagIconRenderer* flagRenderer,
+			                       int numCols, float cardW, float cardH, float cardGap)
 			    : manager(manager),
 			      screen(screen),
 			      items(items),
-			      flagRenderer(flagRenderer) {}
+			      flagRenderer(flagRenderer),
+			      numCols(numCols),
+			      cardW(cardW),
+			      cardH(cardH),
+			      cardGap(cardGap) {}
 
-			int GetNumRows() override { return static_cast<int>(items.size()); }
+			int GetNumRows() override {
+				if (numCols <= 0 || items.empty())
+					return 0;
+				return (static_cast<int>(items.size()) + numCols - 1) / numCols;
+			}
 
 			Handle<UIElement> CreateElement(int row) override {
-				if (row < 0 || row >= static_cast<int>(items.size()))
+				if (row < 0 || row >= GetNumRows())
 					return Handle<UIElement>();
 
-				Handle<SelectCountryItem> item =
-				    Handle<SelectCountryItem>::New(manager, screen, items[row], flagRenderer);
+				Handle<SelectCountryRow> rowElem = Handle<SelectCountryRow>::New(manager);
+				rowElem->SetBounds(AABB2(0.0F, 0.0F,
+				                         static_cast<float>(numCols) * cardW +
+				                             static_cast<float>(numCols - 1) * cardGap,
+				                         cardH + cardGap));
 
-				std::string code = items[row].code;
-				item->activated = [this, code](UIElement&) {
-					screen->SelectCode(code);
-				};
-				item->doubleClicked = [this, code](UIElement&) {
-					screen->ConfirmCode(code);
-				};
+				for (int c = 0; c < numCols; ++c) {
+					int idx = row * numCols + c;
+					if (idx >= static_cast<int>(items.size()))
+						break;
 
-				return item.Cast<UIElement>();
+					Handle<SelectFlagCard> card =
+					    Handle<SelectFlagCard>::New(manager, screen, items[idx], flagRenderer);
+					card->SetBounds(AABB2(static_cast<float>(c) * (cardW + cardGap), 0.0F, cardW, cardH));
+
+					std::string code = items[idx].code;
+					card->activated = [this, code](UIElement&) {
+						screen->ConfirmCode(code);
+					};
+
+					rowElem->AddChild(card.GetPointerOrNull());
+				}
+
+				return rowElem.Cast<UIElement>();
 			}
 		};
 
@@ -156,8 +211,6 @@ namespace spades {
 		      fontManager(fontManager),
 		      onSelected(std::move(onSelected)),
 		      canCancel(canCancel) {
-			SetBounds(owner->GetBounds());
-
 			UIManager* manager = &GetManager();
 			flagIconRenderer = Handle<FlagIconRenderer>::New(&manager->GetRenderer());
 
@@ -165,95 +218,89 @@ namespace spades {
 			if (selectedCode.empty())
 				selectedCode = "US";
 
-			allCountries = FlagIconRenderer::GetSupportedCountries();
+			// First option: Empty Flag (Bandera Vacía)
+			CountryInfo emptyFlag;
+			emptyFlag.code = "NONE";
+			emptyFlag.name = "Sin bandera none empty vacia blanca neutral";
+			allCountries.push_back(emptyFlag);
+
+			// Supported country list
+			const auto& supported = FlagIconRenderer::GetSupportedCountries();
+			for (const auto& c : supported) {
+				allCountries.push_back(c);
+			}
+
 			filteredCountries = allCountries;
 
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
-			contentsWidth = 480.0F;
-			contentsLeft = (sw - contentsWidth) * 0.5F;
-			contentsHeight = 440.0F;
-			contentsTop = (sh - contentsHeight) * 0.5F;
+			SetBounds(AABB2(0.0F, 0.0F, sw, sh));
 
-			// Dim background overlay
+			// Solid black background overlay covering entire screen
 			{
 				Handle<Label> overlay = Handle<Label>::New(manager);
-				overlay->backgroundColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.75F);
+				overlay->backgroundColor = MakeVector4(0.0F, 0.0F, 0.0F, 1.0F);
 				overlay->SetBounds(AABB2(0.0F, 0.0F, sw, sh));
 				AddChild(overlay.GetPointerOrNull());
 			}
 
-			// Modal background box
-			{
-				Handle<Label> bg = Handle<Label>::New(manager);
-				bg->backgroundColor = MakeVector4(0.05F, 0.07F, 0.10F, 0.95F);
-				bg->SetBounds(AABB2(0.0F, contentsTop - 12.0F, sw, contentsHeight + 24.0F));
-				AddChild(bg.GetPointerOrNull());
-			}
-
-			// Title
-			{
-				Handle<Label> title = Handle<Label>::New(manager);
-				title->text = _Tr("SelectCountryScreen", "Selecciona tu país / Choose Country");
-				title->SetFont(&fontManager->GetHeadingFont());
-				title->SetBounds(AABB2(contentsLeft, contentsTop + 6.0F, contentsWidth, 28.0F));
-				title->alignment = MakeVector2(0.0F, 0.5F);
-				AddChild(title.GetPointerOrNull());
-			}
-
-			// Subtitle
-			{
-				Handle<Label> sub = Handle<Label>::New(manager);
-				sub->text = _Tr("SelectCountryScreen", "Tu personaje sostendrá la bandera en el lobby.");
-				sub->SetBounds(AABB2(contentsLeft, contentsTop + 34.0F, contentsWidth, 20.0F));
-				sub->alignment = MakeVector2(0.0F, 0.5F);
-				AddChild(sub.GetPointerOrNull());
-			}
-
-			// Search / Filter field
+			// Minimalist search field at top
+			float fieldW = 360.0F;
+			float fieldH = 32.0F;
+			float fieldX = (sw - fieldW) * 0.5F;
+			float fieldY = 24.0F;
 			{
 				Handle<Field> field = Handle<Field>::New(manager);
-				field->SetBounds(AABB2(contentsLeft, contentsTop + 58.0F, contentsWidth, 28.0F));
-				field->placeholder = _Tr("SelectCountryScreen", "Buscar país o código...");
+				field->SetBounds(AABB2(fieldX, fieldY, fieldW, fieldH));
+				field->placeholder = _Tr("SelectCountryScreen", "Buscar...");
 				field->changed = [this](UIElement& s) { OnFilterChanged(s); };
 				filterField = field.GetPointerOrNull();
 				AddChild(filterField);
 			}
 
-			// Country list
+			// Grid parameters
+			float cardW = 74.0F;
+			float cardH = 52.0F;
+			float cardGap = 8.0F;
+			int numCols = std::max(4, static_cast<int>((sw - 80.0F) / (cardW + cardGap)));
+			if (numCols > 8)
+				numCols = 8;
+
+			float gridW = static_cast<float>(numCols) * cardW + static_cast<float>(numCols - 1) * cardGap;
+			float listW = gridW + 18.0F;
+			float listX = (sw - listW) * 0.5F;
+			float listY = fieldY + fieldH + 16.0F;
+			float listH = sh - listY - 24.0F;
+
+			// Country list (grid of large flags)
 			{
 				Handle<ListView> lv = Handle<ListView>::New(manager);
-				lv->rowHeight = 28.0F;
-				lv->SetBounds(AABB2(contentsLeft, contentsTop + 92.0F, contentsWidth,
-				                    contentsHeight - 142.0F));
+				lv->rowHeight = cardH + cardGap;
+				lv->SetBounds(AABB2(listX, listY, listW, listH));
 				countryList = lv.GetPointerOrNull();
 				AddChild(countryList);
 			}
 
-			// Cancel / Decide later button
-			{
-				Handle<Button> btn = Handle<Button>::New(manager);
-				btn->caption = canCancel ? _Tr("SelectCountryScreen", "Cancelar")
-				                         : _Tr("SelectCountryScreen", "Decidir después");
-				btn->SetBounds(AABB2(contentsLeft, contentsTop + contentsHeight - 38.0F,
-				                     140.0F, 30.0F));
-				btn->activated = [this](UIElement& s) { OnCancelPressed(s); };
-				cancelButton = btn.GetPointerOrNull();
-				AddChild(cancelButton);
-			}
+			RebuildModel();
+		}
 
-			// Confirm button
-			{
-				Handle<Button> btn = Handle<Button>::New(manager);
-				btn->caption = _Tr("SelectCountryScreen", "Confirmar");
-				btn->SetBounds(AABB2(contentsLeft + contentsWidth - 140.0F,
-				                     contentsTop + contentsHeight - 38.0F, 140.0F, 30.0F));
-				btn->activated = [this](UIElement& s) { OnConfirmPressed(s); };
-				confirmButton = btn.GetPointerOrNull();
-				AddChild(confirmButton);
-			}
+		void SelectCountryScreen::RebuildModel() {
+			if (!countryList)
+				return;
 
-			ApplyFilter("");
+			float sw = GetManager().screenWidth;
+			float cardW = 74.0F;
+			float cardH = 52.0F;
+			float cardGap = 8.0F;
+			int numCols = std::max(4, static_cast<int>((sw - 80.0F) / (cardW + cardGap)));
+			if (numCols > 8)
+				numCols = 8;
+
+			listModel = Handle<SelectCountryListModel>::New(&GetManager(), this,
+			                                                filteredCountries,
+			                                                flagIconRenderer.GetPointerOrNull(),
+			                                                numCols, cardW, cardH, cardGap);
+			countryList->SetModel(listModel.Cast<ListViewModel>().GetPointerOrNull());
 		}
 
 		void SelectCountryScreen::ApplyFilter(const std::string& query) {
@@ -267,10 +314,7 @@ namespace spades {
 				}
 			}
 
-			listModel = Handle<SelectCountryListModel>::New(&GetManager(), this,
-			                                                filteredCountries,
-			                                                flagIconRenderer.GetPointerOrNull());
-			countryList->SetModel(listModel.Cast<ListViewModel>().GetPointerOrNull());
+			RebuildModel();
 		}
 
 		void SelectCountryScreen::OnFilterChanged(UIElement&) {
@@ -278,36 +322,14 @@ namespace spades {
 				ApplyFilter(filterField->GetText());
 		}
 
-		void SelectCountryScreen::SelectCode(const std::string& code) {
+		void SelectCountryScreen::ConfirmCode(const std::string& code) {
 			selectedCode = code;
 			cg_country = code;
-			// Refresh list visual
-			if (countryList && listModel)
-				countryList->SetModel(listModel.Cast<ListViewModel>().GetPointerOrNull());
-		}
-
-		void SelectCountryScreen::ConfirmCode(const std::string& code) {
-			SelectCode(code);
 			cg_countryIsSet = 1;
 			Settings::GetInstance()->Flush();
 			if (onSelected)
 				onSelected(selectedCode);
 			Close();
-		}
-
-		void SelectCountryScreen::OnConfirmPressed(UIElement&) {
-			ConfirmCode(selectedCode);
-		}
-
-		void SelectCountryScreen::OnCancelPressed(UIElement&) {
-			if (!canCancel) {
-				// First run: default to US or current selection
-				if (selectedCode.empty())
-					selectedCode = "US";
-				ConfirmCode(selectedCode);
-			} else {
-				Close();
-			}
 		}
 
 		void SelectCountryScreen::Run() {
@@ -326,27 +348,25 @@ namespace spades {
 		}
 
 		void SelectCountryScreen::HotKey(const std::string& key) {
-			if (IsEnabled() && (key == "Enter" || key == "Escape")) {
-				if (key == "Enter") {
-					OnConfirmPressed(*this);
-				} else if (key == "Escape") {
-					OnCancelPressed(*this);
+			if (IsEnabled() && key == "Escape") {
+				if (!canCancel || !static_cast<bool>(cg_countryIsSet)) {
+					ConfirmCode("NONE");
+				} else {
+					Close();
 				}
-			} else {
-				UIElement::HotKey(key);
+				return;
 			}
+			UIElement::HotKey(key);
 		}
 
 		void SelectCountryScreen::Render() {
 			client::IRenderer& r = GetManager().GetRenderer();
-			Vector2 pos = GetScreenPosition();
 			float sw = GetManager().screenWidth;
+			float sh = GetManager().screenHeight;
 
-			// Top & bottom accent border lines
-			SetColorNP(r, MakeVector4(0.25F, 0.55F, 0.95F, 0.4F));
-			r.DrawImage(nullptr, AABB2(pos.x, pos.y + contentsTop - 12.0F, sw, 2.0F));
-			r.DrawImage(nullptr,
-			            AABB2(pos.x, pos.y + contentsTop + contentsHeight + 10.0F, sw, 2.0F));
+			// Ensure solid black background under everything
+			SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, 1.0F));
+			r.DrawImage(nullptr, AABB2(0.0F, 0.0F, sw, sh));
 
 			UIElement::Render();
 		}

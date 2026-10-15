@@ -148,7 +148,6 @@ namespace spades {
 				mainMenu->visible = false;
 			if (lobbyScreen) {
 				lobbyScreen->visible = true;
-				lobbyScreen->UpdateCountryBadge();
 			}
 		}
 
@@ -166,8 +165,6 @@ namespace spades {
 			cg_countryIsSet = 1;
 			Settings::GetInstance()->Flush();
 			RebuildFlagModel();
-			if (lobbyScreen)
-				lobbyScreen->UpdateCountryBadge();
 		}
 
 		void MainScreenUI::InitLobby3D() {
@@ -208,12 +205,28 @@ namespace spades {
 
 		void MainScreenUI::RebuildFlagModel() {
 			std::string countryCode = cg_country;
-			if (countryCode.empty())
-				countryCode = "US";
-
 			flagSliceModels.clear();
 			flagSliceModels.resize(16);
 			loadedFlagCountry = countryCode;
+
+			if (countryCode.empty() || countryCode == "NONE") {
+				// Empty / White flag banner
+				try {
+					for (int col = 0; col < 16; ++col) {
+						Handle<VoxelModel> slice = Handle<VoxelModel>::New(1, 1, 16);
+						slice->SetOrigin(MakeVector3(0.0F, 0.0F, 0.0F));
+
+						// Flag banner height: rows 3 to 13
+						for (int row = 3; row < 14; ++row) {
+							uint32_t colVal = 0xEEEEEE;
+							slice->SetSolid(0, 0, row, colVal);
+						}
+
+						flagSliceModels[col] = renderer->CreateModel(*slice);
+					}
+				} catch (...) {}
+				return;
+			}
 
 			int tileX = 0, tileY = 0;
 			FlagIconRenderer::GetFlagCoordinates(countryCode, tileX, tileY);

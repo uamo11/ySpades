@@ -19,8 +19,13 @@
  */
 
 #include "PreferenceView.h"
+#include <Core/Settings.h>
 #include <Core/Strings.h>
 #include <Gui/UI/Framework/UIManager.h>
+#include <Gui/UI/MainScreen/SelectCountryScreen.h>
+
+SPADES_SETTING(cg_country);
+SPADES_SETTING(cg_countryIsSet);
 
 namespace spades {
 	namespace gui {
@@ -43,6 +48,26 @@ namespace spades {
 			nameField->maxLength = 15;
 			nameField->denyNonAscii = false;
 			nameField->removeNewlines = true;
+
+			l.AddButtonField(_Tr("Preferences", "Country Flag"), _Tr("Preferences", "Change Flag..."),
+			    [this, fontManager](UIElement&) {
+				    UIElement* topOwner = this;
+				    while (topOwner->GetParent() &&
+				           topOwner->GetParent() != &GetManager().GetRootElement()) {
+					    topOwner = topOwner->GetParent();
+				    }
+
+				    Handle<SelectCountryScreen> sc = Handle<SelectCountryScreen>::New(
+				        topOwner, fontManager,
+				        [](const std::string& code) {
+					        cg_country = code;
+					        cg_countryIsSet = 1;
+					        Settings::GetInstance()->Flush();
+				        },
+				        true /* canCancel */
+				    );
+				    sc->Run();
+			    });
 
 			l.AddHeading(_Tr("Preferences", "Gameplay"));
 			l.AddChoiceField(_Tr("Preferences", "Aiming Animation"), "cg_animations",

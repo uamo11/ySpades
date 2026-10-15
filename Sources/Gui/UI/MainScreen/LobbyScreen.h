@@ -22,34 +22,29 @@
 
 #include <string>
 
-#include "CountryFlags.h"
-#include <Gui/UI/Widgets/Button.h>
+#include <Gui/UI/Framework/UIElement.h>
 #include <Gui/UI/Widgets/ButtonBase.h>
 
 namespace spades {
 	namespace gui {
 		class MainScreenUI;
-		class CountryBadgeButton;
+		class LobbyIconButton;
 
-		/** The 3D Lobby UI element: buttons for Play, Settings, Country selector, and Quit. */
+		/** The 3D Lobby UI element: icon-only buttons for Play, Settings, and Quit. */
 		class LobbyScreen : public ui::UIElement {
 			MainScreenUI* ui; // weak
-			Handle<FlagIconRenderer> flagIconRenderer;
 
-			ui::Button* playButton = nullptr;
-			ui::Button* settingsButton = nullptr;
-			CountryBadgeButton* countryBadge = nullptr;
-			ui::Button* quitButton = nullptr;
+			LobbyIconButton* playButton = nullptr;
+			LobbyIconButton* settingsButton = nullptr;
+			LobbyIconButton* quitButton = nullptr;
 
 			void OnPlayPressed(ui::UIElement& sender);
 			void OnSettingsPressed(ui::UIElement& sender);
-			void OnCountryPressed(ui::UIElement& sender);
 			void OnQuitPressed(ui::UIElement& sender);
 
 		public:
 			LobbyScreen(MainScreenUI* ui);
 
-			void UpdateCountryBadge();
 			void Layout();
 
 			void HotKey(const std::string& key) override;

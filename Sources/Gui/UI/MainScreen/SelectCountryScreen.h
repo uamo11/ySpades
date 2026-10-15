@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "CountryFlags.h"
-#include <Gui/UI/Widgets/Button.h>
 #include <Gui/UI/Widgets/ButtonBase.h>
 #include <Gui/UI/Widgets/Field.h>
 #include <Gui/UI/Widgets/ListView.h>
@@ -39,16 +38,12 @@ namespace spades {
 
 		/** Modal dialog for selecting player country / flag. */
 		class SelectCountryScreen : public ui::UIElement {
-			float contentsLeft, contentsTop, contentsWidth, contentsHeight;
-
 			ui::UIElement* owner; // weak
 			client::FontManager* fontManager; // weak
 			Handle<FlagIconRenderer> flagIconRenderer;
 
 			ui::Field* filterField = nullptr;
 			ui::ListView* countryList = nullptr;
-			ui::Button* confirmButton = nullptr;
-			ui::Button* cancelButton = nullptr;
 
 			std::string selectedCode;
 			std::vector<CountryInfo> allCountries;
@@ -59,9 +54,8 @@ namespace spades {
 			bool canCancel;
 
 			void ApplyFilter(const std::string& query);
-			void OnConfirmPressed(ui::UIElement& sender);
-			void OnCancelPressed(ui::UIElement& sender);
 			void OnFilterChanged(ui::UIElement& sender);
+			void RebuildModel();
 
 		public:
 			ui::EventHandler closed;
@@ -73,7 +67,6 @@ namespace spades {
 			void Run();
 			void Close();
 
-			void SelectCode(const std::string& code);
 			void ConfirmCode(const std::string& code);
 
 			void HotKey(const std::string& key) override;

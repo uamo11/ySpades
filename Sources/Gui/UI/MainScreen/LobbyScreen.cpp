@@ -21,7 +21,6 @@
 #include "LobbyScreen.h"
 
 #include "MainScreenUI.h"
-#include "SelectCountryScreen.h"
 #include <Client/Fonts.h>
 #include <Client/IFont.h>
 #include <Client/IRenderer.h>
@@ -29,92 +28,103 @@
 #include <Core/Strings.h>
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/Settings/PreferenceView.h>
-#include <Gui/UI/Widgets/Button.h>
 #include <Gui/UI/Widgets/DrawUtils.h>
-#include <Gui/UI/Widgets/Label.h>
-
-SPADES_SETTING(cg_country);
 
 namespace spades {
 	namespace gui {
-		using ui::Button;
-		using ui::Label;
 		using ui::SetColorNP;
 		using ui::UIElement;
 		using ui::UIManager;
 
-		class CountryBadgeButton : public ui::ButtonBase {
-			FlagIconRenderer* flagRenderer;
-			client::FontManager* fontManager;
-			std::string countryCode;
-			std::string countryName;
+		enum class LobbyIconType {
+			Play,
+			Settings,
+			Quit
+		};
+
+		class LobbyIconButton : public ui::ButtonBase {
+			LobbyIconType iconType;
 
 		public:
-			CountryBadgeButton(UIManager* manager, FlagIconRenderer* flagRenderer,
-			                   client::FontManager* fontManager)
-			    : ui::ButtonBase(manager),
-			      flagRenderer(flagRenderer),
-			      fontManager(fontManager) {
-				UpdateBadge();
-			}
-
-			void UpdateBadge() {
-				countryCode = cg_country;
-				if (countryCode.empty())
-					countryCode = "US";
-				countryName = FlagIconRenderer::GetCountryName(countryCode);
-			}
+			LobbyIconButton(UIManager* manager, LobbyIconType type)
+			    : ui::ButtonBase(manager), iconType(type) {}
 
 			void Render() override {
 				client::IRenderer& r = GetManager().GetRenderer();
-				client::IFont* font = &fontManager->GetGuiFont();
-				client::IFont* smallFont = &fontManager->GetSmallFont();
 				Vector2 pos = GetScreenPosition();
 				Vector2 sz = size;
 
-				Vector4 bg = hover ? MakeVector4(0.08F, 0.12F, 0.18F, 0.85F)
-				                   : MakeVector4(0.04F, 0.06F, 0.09F, 0.70F);
-				if (pressed)
-					bg = MakeVector4(0.12F, 0.18F, 0.28F, 0.95F);
+				// Background color
+				Vector4 bg(0.04F, 0.06F, 0.10F, 0.70F);
+				if (pressed && hover) {
+					bg = MakeVector4(0.12F, 0.20F, 0.32F, 0.95F);
+				} else if (hover) {
+					bg = MakeVector4(0.09F, 0.14F, 0.24F, 0.85F);
+				}
 
-				// Background card
 				SetColorNP(r, bg);
 				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, sz.y));
 
 				// Border line
-				Vector4 borderColor = hover ? MakeVector4(0.35F, 0.65F, 1.0F, 0.6F)
-				                            : MakeVector4(1.0F, 1.0F, 1.0F, 0.18F);
+				Vector4 borderColor(0.25F, 0.40F, 0.65F, 0.35F);
+				float borderW = 1.0F;
+				if (hover) {
+					if (iconType == LobbyIconType::Play)
+						borderColor = MakeVector4(0.35F, 0.85F, 0.55F, 0.9F);
+					else if (iconType == LobbyIconType::Settings)
+						borderColor = MakeVector4(0.45F, 0.75F, 1.0F, 0.9F);
+					else if (iconType == LobbyIconType::Quit)
+						borderColor = MakeVector4(0.95F, 0.35F, 0.35F, 0.9F);
+					borderW = 2.0F;
+				}
+
 				SetColorNP(r, borderColor);
-				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, 1.0F));
-				r.DrawImage(nullptr, AABB2(pos.x, pos.y + sz.y - 1.0F, sz.x, 1.0F));
-				r.DrawImage(nullptr, AABB2(pos.x, pos.y, 1.0F, sz.y));
-				r.DrawImage(nullptr, AABB2(pos.x + sz.x - 1.0F, pos.y, 1.0F, sz.y));
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, borderW));
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y + sz.y - borderW, sz.x, borderW));
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y, borderW, sz.y));
+				r.DrawImage(nullptr, AABB2(pos.x + sz.x - borderW, pos.y, borderW, sz.y));
 
-				// Flag icon
-				if (flagRenderer) {
-					flagRenderer->DrawIcon(countryCode, MakeVector2(pos.x + 22.0F, pos.y + sz.y * 0.5F));
+				// Icon color
+				Vector4 iconCol(0.85F, 0.90F, 0.95F, 0.85F);
+				if (hover) {
+					if (iconType == LobbyIconType::Play)
+						iconCol = MakeVector4(0.40F, 1.0F, 0.60F, 1.0F);
+					else if (iconType == LobbyIconType::Settings)
+						iconCol = MakeVector4(0.60F, 0.85F, 1.0F, 1.0F);
+					else if (iconType == LobbyIconType::Quit)
+						iconCol = MakeVector4(1.0F, 0.45F, 0.45F, 1.0F);
 				}
 
-				// Top small label
-				if (smallFont) {
-					smallFont->Draw(_Tr("Lobby", "BANDERA / COUNTRY:"),
-					                MakeVector2(pos.x + 42.0F, pos.y + 7.0F), 1.0F,
-					                MakeVector4(0.7F, 0.8F, 0.95F, 0.8F));
-				}
+				SetColorNP(r, iconCol);
+				float cx = pos.x + sz.x * 0.5F;
+				float cy = pos.y + sz.y * 0.5F;
 
-				// Country name
-				if (font) {
-					font->Draw(countryName, MakeVector2(pos.x + 42.0F, pos.y + 20.0F), 1.0F,
-					           MakeVector4(1.0F, 1.0F, 1.0F, 1.0F));
-				}
-
-				// Hint to change
-				if (smallFont) {
-					std::string hint = _Tr("Lobby", "(Click para cambiar)");
-					float hw = smallFont->Measure(hint).x;
-					smallFont->Draw(hint,
-					                MakeVector2(pos.x + sz.x - hw - 10.0F, pos.y + (sz.y - 12.0F) * 0.5F),
-					                1.0F, MakeVector4(0.55F, 0.75F, 1.0F, hover ? 0.95F : 0.6F));
+				if (iconType == LobbyIconType::Play) {
+					// Draw filled play triangle pointing right
+					float playX = cx + 2.0F; // optical centering
+					float leftX = playX - 10.0F;
+					float rightX = playX + 12.0F;
+					for (float x = leftX; x <= rightX; x += 1.0F) {
+						float t = (x - leftX) / 22.0F;
+						float halfH = 13.0F * (1.0F - t);
+						r.DrawLine(MakeVector2(x, cy - halfH), MakeVector2(x, cy + halfH), 1.5F);
+					}
+				} else if (iconType == LobbyIconType::Settings) {
+					// Draw gear icon
+					// 8 teeth spokes
+					r.DrawLine(MakeVector2(cx - 13.0F, cy), MakeVector2(cx + 13.0F, cy), 4.5F);
+					r.DrawLine(MakeVector2(cx, cy - 13.0F), MakeVector2(cx, cy + 13.0F), 4.5F);
+					r.DrawLine(MakeVector2(cx - 9.0F, cy - 9.0F), MakeVector2(cx + 9.0F, cy + 9.0F), 4.5F);
+					r.DrawLine(MakeVector2(cx - 9.0F, cy + 9.0F), MakeVector2(cx + 9.0F, cy - 9.0F), 4.5F);
+					// Central solid hub
+					r.DrawImage(nullptr, AABB2(cx - 7.0F, cy - 7.0F, 14.0F, 14.0F));
+					// Inner cutout hole filled with button bg
+					SetColorNP(r, bg);
+					r.DrawImage(nullptr, AABB2(cx - 3.5F, cy - 3.5F, 7.0F, 7.0F));
+				} else if (iconType == LobbyIconType::Quit) {
+					// Draw bold 'X' cross
+					r.DrawLine(MakeVector2(cx - 10.0F, cy - 10.0F), MakeVector2(cx + 10.0F, cy + 10.0F), 3.5F);
+					r.DrawLine(MakeVector2(cx - 10.0F, cy + 10.0F), MakeVector2(cx + 10.0F, cy - 10.0F), 3.5F);
 				}
 			}
 		};
@@ -122,43 +132,31 @@ namespace spades {
 		LobbyScreen::LobbyScreen(MainScreenUI* ui)
 		    : UIElement(&ui->GetUIManager()), ui(ui) {
 			UIManager* manager = &GetManager();
-			flagIconRenderer = Handle<FlagIconRenderer>::New(&manager->GetRenderer());
 
 			SetBounds(manager->GetRootElement().GetBounds());
 
-			// Play Button
+			// Play Button (icon only)
 			{
-				Handle<Button> btn = Handle<Button>::New(manager);
-				btn->caption = _Tr("Lobby", "JUGAR (SERVIDORES)");
-				btn->hotKeyText = _Tr("Client", "[Enter]");
+				Handle<LobbyIconButton> btn =
+				    Handle<LobbyIconButton>::New(manager, LobbyIconType::Play);
 				btn->activated = [this](UIElement& s) { OnPlayPressed(s); };
 				playButton = btn.GetPointerOrNull();
 				AddChild(playButton);
 			}
 
-			// Settings Button
+			// Settings Button (icon only)
 			{
-				Handle<Button> btn = Handle<Button>::New(manager);
-				btn->caption = _Tr("Lobby", "AJUSTES");
+				Handle<LobbyIconButton> btn =
+				    Handle<LobbyIconButton>::New(manager, LobbyIconType::Settings);
 				btn->activated = [this](UIElement& s) { OnSettingsPressed(s); };
 				settingsButton = btn.GetPointerOrNull();
 				AddChild(settingsButton);
 			}
 
-			// Country Badge Button
+			// Quit Button (icon only)
 			{
-				Handle<CountryBadgeButton> badge = Handle<CountryBadgeButton>::New(
-				    manager, flagIconRenderer.GetPointerOrNull(), &ui->GetFontManager());
-				badge->activated = [this](UIElement& s) { OnCountryPressed(s); };
-				countryBadge = badge.GetPointerOrNull();
-				AddChild(countryBadge);
-			}
-
-			// Quit Button
-			{
-				Handle<Button> btn = Handle<Button>::New(manager);
-				btn->caption = _Tr("Lobby", "SALIR");
-				btn->hotKeyText = _Tr("Client", "[Esc]");
+				Handle<LobbyIconButton> btn =
+				    Handle<LobbyIconButton>::New(manager, LobbyIconType::Quit);
 				btn->activated = [this](UIElement& s) { OnQuitPressed(s); };
 				quitButton = btn.GetPointerOrNull();
 				AddChild(quitButton);
@@ -172,31 +170,25 @@ namespace spades {
 			float sh = GetManager().screenHeight;
 			SetBounds(AABB2(0.0F, 0.0F, sw, sh));
 
-			float btnW = 270.0F;
-			float btnX = 80.0F;
-			if (sw < 640.0F)
-				btnX = (sw - btnW) * 0.5F;
+			float btnSize = 56.0F;
+			float btnGap = 16.0F;
+			float totalH = 3.0F * btnSize + 2.0F * btnGap;
+			float startY = (sh - totalH) * 0.5F;
+			if (startY < 80.0F)
+				startY = 80.0F;
 
-			float startY = 240.0F;
-			if (sh < 500.0F)
-				startY = 180.0F;
+			float btnX = 64.0F;
+			if (sw < 640.0F)
+				btnX = 24.0F;
 
 			if (playButton)
-				playButton->SetBounds(AABB2(btnX, startY, btnW, 46.0F));
+				playButton->SetBounds(AABB2(btnX, startY, btnSize, btnSize));
 
 			if (settingsButton)
-				settingsButton->SetBounds(AABB2(btnX, startY + 54.0F, btnW, 38.0F));
-
-			if (countryBadge)
-				countryBadge->SetBounds(AABB2(btnX, startY + 100.0F, btnW, 46.0F));
+				settingsButton->SetBounds(AABB2(btnX, startY + btnSize + btnGap, btnSize, btnSize));
 
 			if (quitButton)
-				quitButton->SetBounds(AABB2(btnX, startY + 154.0F, btnW, 36.0F));
-		}
-
-		void LobbyScreen::UpdateCountryBadge() {
-			if (countryBadge)
-				countryBadge->UpdateBadge();
+				quitButton->SetBounds(AABB2(btnX, startY + 2.0F * (btnSize + btnGap), btnSize, btnSize));
 		}
 
 		void LobbyScreen::OnPlayPressed(UIElement&) {
@@ -209,18 +201,6 @@ namespace spades {
 			Handle<PreferenceView> pref =
 			    Handle<PreferenceView>::New(this, opt, &ui->GetFontManager());
 			pref->Run();
-		}
-
-		void LobbyScreen::OnCountryPressed(UIElement&) {
-			Handle<SelectCountryScreen> sc = Handle<SelectCountryScreen>::New(
-			    this, &ui->GetFontManager(),
-			    [this](const std::string& code) {
-				    ui->SetCountry(code);
-				    UpdateCountryBadge();
-			    },
-			    true /* canCancel */
-			);
-			sc->Run();
 		}
 
 		void LobbyScreen::OnQuitPressed(UIElement&) {
@@ -244,30 +224,25 @@ namespace spades {
 			Layout();
 
 			client::IRenderer& r = GetManager().GetRenderer();
-			client::IFont* font = &ui->GetFontManager().GetSmallFont();
 			Vector2 sz = size;
 
-			// Sleek backdrop card behind the menu items on the left
-			float btnW = 270.0F;
-			float btnX = 80.0F;
+			float btnSize = 56.0F;
+			float btnGap = 16.0F;
+			float totalH = 3.0F * btnSize + 2.0F * btnGap;
+			float startY = (sz.y - totalH) * 0.5F;
+			if (startY < 80.0F)
+				startY = 80.0F;
+
+			float btnX = 64.0F;
 			if (sz.x < 640.0F)
-				btnX = (sz.x - btnW) * 0.5F;
+				btnX = 24.0F;
 
-			float startY = 240.0F;
-			if (sz.y < 500.0F)
-				startY = 180.0F;
+			// Sleek backdrop card behind the 3 buttons
+			SetColorNP(r, MakeVector4(0.02F, 0.04F, 0.07F, 0.60F));
+			r.DrawImage(nullptr, AABB2(btnX - 12.0F, startY - 14.0F, btnSize + 24.0F, totalH + 28.0F));
 
-			SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, 0.35F));
-			r.DrawImage(nullptr, AABB2(btnX - 16.0F, startY - 16.0F, btnW + 32.0F, 230.0F));
-
-			SetColorNP(r, MakeVector4(0.2F, 0.45F, 0.85F, 0.3F));
-			r.DrawImage(nullptr, AABB2(btnX - 16.0F, startY - 16.0F, 3.0F, 230.0F));
-
-			// Lobby title / version in the corner
-			if (font) {
-				font->Draw("ZeroSpades 3D Lobby", MakeVector2(btnX - 12.0F, startY - 32.0F), 1.0F,
-				           MakeVector4(0.8F, 0.85F, 0.9F, 0.75F));
-			}
+			SetColorNP(r, MakeVector4(0.2F, 0.45F, 0.85F, 0.40F));
+			r.DrawImage(nullptr, AABB2(btnX - 12.0F, startY - 14.0F, 2.5F, totalH + 28.0F));
 
 			UIElement::Render();
 		}
