@@ -68,22 +68,32 @@ namespace spades {
 			Vector4 bgcolor = MakeVector4(1.0F, 1.0F, 1.0F, 0.0F);
 			Vector4 fgcolor = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
 
-			if (item->IsFavorite()) {
+			if (item->IsGold()) {
+				// Radiant golden background for the most played server of the year
+				bgcolor = MakeVector4(0.95F, 0.72F, 0.10F, 0.25F);
+				fgcolor = MakeVector4(1.0F, 0.94F, 0.45F, 1.0F);
+			} else if (item->IsFavorite()) {
 				bgcolor = MakeVector4(0.3F, 0.3F, 1.0F, 0.1F);
 				fgcolor = MakeVector4(220, 220, 0, 255) / 255.0F;
 			}
 
 			if (pressed && hover) {
-				bgcolor.w = 0.3F;
+				bgcolor.w = item->IsGold() ? 0.45F : 0.3F;
 			} else if (hover) {
-				bgcolor.w = 0.15F;
+				bgcolor.w = item->IsGold() ? 0.35F : 0.15F;
 			}
 
 			SetColorNP(r, bgcolor);
 			r.DrawImage(nullptr, AABB2(pos.x + 1.0F, pos.y + 1.0F, sz.x, sz.y));
 
+			// Gold vertical accent bar on the left edge
+			if (item->IsGold()) {
+				SetColorNP(r, MakeVector4(1.0F, 0.85F, 0.20F, 0.95F));
+				r.DrawFilledRect(pos.x + 1.0F, pos.y + 1.0F, pos.x + 4.0F, pos.y + sz.y - 1.0F);
+			}
+
 			Vector4 col = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
-			if (!hover && !item->IsFavorite() && item->GetNumPlayers() == 0) {
+			if (!hover && !item->IsFavorite() && !item->IsGold() && item->GetNumPlayers() == 0) {
 				col.w *= 0.5F;
 				fgcolor.w *= 0.5F;
 			}
@@ -94,7 +104,8 @@ namespace spades {
 			    item->GetCountry(), pos + MakeVector2(flagIconOffsetX, itemOffsetY + (sz.y * 0.5F)));
 
 			// Draw server name
-			font->Draw(item->GetName(), pos + MakeVector2(nameOffsetX, itemOffsetY), 1.0F, fgcolor);
+			std::string displayName = item->IsGold() ? ("[★] " + item->GetName()) : item->GetName();
+			font->Draw(displayName, pos + MakeVector2(nameOffsetX, itemOffsetY), 1.0F, fgcolor);
 
 			// Draw server slots
 			std::string playersStr =

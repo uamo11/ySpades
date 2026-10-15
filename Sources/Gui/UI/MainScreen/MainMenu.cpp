@@ -316,12 +316,29 @@ namespace spades {
 					serverPanel->AddChild(toggleIpButton);
 				}
 
+				// Gold season / Most played server event notice
+				{
+					Handle<Label> label = Handle<Label>::New(manager);
+					goldNoticeLabel = label.GetPointerOrNull();
+					goldNoticeLabel->SetBounds(
+					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 190.0F, 30.0F));
+					goldNoticeLabel->alignment = MakeVector2(0.0F, 0.5F);
+					goldNoticeLabel->backgroundColor = MakeVector4(0.18F, 0.14F, 0.04F, 0.65F);
+					goldNoticeLabel->outlineColor = MakeVector4(0.85F, 0.70F, 0.20F, 0.60F);
+					goldNoticeLabel->textColor = MakeVector4(1.0F, 0.88F, 0.35F, 1.0F);
+					goldNoticeLabel->shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.5F);
+					goldNoticeLabel->text = _Tr(
+					    "MainScreen",
+					    " [★] El server más jugado tras 1 año recibirá fondo dorado por 3 meses en enero");
+					serverPanel->AddChild(goldNoticeLabel);
+				}
+
 				// Direct IP address field (hidden until deployed!)
 				{
 					Handle<Field> field = Handle<Field>::New(manager);
 					addressField = field.GetPointerOrNull();
 					addressField->SetBounds(
-					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 315.0F, 30.0F));
+					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 335.0F, 30.0F));
 					addressField->placeholder = _Tr("MainScreen", "IP del Servidor (ej. 127.0.0.1:32887)");
 					addressField->SetText(cg_lastQuickConnectHost);
 					addressField->changed = [this](UIElement& s) { OnAddressChanged(s); };
@@ -337,7 +354,7 @@ namespace spades {
 					connectButton->caption = _Tr("MainScreen", "Conectar");
 					connectButton->hotKeyText = _Tr("Client", "[Enter]");
 					connectButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 270.0F, 200.0F, 115.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 290.0F, 200.0F, 140.0F, 30.0F));
 					connectButton->activated = [this](UIElement&) { Connect(); };
 					connectButton->visible = false;
 					serverPanel->AddChild(connectButton);
@@ -1273,6 +1290,8 @@ namespace spades {
 				connectButton->visible = showDirectConnect;
 			if (toggleIpButton)
 				toggleIpButton->toggled = showDirectConnect;
+			if (goldNoticeLabel)
+				goldNoticeLabel->visible = !showDirectConnect;
 		}
 
 		void MainScreenMainMenu::ReturnToLobby() {

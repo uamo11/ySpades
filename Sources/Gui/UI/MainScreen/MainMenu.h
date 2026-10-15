@@ -108,6 +108,7 @@ namespace spades {
 			ui::Field* addressField = nullptr;
 			MenuIconButton* connectButton = nullptr;
 			MenuIconButton* toggleIpButton = nullptr;
+			ui::Label* goldNoticeLabel = nullptr;
 			bool showDirectConnect = false;
 
 			void UpdateDirectConnectVisibility();

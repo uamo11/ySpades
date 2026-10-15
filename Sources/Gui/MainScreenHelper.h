@@ -46,6 +46,7 @@ namespace spades {
 			int numPlayers;
 			int maxPlayers;
 			bool favorite;
+			bool gold = false;
 			
 		protected:
 			~MainScreenServerItem();
@@ -65,6 +66,8 @@ namespace spades {
 			int GetMaxPlayers() const { return maxPlayers; }
 			bool IsFavorite() const { return favorite; }
 			void SetFavorite(bool favorite) { this->favorite = favorite; }
+			bool IsGold() const { return gold; }
+			void SetGold(bool g) { this->gold = g; }
 		};
 
 		struct MainScreenServerList {

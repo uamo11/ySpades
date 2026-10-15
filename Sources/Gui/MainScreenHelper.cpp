@@ -27,6 +27,7 @@
 #include <memory>
 #include <sys/stat.h>
 
+#include <ctime>
 #include <curl/curl.h>
 #include <json/json.h>
 
@@ -44,6 +45,8 @@
 
 DEFINE_SPADES_SETTING(cl_serverListUrl, "http://services.buildandshoot.com/serverlist.json");
 DEFINE_SPADES_SETTING(cl_serverListUrlFallback, "https://checkpoint.aos.coffee/serverlist.json");
+DEFINE_SPADES_SETTING(cg_goldServerAddress, "");
+DEFINE_SPADES_SETTING(cg_goldSeasonForce, "0");
 
 namespace spades {
 	extern std::string g_pendingMapName;
@@ -338,6 +341,30 @@ namespace spades {
 				pingTester.reset(new PingTester());
 				for (const auto& item : result->list)
 					pingTester->AddTarget(item->GetAddress());
+
+				// Check for the most played server of the year receiving the golden background
+				time_t rawtime;
+				time(&rawtime);
+				struct tm* timeinfo = localtime(&rawtime);
+				bool isGoldSeason = (timeinfo && timeinfo->tm_mon >= 0 && timeinfo->tm_mon <= 2);
+				if (static_cast<bool>(cg_goldSeasonForce))
+					isGoldSeason = true;
+
+				int maxPlayers = -1;
+				MainScreenServerItem* topServer = nullptr;
+				std::string forcedAddr = cg_goldServerAddress.GetString();
+
+				for (const auto& item : result->list) {
+					if (!forcedAddr.empty() && item->GetAddress() == forcedAddr) {
+						item->SetGold(true);
+					} else if (item->GetNumPlayers() > maxPlayers && item->GetNumPlayers() > 0) {
+						maxPlayers = item->GetNumPlayers();
+						topServer = item.GetPointerOrNull();
+					}
+				}
+				if (isGoldSeason && topServer) {
+					topServer->SetGold(true);
+				}
 				
 				// The new list replaces the old one, so LAN servers must be added again
 				lanMerged.clear();
