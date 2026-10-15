@@ -215,7 +215,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F, rowY, optW, cardH));
 				if (currentSkin == "default" || currentSkin.empty())
 					card->Check();
-				AddChild(card);
+				AddChild(radioSkinDefault);
 			}
 			{
 				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
@@ -227,7 +227,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap), rowY, optW, cardH));
 				if (currentSkin == "minecraft")
 					card->Check();
-				AddChild(card);
+				AddChild(radioSkinMinecraft);
 			}
 			{
 				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
@@ -239,7 +239,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap) * 2.0F, rowY, optW, cardH));
 				if (currentSkin == "custom")
 					card->Check();
-				AddChild(card);
+				AddChild(radioSkinCustom);
 			}
 
 			// --- Section 2: Capa Física (Cloak) ---
@@ -254,7 +254,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F, rowY, optW, cardH));
 				if (currentCape == "none" || currentCape.empty())
 					card->Check();
-				AddChild(card);
+				AddChild(radioCapeNone);
 			}
 			{
 				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
@@ -266,7 +266,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap), rowY, optW, cardH));
 				if (currentCape == "classic")
 					card->Check();
-				AddChild(card);
+				AddChild(radioCapeClassic);
 			}
 			{
 				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
@@ -280,7 +280,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap) * 2.0F, rowY, optW, cardH));
 				if (currentCape == "gold")
 					card->Check();
-				AddChild(card);
+				AddChild(radioCapeGold);
 			}
 
 			// --- Section 3: Accesorio de Cabeza ---
@@ -295,7 +295,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F, rowY, optW, cardH));
 				if (currentAcc == "none" || currentAcc.empty())
 					card->Check();
-				AddChild(card);
+				AddChild(radioAccNone);
 			}
 			{
 				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
@@ -307,7 +307,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap), rowY, optW, cardH));
 				if (currentAcc == "helmet")
 					card->Check();
-				AddChild(card);
+				AddChild(radioAccHelmet);
 			}
 			{
 				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
@@ -321,7 +321,7 @@ namespace spades {
 				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap) * 2.0F, rowY, optW, cardH));
 				if (currentAcc == "crown")
 					card->Check();
-				AddChild(card);
+				AddChild(radioAccCrown);
 			}
 
 			// --- Bottom Buttons ---
