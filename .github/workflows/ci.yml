@@ -26,10 +26,22 @@ jobs:
       - name: Ensure openal-soft and vcpkg
         run: |
           if (-not (Test-Path openal-soft/CMakeLists.txt)) {
-            git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+            if (Test-Path openal-soft) {
+              git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft_tmp
+              Get-ChildItem -Path openal-soft_tmp -Force | Copy-Item -Destination openal-soft -Recurse -Force
+              Remove-Item -Path openal-soft_tmp -Recurse -Force
+            } else {
+              git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+            }
           }
           if (-not (Test-Path vcpkg/bootstrap-vcpkg.bat)) {
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+            if (Test-Path vcpkg) {
+              git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg_tmp
+              Get-ChildItem -Path vcpkg_tmp -Force | Copy-Item -Destination vcpkg -Recurse -Force
+              Remove-Item -Path vcpkg_tmp -Recurse -Force
+            } else {
+              git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+            }
           }
 
       - name: Bootstrap vcpkg
@@ -82,10 +94,22 @@ jobs:
       - name: Ensure openal-soft and vcpkg
         run: |
           if (-not (Test-Path openal-soft/CMakeLists.txt)) {
-            git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+            if (Test-Path openal-soft) {
+              git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft_tmp
+              Get-ChildItem -Path openal-soft_tmp -Force | Copy-Item -Destination openal-soft -Recurse -Force
+              Remove-Item -Path openal-soft_tmp -Recurse -Force
+            } else {
+              git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+            }
           }
           if (-not (Test-Path vcpkg/bootstrap-vcpkg.bat)) {
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+            if (Test-Path vcpkg) {
+              git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg_tmp
+              Get-ChildItem -Path vcpkg_tmp -Force | Copy-Item -Destination vcpkg -Recurse -Force
+              Remove-Item -Path vcpkg_tmp -Recurse -Force
+            } else {
+              git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+            }
           }
 
       - name: Bootstrap vcpkg
