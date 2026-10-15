@@ -144,12 +144,30 @@ namespace spades {
 				break;
 			}
 			case GuiIconType::Search: {
-				// Magnifying glass
-				r.DrawLine(MakeVector2(cx - 4.0F * s, cy - 5.0F * s), MakeVector2(cx + 2.0F * s, cy - 5.0F * s), 1.5F * s);
-				r.DrawLine(MakeVector2(cx + 2.0F * s, cy - 5.0F * s), MakeVector2(cx + 2.0F * s, cy + 1.0F * s), 1.5F * s);
-				r.DrawLine(MakeVector2(cx + 2.0F * s, cy + 1.0F * s), MakeVector2(cx - 4.0F * s, cy + 1.0F * s), 1.5F * s);
-				r.DrawLine(MakeVector2(cx - 4.0F * s, cy + 1.0F * s), MakeVector2(cx - 4.0F * s, cy - 5.0F * s), 1.5F * s);
-				r.DrawLine(MakeVector2(cx + 1.5F * s, cy + 1.0F * s), MakeVector2(cx + 5.5F * s, cy + 5.0F * s), 2.0F * s);
+				// Sleek circular magnifying glass with reflection glint & angled grip
+				float rad = 3.8F * s;
+				float ox = cx - 1.2F * s;
+				float oy = cy - 1.2F * s;
+
+				// 12-segment smooth circular lens rim
+				for (int i = 0; i < 12; ++i) {
+					float a1 = static_cast<float>(i) * (kTwoPi / 12.0F);
+					float a2 = static_cast<float>(i + 1) * (kTwoPi / 12.0F);
+					Vector2 p1 = MakeVector2(ox + rad * cosf(a1), oy + rad * sinf(a1));
+					Vector2 p2 = MakeVector2(ox + rad * cosf(a2), oy + rad * sinf(a2));
+					r.DrawLine(p1, p2, 1.8F * s);
+				}
+
+				// Lens reflection highlight glint
+				r.DrawLine(MakeVector2(ox - 2.4F * s, oy - 0.7F * s),
+				           MakeVector2(ox - 0.7F * s, oy - 2.4F * s), 1.2F * s);
+
+				// Angled handle (down-right at 45 degrees)
+				Vector2 hStart = MakeVector2(ox + rad * 0.707F, oy + rad * 0.707F);
+				Vector2 hEnd = MakeVector2(ox + rad * 0.707F + 4.2F * s, oy + rad * 0.707F + 4.2F * s);
+				r.DrawLine(hStart, hEnd, 2.6F * s);
+				// Rounded handle grip end
+				r.DrawLine(hEnd - MakeVector2(0.4F * s, 0.4F * s), hEnd, 3.4F * s);
 				break;
 			}
 			case GuiIconType::Players: {

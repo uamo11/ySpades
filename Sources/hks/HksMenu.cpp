@@ -274,25 +274,17 @@ namespace spades {
 				layouter->AddHelp(_Tr("Preferences",
 				    "Cycles the player head outline border with an animated rainbow RGB chroma spectrum."));
 
-				layouter->AddHeading(_Tr("Preferences", "Filters & Environment"));
+				layouter->AddHeading(_Tr("Preferences", "Filters & Visibility"));
 
 				layouter->AddToggleField(_Tr("Preferences", "Enemies Only (No Teammates)"), "cg_espEnemiesOnly");
 				layouter->AddHelp(_Tr("Preferences",
 				    "Excludes teammates from all ESP features (boxes, names, tracers, and head outline borders)."));
 
-				layouter->AddToggleField(_Tr("Preferences", "Niebla del Mundo (Fog)"), "cg_fog");
-				layouter->AddHelp(_Tr("Preferences",
-				    "Activa o desactiva la niebla del juego. Desactivarla permite ver con total nitidez a través de todo el mapa."));
-
-				layouter->AddChoiceField(_Tr("Preferences", "ESP Visibilidad (Visible Only)"), "cg_espVisibleOnly",
-				    {_Tr("Preferences", "TODOS (WALLS)"), _Tr("Preferences", "SOLO VISIBLES"), _Tr("Preferences", "ATENUAR OCULTOS")},
+				layouter->AddChoiceField(_Tr("Preferences", "Visible-Only ESP"), "cg_espVisibleOnly",
+				    {_Tr("Preferences", "OFF"), _Tr("Preferences", "VISIBLE"), _Tr("Preferences", "DIM")},
 				    {0, 1, 2});
 				layouter->AddHelp(_Tr("Preferences",
-				    "Filtra el ESP segun visibilidad: muestra todos a traves de paredes, solo los que estan a la vista, o atenua/reduce el brillo de los enemigos ocultos tras muros."));
-
-				layouter->AddToggleField(_Tr("Preferences", "Contador FPS / Ping (Ms)"), "cg_showFpsMs");
-				layouter->AddHelp(_Tr("Preferences",
-				    "Muestra un badge minimalista y optimizado con tus FPS y Ping (Ms) en partida sin consumir rendimiento."));
+				    "Filters ESP by line of sight: OFF shows everyone through walls, VISIBLE hides occluded enemies, and DIM reduces their brightness."));
 
 				layouter->FinishLayout();
 				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Visuals"), nav.GetPointerOrNull(),
@@ -326,7 +318,7 @@ namespace spades {
 				    "Maximum field of view angle within which the aimbot will acquire enemy targets."));
 
 				layouter->AddSliderField(_Tr("Preferences", "Aimbot Smoothness"), "cg_aimbotSmooth",
-				                         0.0F, 1.0F, 0.05F, NumberFormatter(2, "x", "Instant Snap"));
+				                         0.0F, 1.0F, 0.05F, NumberFormatter(2, "x"));
 				layouter->AddHelp(_Tr("Preferences",
 				    "Smoothness of aim correction. 0.00 = Instant snap, higher values = smooth gentle assist."));
 
