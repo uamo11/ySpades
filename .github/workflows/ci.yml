@@ -1,0 +1,120 @@
+name: CI
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-windows-x86:
+    name: Build (Windows x86)
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Cache vcpkg and dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            vcpkg/installed
+            vcpkg/buildtrees
+          key: windows-x86-${{ hashFiles('vcpkg_x86-windows.txt', '.gitmodules') }}
+          restore-keys: windows-x86-
+
+      - name: Ensure openal-soft and vcpkg
+        run: |
+          if (-not (Test-Path openal-soft/CMakeLists.txt)) {
+            git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+          }
+          if (-not (Test-Path vcpkg/bootstrap-vcpkg.bat)) {
+            git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          }
+
+      - name: Bootstrap vcpkg
+        run: vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Install dependencies
+        run: vcpkg\vcpkg install @vcpkg_x86-windows.txt
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B "${{ runner.workspace }}\zerospades.mk" `
+            -A Win32 `
+            -D CMAKE_BUILD_TYPE=Release `
+            -D CMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+            -D VCPKG_TARGET_TRIPLET=x86-windows-static `
+            -D CMAKE_CXX_STANDARD=17
+
+      - name: Build application
+        run: cmake --build "${{ runner.workspace }}\zerospades.mk" --config Release --parallel 8
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: zerospades-windows-x86
+          path: |
+            ${{ runner.workspace }}\zerospades.mk\bin\Release
+            !${{ runner.workspace }}\**\*.lib
+            !${{ runner.workspace }}\**\*.exp
+            !${{ runner.workspace }}\**\*.pdb
+          if-no-files-found: warn
+
+  build-windows-x64:
+    name: Build (Windows x64)
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Cache vcpkg and dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            vcpkg/installed
+            vcpkg/buildtrees
+          key: windows-x64-${{ hashFiles('vcpkg_x86-windows.txt', '.gitmodules') }}
+          restore-keys: windows-x64-
+
+      - name: Ensure openal-soft and vcpkg
+        run: |
+          if (-not (Test-Path openal-soft/CMakeLists.txt)) {
+            git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+          }
+          if (-not (Test-Path vcpkg/bootstrap-vcpkg.bat)) {
+            git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          }
+
+      - name: Bootstrap vcpkg
+        run: vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Install dependencies
+        run: |
+          (Get-Content vcpkg_x86-windows.txt) -replace 'x86-windows-static', 'x64-windows-static' | Set-Content vcpkg_x64-windows.txt
+          vcpkg\vcpkg install @vcpkg_x64-windows.txt
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B "${{ runner.workspace }}\zerospades.mk" `
+            -A x64 `
+            -D CMAKE_BUILD_TYPE=Release `
+            -D CMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+            -D VCPKG_TARGET_TRIPLET=x64-windows-static `
+            -D CMAKE_CXX_STANDARD=17
+
+      - name: Build application
+        run: cmake --build "${{ runner.workspace }}\zerospades.mk" --config Release --parallel 8
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: zerospades-windows-x64
+          path: |
+            ${{ runner.workspace }}\zerospades.mk\bin\Release
+            !${{ runner.workspace }}\**\*.lib
+            !${{ runner.workspace }}\**\*.exp
+            !${{ runner.workspace }}\**\*.pdb
+          if-no-files-found: warn

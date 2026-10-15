@@ -1,0 +1,3307 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: zerospades\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: Turkish\n"
+"Language: tr_TR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.9\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#: Sources/Client/Client.cpp:1027
+msgctxt "Client"
+msgid "Map saved: {0}"
+msgstr "Harita kaydedildi: {0}"
+
+#: Sources/Client/Client.cpp:1031 Sources/Client/Client.cpp:1036
+msgctxt "Client"
+msgid "Saving map failed: "
+msgstr "Harita kaydedilemedi: "
+
+#: Sources/Client/Client.cpp:1065
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:211
+msgctxt "Client"
+msgid "Global"
+msgstr "Genel"
+
+#: Sources/Client/Client.cpp:1065
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:220
+msgctxt "Client"
+msgid "Team"
+msgstr "Takım"
+
+#: Sources/Client/Client.cpp:1068 Sources/Client/Client_NetHandler.cpp:405
+#: Sources/Client/LimboView.cpp:67
+msgctxt "Client"
+msgid "Spectator"
+msgstr "Seyirci"
+
+#: Sources/Client/Client.cpp:1075
+msgctxt "Client"
+msgid "(DEAD)"
+msgstr "(ÖLÜ)"
+
+#: Sources/Client/Client.cpp:1077
+msgctxt "Client"
+msgid "(SPEC)"
+msgstr "(SPEC)"
+
+#: Sources/Client/Client.cpp:1085 Sources/Client/Client.cpp:1112
+msgctxt "Client"
+msgid "[Global]"
+msgstr "[Genel]"
+
+#: Sources/Client/Client.cpp:1177
+msgctxt "Client"
+msgid "[PM] "
+msgstr "[ÖM] "
+
+#: Sources/Client/Client_Draw.cpp:144
+msgctxt "Client"
+msgid "Unbound"
+msgstr "Atanmamış"
+
+#: Sources/Client/Client_Draw.cpp:193
+msgctxt "Client"
+msgid "Sceneshot saved: {0}"
+msgstr "Sceneshot kaydedildi: {0}"
+
+#: Sources/Client/Client_Draw.cpp:194
+msgctxt "Client"
+msgid "Screenshot saved: {0}"
+msgstr "Screenshot kaydedildi: {0}"
+
+#: Sources/Client/Client_Draw.cpp:199 Sources/Client/Client_Draw.cpp:204
+msgctxt "Client"
+msgid "Screenshot failed: "
+msgstr "Screenshot alınamadı: "
+
+#: Sources/Client/Client_Draw.cpp:269
+msgctxt "Client"
+msgid "NOW LOADING"
+msgstr "YÜKLENİYOR"
+
+#: Sources/Client/Client_Draw.cpp:1061
+msgctxt "Client"
+msgid "[{0}] Grab color"
+msgstr "[{0}] Renk al"
+
+#: Sources/Client/Client_Draw.cpp:1062
+msgctxt "Client"
+msgid "[{0}/{1}] Navigate up/down"
+msgstr "[{0}/{1}] Yukarı/aşağı gezin"
+
+#: Sources/Client/Client_Draw.cpp:1064
+msgctxt "Client"
+msgid "[{0}/{1}] Navigate left/right"
+msgstr "[{0}/{1}] Sola/sağa gezin"
+
+#: Sources/Client/Client_Draw.cpp:1066
+msgctxt "Client"
+msgid "[{0}] Toggle extended palette"
+msgstr "[{0}] Genişletilmiş paleti aç/kapat"
+
+#: Sources/Client/Client_Draw.cpp:1074
+msgctxt "Client"
+msgid "#{0} / RGB({1}, {2}, {3})"
+msgstr "#{0} / RGB({1}, {2}, {3})"
+
+#: Sources/Client/Client_Draw.cpp:1125
+msgctxt "Client"
+msgid "Accuracy: {0}%"
+msgstr "İsabet oranı: {0}%"
+
+#: Sources/Client/Client_Draw.cpp:1129
+msgctxt "Client"
+msgid "Kill/Death Ratio: {0}"
+msgstr "Öldürme/Ölüm oranı: {0}"
+
+#: Sources/Client/Client_Draw.cpp:1130
+msgctxt "Client"
+msgid "Kill Streak: {0}, Best: {1}"
+msgstr "Öldürme serisi: {0}, En iyi: {1}"
+
+#: Sources/Client/Client_Draw.cpp:1131
+msgctxt "Client"
+msgid "Melee Kills: {0}"
+msgstr "Yakın dövüş öldürmeleri: {0}"
+
+#: Sources/Client/Client_Draw.cpp:1132
+msgctxt "Client"
+msgid "Grenade Kills: {0}"
+msgstr "El bombası öldürmeleri: {0}"
+
+#: Sources/Client/Client_Draw.cpp:1135
+msgctxt "Client"
+msgid "Blocks Placed: {0}"
+msgstr "Yerleştirilen bloklar: {0}"
+
+#: Sources/Client/Client_Draw.cpp:1469
+msgctxt "Client"
+msgid "Reloading"
+msgstr "Yeniden yükleniyor"
+
+#: Sources/Client/Client_Draw.cpp:1471
+msgctxt "Client"
+msgid "Press [{0}] to Reload"
+msgstr "Yeniden yüklemek için [{0}] bas"
+
+#: Sources/Client/Client_Draw.cpp:1619
+msgctxt "Client"
+msgid "You will respawn in: {0}"
+msgstr "Yeniden doğacaksın: {0}"
+
+#: Sources/Client/Client_Draw.cpp:1620
+msgctxt "Client"
+msgid "Waiting for respawn"
+msgstr "Yeniden doğuş bekleniyor"
+
+#: Sources/Client/Client_Draw.cpp:1698
+msgctxt "Client"
+msgid "Following {0} [#{1}]"
+msgstr "{0} takip ediliyor [#{1}]"
+
+#: Sources/Client/Client_Draw.cpp:1703
+msgctxt "Client"
+msgid "Respawning in: {0}"
+msgstr "Yeniden doğuş: {0}"
+
+#: Sources/Client/Client_Draw.cpp:1708
+msgctxt "Client"
+msgid "[{0}] Cycle camera mode"
+msgstr "[{0}] Kamera modunu değiştir"
+
+#: Sources/Client/Client_Draw.cpp:1709
+msgctxt "Client"
+msgid "[{0}/{1}] Next/Prev player"
+msgstr "[{0}/{1}] Sonraki/önceki oyuncu"
+
+#: Sources/Client/Client_Draw.cpp:1712
+msgctxt "Client"
+msgid "[{0}] Unfollow"
+msgstr "[{0}] Takibi bırak"
+
+#: Sources/Client/Client_Draw.cpp:1715
+msgctxt "Client"
+msgid "[{0}/{1}] Follow a player"
+msgstr "[{0}/{1}] Bir oyuncu takip et"
+
+#: Sources/Client/Client_Draw.cpp:1720
+msgctxt "Client"
+msgid "[{0}/{1}] Go up/down"
+msgstr "[{0}/{1}] Yukarı/aşağı git"
+
+#: Sources/Client/Client_Draw.cpp:1722
+msgctxt "Client"
+msgid "[{0}] Hold to Zoom"
+msgstr "[{0}] Yakınlaştırmak için basılı tut"
+
+#: Sources/Client/Client_Draw.cpp:1726
+msgctxt "Client"
+msgid "[{0}] Toggle player names"
+msgstr "[{0}] Oyuncu adlarını göster/gizle"
+
+#: Sources/Client/Client_Draw.cpp:1729
+msgctxt "Client"
+msgid "[{0}] Toggle ESP"
+msgstr "[{0}] ESP'yi aç/kapat"
+
+#: Sources/Client/Client_Draw.cpp:1737
+msgctxt "Client"
+msgid "[{0}] Resume"
+msgstr "[{0}] Devam et"
+
+#: Sources/Client/Client_Draw.cpp:1738
+msgctxt "Client"
+msgid "[{0}] Pause"
+msgstr "[{0}] Duraklat"
+
+#: Sources/Client/Client_Draw.cpp:1739
+msgctxt "Client"
+msgid "[{0}/{1}] Seek +/-5s"
+msgstr "[{0}/{1}] +/-5s ileri/geri al"
+
+#: Sources/Client/Client_Draw.cpp:1744
+msgctxt "Client"
+msgid "[{0}/{1}] Speed: {2}x"
+msgstr "[{0}/{1}] Hız: {2}x"
+
+#: Sources/Client/Client_Draw.cpp:1746
+msgctxt "Client"
+msgid "[{0}] Toggle Demo HUD"
+msgstr "[{0}] Demo HUD'u aç/kapat"
+
+#: Sources/Client/Client_Draw.cpp:1748
+msgctxt "Client"
+msgid "[{0}] Select Team/Weapon"
+msgstr "[{0}] Takım/silah seç"
+
+#: Sources/Client/Client_Input.cpp:398
+msgctxt "Client"
+msgid "Volume: {0}%"
+msgstr "Ses seviyesi: {0}%"
+
+#: Sources/Client/Client_Input.cpp:647 Sources/Client/Client_Input.cpp:979
+msgctxt "Client"
+msgid "Press [{0}] to enable HUD"
+msgstr "HUD'u etkinleştirmek için [{0}] bas"
+
+#: Sources/Client/Client_Input.cpp:789
+msgctxt "Client"
+msgid "Recording stopped"
+msgstr "Kayıt durduruldu"
+
+#: Sources/Client/Client_Input.cpp:800 Sources/Client/Client_NetHandler.cpp:160
+msgctxt "Client"
+msgid "Recording demo: {0}"
+msgstr "Demo kaydediliyor: {0}"
+
+#: Sources/Client/Client_Input.cpp:802
+msgctxt "Client"
+msgid "Failed to start demo recording"
+msgstr "Demo kaydı başlatılamadı"
+
+#: Sources/Client/Client_Input.cpp:904
+msgctxt "Client"
+msgid "Out of Blocks"
+msgstr "Blok bitti"
+
+#: Sources/Client/Client_Input.cpp:911
+msgctxt "Client"
+msgid "Out of Ammo"
+msgstr "Mermi bitti"
+
+#: Sources/Client/Client_Input.cpp:918
+msgctxt "Client"
+msgid "Out of Grenades"
+msgstr "El bombası bitti"
+
+#: Sources/Client/Client_Input.cpp:1017
+msgctxt "Client"
+msgid "zerovl {0}"
+msgstr "zerovl {0}"
+
+#: Sources/Client/Client_NetHandler.cpp:142
+msgctxt "Client"
+msgid "Welcome to the server, {0}!"
+msgstr "Sunucuya hoş geldin, {0}!"
+
+#: Sources/Client/Client_NetHandler.cpp:152
+msgctxt "Client"
+msgid "You are connected with {0} ({2}) on {1}"
+msgstr "{1} üzerinde {0} ({2}) ile bağlandın"
+
+#: Sources/Client/Client_NetHandler.cpp:180
+msgctxt "Client"
+msgid "{0} captured a Neutral Territory"
+msgstr "{0} tarafsız bir bölgeyi ele geçirdi"
+
+#: Sources/Client/Client_NetHandler.cpp:182
+msgctxt "Client"
+msgid "{0} captured {1}'s Territory"
+msgstr "{0}, {1}'in bölgesini ele geçirdi"
+
+#: Sources/Client/Client_NetHandler.cpp:191
+msgctxt "Client"
+msgid "{0} captured a neutral territory"
+msgstr "{0} tarafsız bir bölgeyi ele geçirdi"
+
+#: Sources/Client/Client_NetHandler.cpp:194
+msgctxt "Client"
+msgid "{0} captured {1}'s territory"
+msgstr "{0}, {1}'in bölgesini ele geçirdi"
+
+#: Sources/Client/Client_NetHandler.cpp:216
+msgctxt "Client"
+msgid "{0} captured {1}'s Intel"
+msgstr "{0}, {1}'in istihbaratını ele geçirdi"
+
+#: Sources/Client/Client_NetHandler.cpp:220
+msgctxt "Client"
+msgid "You captured {0}'s Intel"
+msgstr "{0}'in istihbaratını ele geçirdin"
+
+#: Sources/Client/Client_NetHandler.cpp:225
+msgctxt "Client"
+msgid "{0} captured {1}'s intel"
+msgstr "{0}, {1}'in istihbaratını ele geçirdi"
+
+#: Sources/Client/Client_NetHandler.cpp:248
+msgctxt "Client"
+msgid "{0} picked up {1}'s Intel"
+msgstr "{0}, {1}'in istihbaratını aldı"
+
+#: Sources/Client/Client_NetHandler.cpp:252
+msgctxt "Client"
+msgid "You picked up {0}'s Intel"
+msgstr "{0}'in istihbaratını aldın"
+
+#: Sources/Client/Client_NetHandler.cpp:257
+msgctxt "Client"
+msgid "{0} picked up {1}'s intel"
+msgstr "{0}, {1}'in istihbaratını aldı"
+
+#: Sources/Client/Client_NetHandler.cpp:278
+msgctxt "Client"
+msgid "{0} dropped {1}'s Intel"
+msgstr "{0}, {1}'in istihbaratını bıraktı"
+
+#: Sources/Client/Client_NetHandler.cpp:282
+msgctxt "Client"
+msgid "You dropped {0}'s Intel"
+msgstr "{0}'in istihbaratını bıraktın"
+
+#: Sources/Client/Client_NetHandler.cpp:287
+msgctxt "Client"
+msgid "{0} dropped {1}'s intel"
+msgstr "{0}, {1}'in istihbaratını bıraktı"
+
+#: Sources/Client/Client_NetHandler.cpp:375
+#: Sources/Client/Client_NetHandler.cpp:383
+msgctxt "Client"
+msgid "Player {0} has left"
+msgstr "{0} oyunu terk etti"
+
+#: Sources/Client/Client_NetHandler.cpp:377
+#: Sources/Client/Client_NetHandler.cpp:385
+msgctxt "Client"
+msgid " (ragequit)"
+msgstr " (sinirle çıktı)"
+
+#: Sources/Client/Client_NetHandler.cpp:409
+msgctxt "Client"
+msgid "You are now a spectator"
+msgstr "Artık seyircisin"
+
+#: Sources/Client/Client_NetHandler.cpp:410
+msgctxt "Client"
+msgid "You joined {0} team"
+msgstr "{0} takımına katıldın"
+
+#: Sources/Client/Client_NetHandler.cpp:416
+#: Sources/Client/Client_NetHandler.cpp:422
+msgctxt "Client"
+msgid "{0} joined {1} team"
+msgstr "{0}, {1} takımına katıldı"
+
+#: Sources/Client/Client_NetHandler.cpp:443
+msgctxt "Client"
+msgid "{0} Wins!"
+msgstr "{0} kazandı!"
+
+#: Sources/Client/Client_NetHandler.cpp:450
+msgctxt "Client"
+msgid "{0} wins!"
+msgstr "{0} kazandı!"
+
+#: Sources/Client/Client_Update.cpp:716
+msgctxt "Client"
+msgid "{0} block"
+msgid_plural "{0} blocks"
+msgstr[0] "{0} blok"
+msgstr[1] "{0} blok"
+
+#: Sources/Client/Client_Update.cpp:721
+msgctxt "Client"
+msgid "-- blocks"
+msgstr "-- blok"
+
+#: Sources/Client/Client_Update.cpp:1225 Sources/Client/LimboView.cpp:73
+msgctxt "Client"
+msgid "Rifle"
+msgstr "Tüfek"
+
+#: Sources/Client/Client_Update.cpp:1226 Sources/Client/LimboView.cpp:76
+msgctxt "Client"
+msgid "SMG"
+msgstr "SMG"
+
+#: Sources/Client/Client_Update.cpp:1227 Sources/Client/LimboView.cpp:79
+msgctxt "Client"
+msgid "Shotgun"
+msgstr "Pompalı tüfek"
+
+#: Sources/Client/Client_Update.cpp:1231
+msgctxt "Client"
+msgid "Fall"
+msgstr "Düşme"
+
+#: Sources/Client/Client_Update.cpp:1232
+msgctxt "Client"
+msgid "Melee"
+msgstr "Yakın dövüş"
+
+#: Sources/Client/Client_Update.cpp:1233
+msgctxt "Client"
+msgid "Grenade"
+msgstr "El bombası"
+
+#: Sources/Client/Client_Update.cpp:1234
+msgctxt "Client"
+msgid "Headshot"
+msgstr "Kafa vuruşu"
+
+#: Sources/Client/Client_Update.cpp:1235
+msgctxt "Client"
+msgid "Team Change"
+msgstr "Takım değişikliği"
+
+#: Sources/Client/Client_Update.cpp:1236
+msgctxt "Client"
+msgid "Weapon Change"
+msgstr "Silah değişikliği"
+
+#: Sources/Client/Client_Update.cpp:1286
+msgctxt "Client"
+msgid "Revenge!"
+msgstr "İntikam!"
+
+#: Sources/Client/Client_Update.cpp:1294
+msgctxt "Client"
+msgid "Dominating!"
+msgstr "Hükmediyorsun!"
+
+#: Sources/Client/Client_Update.cpp:1320
+msgctxt "Client"
+msgid "You were killed by {0}"
+msgstr "{0} tarafından öldürüldün"
+
+#: Sources/Client/Client_Update.cpp:1322
+msgctxt "Client"
+msgid "You have killed {0}"
+msgstr "{0}'i öldürdün"
+
+#: Sources/Client/Client_Update.cpp:1534
+msgctxt "Client"
+msgid "You hit {0} from: {1} blocks "
+msgstr "{1} blok mesafeden {0}'e vurdun "
+
+#: Sources/Client/Client_Update.cpp:1554
+msgctxt "Client"
+msgid "TORSO"
+msgstr "GÖVDE"
+
+#: Sources/Client/Client_Update.cpp:1555
+msgctxt "Client"
+msgid "ARMS"
+msgstr "KOLLAR"
+
+#: Sources/Client/Client_Update.cpp:1556
+msgctxt "Client"
+msgid "LEGS"
+msgstr "BACAKLAR"
+
+#: Sources/Client/Client_Update.cpp:1557
+msgctxt "Client"
+msgid "MELEE"
+msgstr "YAKN DÖVÜŞ"
+
+#: Sources/Client/Client_Update.cpp:1558
+msgctxt "Client"
+msgid "HEAD"
+msgstr "KAF"
+
+#: Sources/Client/Client_Update.cpp:1889
+msgctxt "Client"
+msgid "You are taking damage. Find solid ground!"
+msgstr "Hasar alıyorsun. Sağlam zemin bul!"
+
+#: Sources/Client/Client_Update.cpp:1907
+msgctxt "Client"
+msgid "Insufficient blocks."
+msgstr "Yeterli blok yok."
+
+#: Sources/Client/Client_Update.cpp:1910
+msgctxt "Client"
+msgid "You cannot place a block there."
+msgstr "Oraya blok koyamazsın."
+
+#: Sources/Client/DemoNetClient.cpp:102 Sources/Client/NetClient.cpp:276
+msgctxt "NetClient"
+msgid "Not connected"
+msgstr "Bağlı değil"
+
+#: Sources/Client/DemoNetClient.cpp:116
+msgctxt "NetClient"
+msgid "Failed to open demo file"
+msgstr "Demo dosyası açılamadı"
+
+#: Sources/Client/DemoNetClient.cpp:129
+msgctxt "NetClient"
+msgid "Loading demo"
+msgstr "Demo yükleniyor"
+
+#: Sources/Client/DemoNetClient.cpp:149
+msgctxt "NetClient"
+msgid "Demo finished - press [{0}] to replay"
+msgstr "Demo bitti - tekrar oynamak için [{0}] bas"
+
+#: Sources/Client/DemoNetClient.cpp:173
+msgctxt "NetClient"
+msgid "Loading map from demo"
+msgstr "Demoda harita yükleniyor"
+
+#: Sources/Client/DemoNetClient.cpp:186 Sources/Client/DemoNetClient.cpp:985
+#: Sources/Client/DemoNetClient.cpp:1005
+msgctxt "NetClient"
+msgid "Playing demo"
+msgstr "Demo oynatılıyor"
+
+#: Sources/Client/DemoNetClient.cpp:193
+msgctxt "NetClient"
+msgid "Error loading map"
+msgstr "Harita yükleme hatası"
+
+#: Sources/Client/DemoNetClient.cpp:905
+msgctxt "NetClient"
+msgid "Loading map from demo ({0}%)"
+msgstr "Demoda harita yükleniyor ({0}%)"
+
+#: Sources/Client/LimboView.cpp:84
+msgctxt "Client"
+msgid "Spawn"
+msgstr "Doğ"
+
+#: Sources/Client/LimboView.cpp:204
+msgctxt "Client"
+msgid "Select Team:"
+msgstr "Takım seç:"
+
+#: Sources/Client/LimboView.cpp:210
+msgctxt "Client"
+msgid "Select Weapon:"
+msgstr "Silah seç:"
+
+#: Sources/Client/LimboView.cpp:260
+#: Resources/Scripts/Gui/Client/ChatLogWindow.as:85
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:193
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:603
+#: Resources/Scripts/Gui/Preferences.as:116
+msgctxt "Client"
+msgid "[Esc]"
+msgstr "[Esc]"
+
+#: Sources/Client/LimboView.cpp:272
+msgctxt "Client"
+msgid "[1, 2, 3]"
+msgstr "[1, 2, 3]"
+
+#: Sources/Client/NetClient.cpp:265
+msgctxt "NetClient"
+msgid "Connecting to the server"
+msgstr "Sunucuya bağlanılıyor"
+
+#: Sources/Client/NetClient.cpp:398
+msgctxt "NetClient"
+msgid "Awaiting for state"
+msgstr "Durum bekleniyor"
+
+#: Sources/Client/NetClient.cpp:414 Sources/Client/NetClient.cpp:1122
+msgctxt "NetClient"
+msgid "Loading snapshot"
+msgstr "Anlık görüntü yükleniyor"
+
+#: Sources/Client/NetClient.cpp:460
+msgctxt "NetClient"
+msgid "Connected"
+msgstr "Bağlandı"
+
+#: Sources/Client/NetClient.cpp:469 Sources/Client/NetClient.cpp:474
+msgctxt "NetClient"
+msgid "Error"
+msgstr "Hata"
+
+#: Sources/Client/NetClient.cpp:554
+msgctxt "NetClient"
+msgid "You are banned from this server."
+msgstr "Bu sunucudan yasaklandın."
+
+#: Sources/Client/NetClient.cpp:555
+msgctxt "NetClient"
+msgid "Your network's public address has too many connections to this server."
+msgstr "Ağının genel adresi bu sunucuya çok fazla bağlantı yapıyor."
+
+#: Sources/Client/NetClient.cpp:556
+msgctxt "NetClient"
+msgid "Incompatible client protocol version."
+msgstr "Uyumsuz istemci protokolü sürümü."
+
+#: Sources/Client/NetClient.cpp:557
+msgctxt "NetClient"
+msgid "Server full"
+msgstr "Sunucu dolu"
+
+#: Sources/Client/NetClient.cpp:558
+msgctxt "NetClient"
+msgid "Server shutdown"
+msgstr "Sunucu kapatıldı"
+
+#: Sources/Client/NetClient.cpp:559
+msgctxt "NetClient"
+msgid "You were kicked from this server."
+msgstr "Bu sunucudan atıldın."
+
+#: Sources/Client/NetClient.cpp:560
+msgctxt "NetClient"
+msgid "Invalid name"
+msgstr "Geçersiz isim"
+
+#: Sources/Client/NetClient.cpp:561
+msgctxt "NetClient"
+msgid "Unknown Reason"
+msgstr "Bilinmeyen neden"
+
+#: Sources/Client/NetClient.cpp:1785
+msgctxt "NetClient"
+msgid "{0} second remaining"
+msgid_plural "{0} seconds remaining"
+msgstr[0] "{0} saniye kaldı"
+msgstr[1] "{0} saniye kaldı"
+
+#: Sources/Client/NetClient.cpp:1788
+msgctxt "NetClient"
+msgid "{0} minute remaining"
+msgid_plural "{0} minutes remaining"
+msgstr[0] "{0} dakika kaldı"
+msgstr[1] "{0} dakika kaldı"
+
+#: Sources/Client/PieMenuView.cpp:194 Sources/Client/PieMenuView.cpp:202
+msgctxt "Client"
+msgid "Affirmative"
+msgstr "Onaylandı"
+
+#: Sources/Client/PieMenuView.cpp:195
+msgctxt "Client"
+msgid "Behind Us!"
+msgstr "Arkamızda!"
+
+#: Sources/Client/PieMenuView.cpp:196
+msgctxt "Client"
+msgid "Spawnkiller!"
+msgstr "Spawnkiller!"
+
+#: Sources/Client/PieMenuView.cpp:197 Sources/Client/PieMenuView.cpp:205
+msgctxt "Client"
+msgid "Negative"
+msgstr "Olumsuz"
+
+#: Sources/Client/PieMenuView.cpp:198
+msgctxt "Client"
+msgid "Help Me Build"
+msgstr "İnşa etmeme yardım et"
+
+#: Sources/Client/PieMenuView.cpp:199
+msgctxt "Client"
+msgid "Tear It Down!"
+msgstr "Yıkın!"
+
+#: Sources/Client/PieMenuView.cpp:203
+msgctxt "Client"
+msgid "Behind You"
+msgstr "Arkanızda"
+
+#: Sources/Client/PieMenuView.cpp:204
+msgctxt "Client"
+msgid "Cover Me"
+msgstr "Beni koru"
+
+#: Sources/Client/PieMenuView.cpp:206
+msgctxt "Client"
+msgid "Help Me"
+msgstr "Yardım et"
+
+#: Sources/Client/PieMenuView.cpp:207
+msgctxt "Client"
+msgid "Thank You"
+msgstr "Teşekkürler"
+
+#: Sources/Client/ScoreboardView.cpp:61 Sources/Client/ScoreboardView.cpp:418
+msgctxt "Client"
+msgid "Spectator{1}"
+msgid_plural "Spectators{1}"
+msgstr[0] "Seyirci{1}"
+msgstr[1] "Seyirciler{1}"
+
+#: Sources/Client/TCProgressView.cpp:159
+msgctxt "Client"
+msgid "Neutral Territory"
+msgstr "Tarafsız bölge"
+
+#: Sources/Client/TCProgressView.cpp:162
+msgctxt "Client"
+msgid "{0}'s Territory"
+msgstr "{0}'in bölgesi"
+
+#: Sources/Gui/Main.cpp:960
+msgctxt "Main"
+msgid "Localization System Loaded"
+msgstr "Yerelleştirme sistemi yüklendi"
+
+#: Sources/Gui/Main.cpp:1038 Sources/Gui/Runner.cpp:56
+msgctxt "Main"
+msgid ""
+msgid ""
+"A serious error caused ZeroSpades to stop working:\n"
+"\n"
+"{0}\n"
+"\n"
+"See SystemMessages.log for more details."
+msgstr ""
+
+#: Sources/Gui/Main.cpp:1046 Sources/Gui/Runner.cpp:62
+msgctxt "Main"
+msgid "ZeroSpades Fatal Error"
+msgstr "ZeroSpades Kritik Hata"
+
+#: Sources/Gui/MainScreen.cpp:229
+msgctxt "MainScreen"
+msgid "NOW LOADING"
+msgstr "YÜKLENİYOR"
+
+#: Sources/Gui/ModsScreenHelper.cpp:304
+msgctxt "ModsScreenHelper"
+msgid "Download '{0}': {1}"
+msgstr "'{0}' indiriliyor: {1}"
+
+#: Sources/Gui/ModsScreenHelper.cpp:308
+msgctxt "ModsScreenHelper"
+msgid "Rename '{0}' failed"
+msgstr "'{0}' yeniden adlandırılamadı"
+
+#: Sources/Gui/ModsScreenHelper.cpp:329 Sources/Gui/ModsScreenHelper.cpp:359
+msgctxt "ModsScreenHelper"
+msgid "List '{0}': {1}"
+msgstr "Liste '{0}': {1}"
+
+#: Sources/Gui/ModsScreenHelper.cpp:335
+msgctxt "ModsScreenHelper"
+msgid "Index parse failed (expected JSON array)"
+msgstr "Dizin ayrıştırma başarısız (JSON dizisi bekleniyordu)"
+
+#: Resources/Scripts/Gui/Client/ChatLogWindow.as:84
+msgctxt "Client"
+msgid "Close"
+msgstr "Kapat"
+
+#: Resources/Scripts/Gui/Client/ChatLogWindow.as:93
+msgctxt "Client"
+msgid "Say Global"
+msgstr "Genel mesaj"
+
+#: Resources/Scripts/Gui/Client/ChatLogWindow.as:102
+msgctxt "Client"
+msgid "Say Team"
+msgstr "Takım mesajı"
+
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:183
+msgctxt "Client"
+msgid "Send"
+msgstr "Gönder"
+
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:184
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:274
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:444
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:58
+msgctxt "Client"
+msgid "[Enter]"
+msgstr "[Enter]"
+
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:192
+msgctxt "Client"
+msgid "Cancel"
+msgstr "İptal"
+
+#: Resources/Scripts/Gui/Client/ChatSayWindow.as:201
+msgctxt "Client"
+msgid "Chat Text"
+msgstr "Sohbet metni"
+
+#: Resources/Scripts/Gui/Client/Menu.as:52
+msgctxt "Client"
+msgid "Back to Game"
+msgstr "Oyuna dön"
+
+#: Resources/Scripts/Gui/Client/Menu.as:59
+msgctxt "Client"
+msgid "Chat Log"
+msgstr "Sohbet günlüğü"
+
+#: Resources/Scripts/Gui/Client/Menu.as:66
+msgctxt "Client"
+msgid "Setup"
+msgstr "Ayarlar"
+
+#: Resources/Scripts/Gui/Client/Menu.as:74
+msgctxt "Client"
+msgid "Exit Demo"
+msgstr "Demodan çık"
+
+#: Resources/Scripts/Gui/Client/Menu.as:75
+msgctxt "Client"
+msgid "Disconnect"
+msgstr "Bağlantıyı kes"
+
+#: Resources/Scripts/Gui/Console/ConsoleWindow.as:59
+msgctxt "Console"
+msgid "Command"
+msgstr "Komut"
+
+#: Resources/Scripts/Gui/MainScreen/CreateProfileScreen.as:53
+msgctxt "CreateProfileScreen"
+msgid "OK"
+msgstr "Tamam"
+
+#: Resources/Scripts/Gui/MainScreen/CreateProfileScreen.as:63
+msgctxt "CreateProfileScreen"
+msgid "Decide later"
+msgstr "Sonra karar ver"
+
+#: Resources/Scripts/Gui/MainScreen/CreateProfileScreen.as:70
+msgctxt "CreateProfileScreen"
+msgid "Welcome to ZeroSpades"
+msgstr "ZeroSpades'e hoş geldin"
+
+#: Resources/Scripts/Gui/MainScreen/CreateProfileScreen.as:78
+msgctxt "CreateProfileScreen"
+msgid "Choose a player name:"
+msgstr "Oyuncu adı seç:"
+
+#: Resources/Scripts/Gui/MainScreen/CreateProfileScreen.as:86
+msgctxt "CreateProfileScreen"
+msgid "Player name"
+msgstr "Oyuncu adı"
+
+#: Resources/Scripts/Gui/MainScreen/CreateProfileScreen.as:95
+msgctxt "CreateProfileScreen"
+msgid "You can change it later in the Setup dialog."
+msgstr "Bunu daha sonra Ayarlar iletişim kutusunda değiştirebilirsin."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:92
+msgctxt "MainScreen"
+msgid "Rename Demo"
+msgstr "Demoyu yeniden adlandır"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:106
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:436
+msgctxt "MainScreen"
+msgid "Rename"
+msgstr "Yeniden adlandır"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:113
+msgctxt "MainScreen"
+msgid "Cancel"
+msgstr "İptal"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:273
+msgctxt "MainScreen"
+msgid "Connect"
+msgstr "Bağlan"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:282
+msgctxt "MainScreen"
+msgid "Quick Connect"
+msgstr "Hızlı bağlan"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:296
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:386
+msgctxt "MainScreen"
+msgid "0.75"
+msgstr "0.75"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:305
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:394
+msgctxt "MainScreen"
+msgid "0.76"
+msgstr "0.76"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:319
+msgctxt "MainScreen"
+msgid "Server Name"
+msgstr "Sunucu adı"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:326
+msgctxt "MainScreen"
+msgid "Slots"
+msgstr "Yer"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:334
+msgctxt "MainScreen"
+msgid "Map Name"
+msgstr "Harita adı"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:341
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:472
+msgctxt "MainScreen"
+msgid "Game Mode"
+msgstr "Oyun modu"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:349
+msgctxt "MainScreen"
+msgid "Ver."
+msgstr "Sür."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:357
+msgctxt "MainScreen"
+msgid "Ping"
+msgstr "Ping"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:378
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:412
+msgctxt "MainScreen"
+msgid "Filter"
+msgstr "Filtre"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:403
+msgctxt "MainScreen"
+msgid "Not Full"
+msgstr "Dolu değil"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:422
+msgctxt "MainScreen"
+msgid "Select a demo"
+msgstr "Bir demo seç"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:429
+msgctxt "MainScreen"
+msgid "Delete"
+msgstr "Sil"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:443
+msgctxt "MainScreen"
+msgid "Play"
+msgstr "Oynat"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:458
+msgctxt "MainScreen"
+msgid "Server"
+msgstr "Sunucu"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:465
+msgctxt "MainScreen"
+msgid "Map"
+msgstr "Harita"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:479
+msgctxt "MainScreen"
+msgid "Timestamp"
+msgstr "Zaman damgası"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:486
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:563
+msgctxt "MainScreen"
+msgid "Size"
+msgstr "Boyut"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:499
+msgctxt "MainScreen"
+msgid "Download official mods..."
+msgstr "Resmi modları indir..."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:506
+msgctxt "MainScreen"
+msgid "Disable all"
+msgstr "Tümünü devre dışı bırak"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:513
+msgctxt "MainScreen"
+msgid "Apply changes"
+msgstr "Değişiklikleri uygula"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:535
+msgctxt "MainScreen"
+msgid "Status"
+msgstr "Durum"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:542
+msgctxt "MainScreen"
+msgid "Apply Order"
+msgstr "Sırayı uygula"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:549
+msgctxt "MainScreen"
+msgid "Mod"
+msgstr "Mod"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:556
+msgctxt "MainScreen"
+msgid "Paks"
+msgstr "Paks"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:582
+msgctxt "MainScreen"
+msgid "Servers"
+msgstr "Sunucular"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:583
+msgctxt "MainScreen"
+msgid "Demos"
+msgstr "Demolar"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:587
+msgctxt "MainScreen"
+msgid "Mods"
+msgstr "Modlar"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:602
+msgctxt "MainScreen"
+msgid "Quit"
+msgstr "Çık"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:610
+msgctxt "MainScreen"
+msgid "Credits"
+msgstr "Yapımcılar"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:617
+msgctxt "MainScreen"
+msgid "Setup"
+msgstr "Ayarlar"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:727
+msgctxt "MainScreen"
+msgid "Fetching mod list..."
+msgstr "Mod listesi alınıyor..."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:746
+msgctxt "MainScreen"
+msgid "Press 'Apply changes' to restart and apply your mods."
+msgstr "'Değişiklikleri uygula'ya bas, yeniden başlat ve modlarını uygula."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:756
+msgctxt "MainScreen"
+msgid "Download the official ZeroSpades mod pack?"
+msgstr "Resmi ZeroSpades mod paketi indirilsin mi?"
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:757
+msgctxt "MainScreen"
+msgid "These are mods reviewed and hosted by the ZeroSpades team."
+msgstr "Bunlar ZeroSpades ekibi tarafından incelenmiş ve barındırılan modlardır."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:758
+msgctxt "MainScreen"
+msgid "Source: "
+msgstr "Kaynak: "
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:759
+msgctxt "MainScreen"
+msgid "Files will be saved into your Mods/ folder, overwriting any existing copies."
+msgstr ""
+"Dosyalar Mods/ klasörüne kaydedilecek ve mevcut kopyaların üzerine "
+"yazılacak."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:785
+msgctxt "MainScreen"
+msgid "Disable all mods? This takes effect after a restart."
+msgstr ""
+"Tüm modlar devre dışı bırakılsın mı? Bu, yeniden başlatmadan sonra "
+"geçerli olur."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:856
+msgctxt "MainScreen"
+msgid "Are you sure you want to delete '{0}'?\nThis action cannot be undone."
+msgstr ""
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:891
+msgctxt "MainScreen"
+msgid "Failed to rename demo."
+msgstr "Demo yeniden adlandırılamadı."
+
+#: Resources/Scripts/Gui/MainScreen/MainMenu.as:1121
+msgctxt "MainScreen"
+msgid "You were disconnected from the server because of the following reason:\n\n{0}"
+msgstr ""
+
+#: Resources/Scripts/Gui/MainScreen/ServerList.as:223
+msgctxt "MainScreen"
+msgid "Fetching server list..."
+msgstr "Sunucu listesi alınıyor..."
+
+#: Resources/Scripts/Gui/MainScreen/ServerList.as:239
+msgctxt "MainScreen"
+msgid "Failed to fetch the server list."
+msgstr "Sunucu listesi alınamadı."
+
+#: Resources/Scripts/Gui/MessageBox.as:120
+#: Resources/Scripts/Gui/MessageBox.as:134
+msgctxt "MessageBox"
+msgid "OK"
+msgstr "Tamam"
+
+#: Resources/Scripts/Gui/MessageBox.as:134
+msgctxt "MessageBox"
+msgid "Cancel"
+msgstr "İptal"
+
+#: Resources/Scripts/Gui/Preferences.as:103
+msgctxt "Preferences"
+msgid "Game Options"
+msgstr "Oyun seçenekleri"
+
+#: Resources/Scripts/Gui/Preferences.as:106
+msgctxt "Preferences"
+msgid "Interface"
+msgstr "Arayüz"
+
+#: Resources/Scripts/Gui/Preferences.as:107
+msgctxt "Preferences"
+msgid "Graphics"
+msgstr "Grafik"
+
+#: Resources/Scripts/Gui/Preferences.as:108
+msgctxt "Preferences"
+msgid "Controls"
+msgstr "Kontroller"
+
+#: Resources/Scripts/Gui/Preferences.as:109
+#: Resources/Scripts/Gui/Preferences.as:1664
+#: Resources/Scripts/Gui/Preferences.as:1951
+msgctxt "Preferences"
+msgid "Misc"
+msgstr "Çeşitli"
+
+#: Resources/Scripts/Gui/Preferences.as:115
+msgctxt "Preferences"
+msgid "Back"
+msgstr "Geri"
+
+#: Resources/Scripts/Gui/Preferences.as:373
+msgctxt "Preferences"
+msgid "Horizontal Alignment"
+msgstr "Yatay hizalama"
+
+#: Resources/Scripts/Gui/Preferences.as:385
+msgctxt "Preferences"
+msgid "Vertical Alignment"
+msgstr "Dikey hizalama"
+
+#: Resources/Scripts/Gui/Preferences.as:397
+msgctxt "Preferences"
+msgid "OK"
+msgstr "Tamam"
+
+#: Resources/Scripts/Gui/Preferences.as:519
+msgctxt "Preferences"
+msgid "Left"
+msgstr "Sol"
+
+#: Resources/Scripts/Gui/Preferences.as:521
+msgctxt "Preferences"
+msgid "Center"
+msgstr "Orta"
+
+#: Resources/Scripts/Gui/Preferences.as:523
+msgctxt "Preferences"
+msgid "Right"
+msgstr "Sağ"
+
+#: Resources/Scripts/Gui/Preferences.as:536
+#: Resources/Scripts/Gui/Preferences.as:591
+#: Resources/Scripts/Gui/Preferences.as:1648
+#: Resources/Scripts/Gui/Preferences.as:1771
+msgctxt "Preferences"
+msgid "Default"
+msgstr "Varsayılan"
+
+#: Resources/Scripts/Gui/Preferences.as:538
+msgctxt "Preferences"
+msgid "Quake Pro"
+msgstr "Quake Pro"
+
+#: Resources/Scripts/Gui/Preferences.as:551
+msgctxt "Preferences"
+msgid "Bicubic"
+msgstr "Bikübik"
+
+#: Resources/Scripts/Gui/Preferences.as:553
+msgctxt "Preferences"
+msgid "Bilinear"
+msgstr "Bilineer"
+
+#: Resources/Scripts/Gui/Preferences.as:555
+msgctxt "Preferences"
+msgid "Nearest Neighbour"
+msgstr "En yakın komşu"
+
+#: Resources/Scripts/Gui/Preferences.as:568
+msgctxt "Preferences"
+msgid "Unlimited"
+msgstr "Sınırsız"
+
+#: Resources/Scripts/Gui/Preferences.as:602
+msgctxt "Preferences"
+msgid "Team Color"
+msgstr "Takım rengi"
+
+#: Resources/Scripts/Gui/Preferences.as:604
+msgctxt "Preferences"
+msgid "Light Blue"
+msgstr "Açık mavi"
+
+#: Resources/Scripts/Gui/Preferences.as:606
+#: Resources/Scripts/Gui/Preferences.as:637
+msgctxt "Preferences"
+msgid "Blue"
+msgstr "Mavi"
+
+#: Resources/Scripts/Gui/Preferences.as:608
+msgctxt "Preferences"
+msgid "Purple"
+msgstr "Mor"
+
+#: Resources/Scripts/Gui/Preferences.as:610
+#: Resources/Scripts/Gui/Preferences.as:633
+msgctxt "Preferences"
+msgid "Red"
+msgstr "Kırmızı"
+
+#: Resources/Scripts/Gui/Preferences.as:612
+msgctxt "Preferences"
+msgid "Orange"
+msgstr "Turuncu"
+
+#: Resources/Scripts/Gui/Preferences.as:614
+#: Resources/Scripts/Gui/Preferences.as:639
+msgctxt "Preferences"
+msgid "Yellow"
+msgstr "Sarı"
+
+#: Resources/Scripts/Gui/Preferences.as:616
+#: Resources/Scripts/Gui/Preferences.as:635
+msgctxt "Preferences"
+msgid "Green"
+msgstr "Yeşil"
+
+#: Resources/Scripts/Gui/Preferences.as:618
+msgctxt "Preferences"
+msgid "Aqua"
+msgstr "Aqua"
+
+#: Resources/Scripts/Gui/Preferences.as:620
+#: Resources/Scripts/Gui/Preferences.as:643
+msgctxt "Preferences"
+msgid "Pink"
+msgstr "Pembe"
+
+#: Resources/Scripts/Gui/Preferences.as:622
+#: Resources/Scripts/Gui/Preferences.as:645
+#: Resources/Scripts/Gui/Preferences.as:660
+#: Resources/Scripts/Gui/Preferences.as:1772
+msgctxt "Preferences"
+msgid "Custom"
+msgstr "Özel"
+
+#: Resources/Scripts/Gui/Preferences.as:641
+msgctxt "Preferences"
+msgid "Cyan"
+msgstr "Camgöbeği"
+
+#: Resources/Scripts/Gui/Preferences.as:656
+msgctxt "Preferences"
+msgid "Classic"
+msgstr "Klasik"
+
+#: Resources/Scripts/Gui/Preferences.as:658
+msgctxt "Preferences"
+msgid "Dot Sight"
+msgstr "Nokta nişangahı"
+
+#: Resources/Scripts/Gui/Preferences.as:662
+msgctxt "Preferences"
+msgid "Iron Sight"
+msgstr "Demir nişangah"
+
+#: Resources/Scripts/Gui/Preferences.as:801
+msgctxt "Preferences"
+msgid "Press Key to Bind or [Escape] to Cancel..."
+msgstr "Bağlamak için tuşa bas veya iptal için [Escape]..."
+
+#: Resources/Scripts/Gui/Preferences.as:812
+msgctxt "Preferences"
+msgid "Unbound"
+msgstr "Atanmamış"
+
+#: Resources/Scripts/Gui/Preferences.as:815
+msgctxt "Preferences"
+msgid "Left Mouse Button"
+msgstr "Sol fare tuşu"
+
+#: Resources/Scripts/Gui/Preferences.as:817
+msgctxt "Preferences"
+msgid "Right Mouse Button"
+msgstr "Sağ fare tuşu"
+
+#: Resources/Scripts/Gui/Preferences.as:819
+msgctxt "Preferences"
+msgid "Middle Mouse Button"
+msgstr "Orta fare tuşu"
+
+#: Resources/Scripts/Gui/Preferences.as:821
+msgctxt "Preferences"
+msgid "Mouse Button 4"
+msgstr "Fare tuşu 4"
+
+#: Resources/Scripts/Gui/Preferences.as:823
+msgctxt "Preferences"
+msgid "Mouse Button 5"
+msgstr "Fare tuşu 5"
+
+#: Resources/Scripts/Gui/Preferences.as:825
+msgctxt "Preferences"
+msgid "Escape"
+msgstr "Escape"
+
+#: Resources/Scripts/Gui/Preferences.as:827
+msgctxt "Preferences"
+msgid "Tab"
+msgstr "Sekme"
+
+#: Resources/Scripts/Gui/Preferences.as:829
+msgctxt "Preferences"
+msgid "Backspace"
+msgstr "Geri Al"
+
+#: Resources/Scripts/Gui/Preferences.as:831
+msgctxt "Preferences"
+msgid "Delete"
+msgstr "Delete"
+
+#: Resources/Scripts/Gui/Preferences.as:833
+msgctxt "Preferences"
+msgid "Enter"
+msgstr "Giriş"
+
+#: Resources/Scripts/Gui/Preferences.as:835
+msgctxt "Preferences"
+msgid "Space"
+msgstr "Boşluk tuşu"
+
+#: Resources/Scripts/Gui/Preferences.as:837
+msgctxt "Preferences"
+msgid "Control"
+msgstr "Control"
+
+#: Resources/Scripts/Gui/Preferences.as:839
+msgctxt "Preferences"
+msgid "Left Control"
+msgstr "Sol Control"
+
+#: Resources/Scripts/Gui/Preferences.as:841
+msgctxt "Preferences"
+msgid "Right Control"
+msgstr "Sağ Control"
+
+#: Resources/Scripts/Gui/Preferences.as:843
+msgctxt "Preferences"
+msgid "Shift"
+msgstr "Shift"
+
+#: Resources/Scripts/Gui/Preferences.as:845
+msgctxt "Preferences"
+msgid "Left Shift"
+msgstr "Sol Shift"
+
+#: Resources/Scripts/Gui/Preferences.as:847
+msgctxt "Preferences"
+msgid "Right Shift"
+msgstr "Sağ Shift"
+
+#: Resources/Scripts/Gui/Preferences.as:849
+msgctxt "Preferences"
+msgid "Left Alt"
+msgstr "Sol Alt"
+
+#: Resources/Scripts/Gui/Preferences.as:851
+msgctxt "Preferences"
+msgid "Right Alt"
+msgstr "Sağ Alt"
+
+#: Resources/Scripts/Gui/Preferences.as:853
+msgctxt "Preferences"
+msgid "Up Arrow"
+msgstr "Yukarı ok"
+
+#: Resources/Scripts/Gui/Preferences.as:855
+msgctxt "Preferences"
+msgid "Down Arrow"
+msgstr "Aşağı ok"
+
+#: Resources/Scripts/Gui/Preferences.as:857
+msgctxt "Preferences"
+msgid "Left Arrow"
+msgstr "Sol ok"
+
+#: Resources/Scripts/Gui/Preferences.as:859
+msgctxt "Preferences"
+msgid "Right Arrow"
+msgstr "Sağ ok"
+
+#: Resources/Scripts/Gui/Preferences.as:861
+msgctxt "Preferences"
+msgid "Page Up"
+msgstr "Sayfa Yukarı"
+
+#: Resources/Scripts/Gui/Preferences.as:863
+msgctxt "Preferences"
+msgid "Page Down"
+msgstr "Sayfa Aşağı"
+
+#: Resources/Scripts/Gui/Preferences.as:1114
+#: Resources/Scripts/Gui/Preferences.as:1278
+msgctxt "Preferences"
+msgid "No Preview Available."
+msgstr "Önizleme yok."
+
+#: Resources/Scripts/Gui/Preferences.as:1486
+#: Resources/Scripts/Gui/Preferences.as:1493
+#: Resources/Scripts/Gui/Preferences.as:1595
+#: Resources/Scripts/Gui/Preferences.as:1600
+#: Resources/Scripts/Gui/Preferences.as:1704
+msgctxt "Preferences"
+msgid "ON"
+msgstr "AÇIK"
+
+#: Resources/Scripts/Gui/Preferences.as:1487
+#: Resources/Scripts/Gui/Preferences.as:1495
+#: Resources/Scripts/Gui/Preferences.as:1579
+#: Resources/Scripts/Gui/Preferences.as:1590
+#: Resources/Scripts/Gui/Preferences.as:1597
+#: Resources/Scripts/Gui/Preferences.as:1602
+#: Resources/Scripts/Gui/Preferences.as:1610
+#: Resources/Scripts/Gui/Preferences.as:1615
+#: Resources/Scripts/Gui/Preferences.as:1703
+#: Resources/Scripts/Gui/Preferences.as:1723
+#: Resources/Scripts/Gui/Preferences.as:1728
+#: Resources/Scripts/Gui/Preferences.as:1758
+#: Resources/Scripts/Gui/Preferences.as:1770
+#: Resources/Scripts/Gui/Preferences.as:1812
+msgctxt "Preferences"
+msgid "OFF"
+msgstr "KAPALI"
+
+#: Resources/Scripts/Gui/Preferences.as:1494
+msgctxt "Preferences"
+msgid "REVERSED"
+msgstr "TERS"
+
+#: Resources/Scripts/Gui/Preferences.as:1519
+msgctxt "Preferences"
+msgid "Reset"
+msgstr "Sıfırla"
+
+#: Resources/Scripts/Gui/Preferences.as:1525
+msgctxt "Preferences"
+msgid "Randomize"
+msgstr "Rastgele"
+
+#: Resources/Scripts/Gui/Preferences.as:1568
+msgctxt "Preferences"
+msgid "Player Information"
+msgstr "Oyuncu bilgisi"
+
+#: Resources/Scripts/Gui/Preferences.as:1569
+msgctxt "Preferences"
+msgid "Player Name"
+msgstr "Oyuncu adı"
+
+#: Resources/Scripts/Gui/Preferences.as:1575
+msgctxt "Preferences"
+msgid "Gameplay"
+msgstr "Oynanış"
+
+#: Resources/Scripts/Gui/Preferences.as:1576
+msgctxt "Preferences"
+msgid "Aiming Animation"
+msgstr "Nişan alma animasyonu"
+
+#: Resources/Scripts/Gui/Preferences.as:1577
+msgctxt "Preferences"
+msgid "FAST"
+msgstr "HIZLI"
+
+#: Resources/Scripts/Gui/Preferences.as:1578
+#: Resources/Scripts/Gui/Preferences.as:1589
+#: Resources/Scripts/Gui/Preferences.as:1609
+#: Resources/Scripts/Gui/Preferences.as:1614
+#: Resources/Scripts/Gui/Preferences.as:1621
+#: Resources/Scripts/Gui/Preferences.as:1625
+#: Resources/Scripts/Gui/Preferences.as:1719
+msgctxt "Preferences"
+msgid "NORMAL"
+msgstr "NORMAL"
+
+#: Resources/Scripts/Gui/Preferences.as:1581
+msgctxt "Preferences"
+msgid "Full Aim Down Sight"
+msgstr "Tam nişan alma"
+
+#: Resources/Scripts/Gui/Preferences.as:1582
+msgctxt "Preferences"
+msgid "Classic Weapon Recoil"
+msgstr "Klasik silah geri tepisi"
+
+#: Resources/Scripts/Gui/Preferences.as:1583
+msgctxt "Preferences"
+msgid "Classic Sprinting"
+msgstr "Klasik koşu"
+
+#: Resources/Scripts/Gui/Preferences.as:1584
+msgctxt "Preferences"
+msgid "Classic Zoom"
+msgstr "Klasik zum"
+
+#: Resources/Scripts/Gui/Preferences.as:1586
+msgctxt "Preferences"
+msgid "Effects"
+msgstr "Efektler"
+
+#: Resources/Scripts/Gui/Preferences.as:1587
+msgctxt "Preferences"
+msgid "Blood"
+msgstr "Kan"
+
+#: Resources/Scripts/Gui/Preferences.as:1588
+msgctxt "Preferences"
+msgid "MARKS"
+msgstr "İZLER"
+
+#: Resources/Scripts/Gui/Preferences.as:1592
+msgctxt "Preferences"
+msgid "Ragdoll Corpses"
+msgstr "Ragdoll cesetleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1593
+msgctxt "Preferences"
+msgid "Enhanced Ragdoll Physics"
+msgstr "Gelişmiş ragdoll fiziği"
+
+#: Resources/Scripts/Gui/Preferences.as:1594
+msgctxt "Preferences"
+msgid "Bullet Tracers"
+msgstr "Mermi izleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1596
+#: Resources/Scripts/Gui/Preferences.as:1601
+msgctxt "Preferences"
+msgid "3rd Person"
+msgstr "3. şahıs"
+
+#: Resources/Scripts/Gui/Preferences.as:1599
+msgctxt "Preferences"
+msgid "Muzzle Flashes"
+msgstr "Namlu alevi"
+
+#: Resources/Scripts/Gui/Preferences.as:1604
+msgctxt "Preferences"
+msgid "Eject Bullet Casings"
+msgstr "Boş kovan fırlat"
+
+#: Resources/Scripts/Gui/Preferences.as:1605
+msgctxt "Preferences"
+msgid "Hurt Screen Effects"
+msgstr "Hasar ekran efektleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1606
+msgctxt "Preferences"
+msgid "Heal Screen Effects"
+msgstr "İyileşme ekran efektleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1607
+msgctxt "Preferences"
+msgid "Camera Shake"
+msgstr "Kamera sarsıntısı"
+
+#: Resources/Scripts/Gui/Preferences.as:1608
+#: Resources/Scripts/Gui/Preferences.as:1613
+msgctxt "Preferences"
+msgid "MORE"
+msgstr "DAHA FAZLA"
+
+#: Resources/Scripts/Gui/Preferences.as:1612
+msgctxt "Preferences"
+msgid "Particles"
+msgstr "Partiküller"
+
+#: Resources/Scripts/Gui/Preferences.as:1617
+msgctxt "Preferences"
+msgid "Water Splash"
+msgstr "Su sıçraması"
+
+#: Resources/Scripts/Gui/Preferences.as:1619
+msgctxt "Preferences"
+msgid "Feedbacks"
+msgstr "Geri bildirimler"
+
+#: Resources/Scripts/Gui/Preferences.as:1620
+msgctxt "Preferences"
+msgid "Center Messages"
+msgstr "Merkez mesajları"
+
+#: Resources/Scripts/Gui/Preferences.as:1622
+msgctxt "Preferences"
+msgid "LESS"
+msgstr "DAHA AZ"
+
+#: Resources/Scripts/Gui/Preferences.as:1624
+msgctxt "Preferences"
+msgid "Center Messages Size"
+msgstr "Merkez mesaj boyutu"
+
+#: Resources/Scripts/Gui/Preferences.as:1626
+msgctxt "Preferences"
+msgid "SMALL"
+msgstr "KÜÇÜK"
+
+#: Resources/Scripts/Gui/Preferences.as:1628
+msgctxt "Preferences"
+msgid "Ignore Chat Messages"
+msgstr "Sohbet mesajlarını yoksay"
+
+#: Resources/Scripts/Gui/Preferences.as:1629
+msgctxt "Preferences"
+msgid "Ignore Private Messages"
+msgstr "Özel mesajları yoksay"
+
+#: Resources/Scripts/Gui/Preferences.as:1630
+msgctxt "Preferences"
+msgid "Master Volume"
+msgstr "Ana ses seviyesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1632
+msgctxt "Preferences"
+msgid "Death Camera Volume"
+msgstr "Ölüm kamerası ses seviyesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1633
+msgctxt "Preferences"
+msgid "Respawn Beep Volume"
+msgstr "Yeniden doğuş sesi seviyesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1634
+msgctxt "Preferences"
+msgid "Hit Feedback Volume"
+msgstr "Vurma geri bildirim sesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1635
+msgctxt "Preferences"
+msgid "Headshot Feedback Volume"
+msgstr "Kafa vuruşu geri bildirim sesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1636
+msgctxt "Preferences"
+msgid "Chat Notify Sounds"
+msgstr "Sohbet bildirim sesleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1637
+msgctxt "Preferences"
+msgid "Show Alerts"
+msgstr "Uyarıları göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1638
+msgctxt "Preferences"
+msgid "Show Server Alerts"
+msgstr "Sunucu uyarılarını göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1639
+msgctxt "Preferences"
+msgid "Alert Sounds"
+msgstr "Uyarı sesleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1640
+msgctxt "Preferences"
+msgid "Hit Log"
+msgstr "Vurma günlüğü"
+
+#: Resources/Scripts/Gui/Preferences.as:1641
+msgctxt "Preferences"
+msgid "Hit Indicator"
+msgstr "Vurma göstergesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1643
+msgctxt "Preferences"
+msgid "Viewmodel"
+msgstr "Görünüm modeli"
+
+#: Resources/Scripts/Gui/Preferences.as:1644
+msgctxt "Preferences"
+msgid "Weapon Keychains"
+msgstr "Silah anahtarlıkları"
+
+#: Resources/Scripts/Gui/Preferences.as:1646
+msgctxt "Preferences"
+msgid "Viewmodel Position"
+msgstr "Görünüm modeli konumu"
+
+#: Resources/Scripts/Gui/Preferences.as:1649
+msgctxt "Preferences"
+msgid "Balanced"
+msgstr "Dengeli"
+
+#: Resources/Scripts/Gui/Preferences.as:1650
+msgctxt "Preferences"
+msgid "Minimal"
+msgstr "Minimal"
+
+#: Resources/Scripts/Gui/Preferences.as:1656
+msgctxt "Preferences"
+msgid "Viewmodel Alignment"
+msgstr "Görünüm modeli hizalaması"
+
+#: Resources/Scripts/Gui/Preferences.as:1658
+msgctxt "Preferences"
+msgid "Switch Viewmodel Handedness"
+msgstr "Görünüm modeli el tercihini değiştir"
+
+#: Resources/Scripts/Gui/Preferences.as:1659
+msgctxt "Preferences"
+msgid "Hide Player Arms"
+msgstr "Oyuncu kollarını gizle"
+
+#: Resources/Scripts/Gui/Preferences.as:1660
+msgctxt "Preferences"
+msgid "Hide Player Body"
+msgstr "Oyuncu gövdesini gizle"
+
+#: Resources/Scripts/Gui/Preferences.as:1661
+msgctxt "Preferences"
+msgid "Classic Player Model"
+msgstr "Klasik oyuncu modeli"
+
+#: Resources/Scripts/Gui/Preferences.as:1662
+msgctxt "Preferences"
+msgid "Classic Viewmodel"
+msgstr "Klasik görünüm modeli"
+
+#: Resources/Scripts/Gui/Preferences.as:1665
+msgctxt "Preferences"
+msgid "Field of View"
+msgstr "Görüş alanı"
+
+#: Resources/Scripts/Gui/Preferences.as:1667
+msgctxt "Preferences"
+msgid "Horizontal FOV"
+msgstr "Yatay FOV"
+
+#: Resources/Scripts/Gui/Preferences.as:1668
+msgctxt "Preferences"
+msgid "Environmental Audio"
+msgstr "Çevresel ses"
+
+#: Resources/Scripts/Gui/Preferences.as:1669
+msgctxt "Preferences"
+msgid "Skip dead players (death cam)"
+msgstr "Ölü oyuncuları atla (ölüm kamerası)"
+
+#: Resources/Scripts/Gui/Preferences.as:1670
+msgctxt "Preferences"
+msgid "Save Final Score Screenshot"
+msgstr "Son skor Screenshot'ını kaydet"
+
+#: Resources/Scripts/Gui/Preferences.as:1671
+msgctxt "Preferences"
+msgid "Debug Hit Detection"
+msgstr "Vurma tespitini hata ayıkla"
+
+#: Resources/Scripts/Gui/Preferences.as:1672
+msgctxt "Preferences"
+msgid "Hit Debugger Size"
+msgstr "Vurma hata ayıklayıcı boyutu"
+
+#: Resources/Scripts/Gui/Preferences.as:1674
+msgctxt "Preferences"
+msgid "Toggle Hit Debugger Zoom"
+msgstr "Vurma hata ayıklayıcı zum aç/kapat"
+
+#: Resources/Scripts/Gui/Preferences.as:1675
+msgctxt "Preferences"
+msgid "Hit Debugger Fade Time"
+msgstr "Vurma hata ayıklayıcı solma süresi"
+
+#: Resources/Scripts/Gui/Preferences.as:1677
+msgctxt "Preferences"
+msgid "Debug Weapon Spread"
+msgstr "Silah yayılımını hata ayıkla"
+
+#: Resources/Scripts/Gui/Preferences.as:1678
+msgctxt "Preferences"
+msgid "Debug Block Cursor"
+msgstr "Blok imlecini hata ayıkla"
+
+#: Resources/Scripts/Gui/Preferences.as:1679
+msgctxt "Preferences"
+msgid "Debug Players Hitbox"
+msgstr "Oyuncu vuruş kutularını hata ayıkla"
+
+#: Resources/Scripts/Gui/Preferences.as:1680
+msgctxt "Preferences"
+msgid "Debug Weapon Anchor Points"
+msgstr "Silah sabitleme noktalarını hata ayıkla"
+
+#: Resources/Scripts/Gui/Preferences.as:1701
+msgctxt "Preferences"
+msgid "World Markers"
+msgstr "Dünya işaretleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1702
+msgctxt "Preferences"
+msgid "Damage Indicators"
+msgstr "Hasar göstergeleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1705
+msgctxt "Preferences"
+msgid "Grenades"
+msgstr "El bombaları"
+
+#: Resources/Scripts/Gui/Preferences.as:1707
+msgctxt "Preferences"
+msgid "Show Hover Player Names"
+msgstr "Üzerine gelindiğinde oyuncu adlarını göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1708
+msgctxt "Preferences"
+msgid "Show Dead Player Names"
+msgstr "Ölü oyuncu adlarını göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1710
+msgctxt "Preferences"
+msgid "Heads-Up Display"
+msgstr "Ekran üstü gösterge"
+
+#: Resources/Scripts/Gui/Preferences.as:1711
+msgctxt "Preferences"
+msgid "Hide HUD"
+msgstr "HUD'u gizle"
+
+#: Resources/Scripts/Gui/Preferences.as:1712
+msgctxt "Preferences"
+msgid "HUD Color"
+msgstr "HUD rengi"
+
+#: Resources/Scripts/Gui/Preferences.as:1714
+#: Resources/Scripts/Gui/Preferences.as:1777
+msgctxt "Preferences"
+msgid "Custom Color"
+msgstr "Özel renk"
+
+#: Resources/Scripts/Gui/Preferences.as:1716
+msgctxt "Preferences"
+msgid "HUD Edge Positions"
+msgstr "HUD kenar konumları"
+
+#: Resources/Scripts/Gui/Preferences.as:1717
+msgctxt "Preferences"
+msgid "Edit"
+msgstr "Düzenle"
+
+#: Resources/Scripts/Gui/Preferences.as:1718
+msgctxt "Preferences"
+msgid "HUD Ammo Style"
+msgstr "HUD mermi stili"
+
+#: Resources/Scripts/Gui/Preferences.as:1720
+msgctxt "Preferences"
+msgid "SIMPLE"
+msgstr "BASIT"
+
+#: Resources/Scripts/Gui/Preferences.as:1722
+msgctxt "Preferences"
+msgid "Show Alive Player Count"
+msgstr "Yaşayan oyuncu sayısını göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1724
+#: Resources/Scripts/Gui/Preferences.as:1729
+msgctxt "Preferences"
+msgid "Top"
+msgstr "Üst"
+
+#: Resources/Scripts/Gui/Preferences.as:1725
+#: Resources/Scripts/Gui/Preferences.as:1730
+#: Resources/Scripts/Gui/Preferences.as:1759
+msgctxt "Preferences"
+msgid "Bottom"
+msgstr "Alt"
+
+#: Resources/Scripts/Gui/Preferences.as:1727
+msgctxt "Preferences"
+msgid "Show Client Statistics"
+msgstr "İstemci istatistiklerini göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1732
+msgctxt "Preferences"
+msgid "Small Stats Font"
+msgstr "Küçük istatistik yazı tipi"
+
+#: Resources/Scripts/Gui/Preferences.as:1733
+msgctxt "Preferences"
+msgid "Show Player Statistics"
+msgstr "Oyuncu istatistiklerini göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1734
+msgctxt "Preferences"
+msgid "Show Placed Blocks"
+msgstr "Yerleştirilen blokları göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1735
+msgctxt "Preferences"
+msgid "Player Statistics Height"
+msgstr "Oyuncu istatistikleri yüksekliği"
+
+#: Resources/Scripts/Gui/Preferences.as:1737
+msgctxt "Preferences"
+msgid "Chat Height"
+msgstr "Sohbet yüksekliği"
+
+#: Resources/Scripts/Gui/Preferences.as:1739
+msgctxt "Preferences"
+msgid "Chat Fade Time"
+msgstr "Sohbet solma süresi"
+
+#: Resources/Scripts/Gui/Preferences.as:1741
+msgctxt "Preferences"
+msgid "Killfeed Height"
+msgstr "Öldürme akışı yüksekliği"
+
+#: Resources/Scripts/Gui/Preferences.as:1743
+msgctxt "Preferences"
+msgid "Killfeed Fade Time"
+msgstr "Öldürme akışı solma süresi"
+
+#: Resources/Scripts/Gui/Preferences.as:1745
+msgctxt "Preferences"
+msgid "Killfeed Icons"
+msgstr "Öldürme akışı simgeleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1746
+msgctxt "Preferences"
+msgid "Show Dominations"
+msgstr "Hakimiyetleri göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1748
+msgctxt "Preferences"
+msgid "Minimap"
+msgstr "Küçük harita"
+
+#: Resources/Scripts/Gui/Preferences.as:1749
+msgctxt "Preferences"
+msgid "Minimap Size"
+msgstr "Küçük harita boyutu"
+
+#: Resources/Scripts/Gui/Preferences.as:1751
+msgctxt "Preferences"
+msgid "Minimap Scale Mode"
+msgstr "Küçük harita ölçek modu"
+
+#: Resources/Scripts/Gui/Preferences.as:1753
+msgctxt "Preferences"
+msgid "Minimap Opacity"
+msgstr "Küçük harita saydamlığı"
+
+#: Resources/Scripts/Gui/Preferences.as:1755
+msgctxt "Preferences"
+msgid "Use Weapon Icons"
+msgstr "Silah simgelerini kullan"
+
+#: Resources/Scripts/Gui/Preferences.as:1756
+msgctxt "Preferences"
+msgid "Use Random Colors"
+msgstr "Rastgele renkler kullan"
+
+#: Resources/Scripts/Gui/Preferences.as:1757
+msgctxt "Preferences"
+msgid "Show Map Location"
+msgstr "Harita konumunu göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1760
+msgctxt "Preferences"
+msgid "Side"
+msgstr "Yan"
+
+#: Resources/Scripts/Gui/Preferences.as:1762
+msgctxt "Preferences"
+msgid "Show Player Names"
+msgstr "Oyuncu adlarını göster"
+
+#: Resources/Scripts/Gui/Preferences.as:1763
+msgctxt "Preferences"
+msgid "Circular Minimap"
+msgstr "Dairesel küçük harita"
+
+#: Resources/Scripts/Gui/Preferences.as:1764
+msgctxt "Preferences"
+msgid "Rotating Minimap"
+msgstr "Dönen küçük harita"
+
+#: Resources/Scripts/Gui/Preferences.as:1766
+msgctxt "Preferences"
+msgid "Target"
+msgstr "Hedef"
+
+#: Resources/Scripts/Gui/Preferences.as:1769
+msgctxt "Preferences"
+msgid "Target Type"
+msgstr "Hedef türü"
+
+#: Resources/Scripts/Gui/Preferences.as:1774
+#: Resources/Scripts/Gui/Preferences.as:1818
+msgctxt "Preferences"
+msgid "Lines"
+msgstr "Çizgiler"
+
+#: Resources/Scripts/Gui/Preferences.as:1775
+#: Resources/Scripts/Gui/Preferences.as:1819
+msgctxt "Preferences"
+msgid "Color"
+msgstr "Renk"
+
+#: Resources/Scripts/Gui/Preferences.as:1779
+#: Resources/Scripts/Gui/Preferences.as:1821
+msgctxt "Preferences"
+msgid "Opacity"
+msgstr "Saydamlık"
+
+#: Resources/Scripts/Gui/Preferences.as:1781
+#: Resources/Scripts/Gui/Preferences.as:1823
+msgctxt "Preferences"
+msgid "Length"
+msgstr "Uzunluk"
+
+#: Resources/Scripts/Gui/Preferences.as:1784
+#: Resources/Scripts/Gui/Preferences.as:1826
+msgctxt "Preferences"
+msgid "Thickness"
+msgstr "Kalınlık"
+
+#: Resources/Scripts/Gui/Preferences.as:1786
+#: Resources/Scripts/Gui/Preferences.as:1828
+msgctxt "Preferences"
+msgid "Gap"
+msgstr "Boşluk"
+
+#: Resources/Scripts/Gui/Preferences.as:1788
+#: Resources/Scripts/Gui/Preferences.as:1830
+msgctxt "Preferences"
+msgid "Dynamic"
+msgstr "Dinamik"
+
+#: Resources/Scripts/Gui/Preferences.as:1789
+#: Resources/Scripts/Gui/Preferences.as:1831
+msgctxt "Preferences"
+msgid "Dynamic Split Dist"
+msgstr "Dinamik bölünme mesafesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1791
+#: Resources/Scripts/Gui/Preferences.as:1833
+msgctxt "Preferences"
+msgid "Outline"
+msgstr "Dış hat"
+
+#: Resources/Scripts/Gui/Preferences.as:1792
+#: Resources/Scripts/Gui/Preferences.as:1834
+msgctxt "Preferences"
+msgid "Outline Color"
+msgstr "Dış hat rengi"
+
+#: Resources/Scripts/Gui/Preferences.as:1794
+#: Resources/Scripts/Gui/Preferences.as:1836
+msgctxt "Preferences"
+msgid "Outline Opacity"
+msgstr "Dış hat saydamlığı"
+
+#: Resources/Scripts/Gui/Preferences.as:1796
+#: Resources/Scripts/Gui/Preferences.as:1838
+msgctxt "Preferences"
+msgid "Outline Thickness"
+msgstr "Dış hat kalınlığı"
+
+#: Resources/Scripts/Gui/Preferences.as:1798
+#: Resources/Scripts/Gui/Preferences.as:1840
+msgctxt "Preferences"
+msgid "Rounded Corners Style"
+msgstr "Yuvarlak köşe stili"
+
+#: Resources/Scripts/Gui/Preferences.as:1799
+#: Resources/Scripts/Gui/Preferences.as:1841
+msgctxt "Preferences"
+msgid "Center Dot"
+msgstr "Merkez nokta"
+
+#: Resources/Scripts/Gui/Preferences.as:1800
+#: Resources/Scripts/Gui/Preferences.as:1842
+msgctxt "Preferences"
+msgid "Center Dot Color"
+msgstr "Merkez nokta rengi"
+
+#: Resources/Scripts/Gui/Preferences.as:1802
+#: Resources/Scripts/Gui/Preferences.as:1844
+msgctxt "Preferences"
+msgid "Center Dot Opacity"
+msgstr "Merkez nokta saydamlığı"
+
+#: Resources/Scripts/Gui/Preferences.as:1804
+#: Resources/Scripts/Gui/Preferences.as:1846
+msgctxt "Preferences"
+msgid "Center Dot Thickness"
+msgstr "Merkez nokta kalınlığı"
+
+#: Resources/Scripts/Gui/Preferences.as:1806
+#: Resources/Scripts/Gui/Preferences.as:1848
+msgctxt "Preferences"
+msgid "T Style"
+msgstr "T stili"
+
+#: Resources/Scripts/Gui/Preferences.as:1808
+msgctxt "Preferences"
+msgid "Scope"
+msgstr "Dürbün"
+
+#: Resources/Scripts/Gui/Preferences.as:1811
+msgctxt "Preferences"
+msgid "Reflex Sight"
+msgstr "Refleks nişangahı"
+
+#: Resources/Scripts/Gui/Preferences.as:1813
+msgctxt "Preferences"
+msgid "Dot"
+msgstr "Nokta"
+
+#: Resources/Scripts/Gui/Preferences.as:1814
+msgctxt "Preferences"
+msgid "Cross"
+msgstr "Artı"
+
+#: Resources/Scripts/Gui/Preferences.as:1816
+msgctxt "Preferences"
+msgid "Scope Type"
+msgstr "Dürbün türü"
+
+#: Resources/Scripts/Gui/Preferences.as:1863
+#: Resources/Scripts/Gui/Preferences.as:1984
+msgctxt "Preferences"
+msgid "General"
+msgstr "Genel"
+
+#: Resources/Scripts/Gui/Preferences.as:1864
+msgctxt "Preferences"
+msgid "Render Scale"
+msgstr "Oluşturma ölçeği"
+
+#: Resources/Scripts/Gui/Preferences.as:1866
+msgctxt "Preferences"
+msgid "Render Scaling Filter"
+msgstr "Oluşturma ölçek filtresi"
+
+#: Resources/Scripts/Gui/Preferences.as:1868
+msgctxt "Preferences"
+msgid "Rendering Statistics"
+msgstr "Oluşturma istatistikleri"
+
+#: Resources/Scripts/Gui/Preferences.as:1869
+msgctxt "Preferences"
+msgid "Allow CPU Rendering"
+msgstr "CPU oluşturmasına izin ver"
+
+#: Resources/Scripts/Gui/Preferences.as:1871
+msgctxt "Preferences"
+msgid "World"
+msgstr "Dünya"
+
+#: Resources/Scripts/Gui/Preferences.as:1872
+msgctxt "Preferences"
+msgid "Dynamic Lights"
+msgstr "Dinamik ışıklar"
+
+#: Resources/Scripts/Gui/Preferences.as:1873
+msgctxt "Preferences"
+msgid "Tracers Lights"
+msgstr "İzci ışıkları"
+
+#: Resources/Scripts/Gui/Preferences.as:1874
+msgctxt "Preferences"
+msgid "Depth Prepass"
+msgstr "Derinlik ön geçişi"
+
+#: Resources/Scripts/Gui/Preferences.as:1875
+msgctxt "Preferences"
+msgid "Occlusion Querying"
+msgstr "Kapanma sorgulama"
+
+#: Resources/Scripts/Gui/Preferences.as:1876
+msgctxt "Preferences"
+msgid "Object Outlines"
+msgstr "Nesne dış hatları"
+
+#: Resources/Scripts/Gui/Preferences.as:1878
+msgctxt "Preferences"
+msgid "Post-processing"
+msgstr "Son işlem"
+
+#: Resources/Scripts/Gui/Preferences.as:1879
+msgctxt "Preferences"
+msgid "Depth Of Field"
+msgstr "Alan derinliği"
+
+#: Resources/Scripts/Gui/Preferences.as:1880
+msgctxt "Preferences"
+msgid "Camera Blur"
+msgstr "Kamera bulanıklığı"
+
+#: Resources/Scripts/Gui/Preferences.as:1881
+msgctxt "Preferences"
+msgid "FXAA Anti-Aliasing"
+msgstr "FXAA Kenar Yumuşatma"
+
+#: Resources/Scripts/Gui/Preferences.as:1882
+msgctxt "Preferences"
+msgid "Lens Flares"
+msgstr "Mercek parlaması"
+
+#: Resources/Scripts/Gui/Preferences.as:1883
+msgctxt "Preferences"
+msgid "Flares Lights"
+msgstr "Parlaklık ışıkları"
+
+#: Resources/Scripts/Gui/Preferences.as:1884
+msgctxt "Preferences"
+msgid "Color Correction"
+msgstr "Renk düzeltme"
+
+#: Resources/Scripts/Gui/Preferences.as:1885
+msgctxt "Preferences"
+msgid "Sharpening"
+msgstr "Keskinleştirme"
+
+#: Resources/Scripts/Gui/Preferences.as:1887
+msgctxt "Preferences"
+msgid "Saturation"
+msgstr "Doygunluk"
+
+#: Resources/Scripts/Gui/Preferences.as:1889
+msgctxt "Preferences"
+msgid "Exposure"
+msgstr "Pozlama"
+
+#: Resources/Scripts/Gui/Preferences.as:1892
+msgctxt "Preferences"
+msgid "Software Renderer"
+msgstr "Yazılım oluşturucusu"
+
+#: Resources/Scripts/Gui/Preferences.as:1893
+msgctxt "Preferences"
+msgid "Thread Count"
+msgstr "İş parçacığı sayısı"
+
+#: Resources/Scripts/Gui/Preferences.as:1894
+msgctxt "Preferences"
+msgid " Threads"
+msgstr " İş parçacıkları"
+
+#: Resources/Scripts/Gui/Preferences.as:1895
+msgctxt "Preferences"
+msgid "Undersampling"
+msgstr "Eksik örnekleme"
+
+#: Resources/Scripts/Gui/Preferences.as:1911
+msgctxt "Preferences"
+msgid "Weapons/Tools"
+msgstr "Silahlar/Araçlar"
+
+#: Resources/Scripts/Gui/Preferences.as:1912
+msgctxt "Preferences"
+msgid "Attack"
+msgstr "Saldır"
+
+#: Resources/Scripts/Gui/Preferences.as:1913
+msgctxt "Preferences"
+msgid "Alt. Attack"
+msgstr "Alt. saldırı"
+
+#: Resources/Scripts/Gui/Preferences.as:1914
+msgctxt "Preferences"
+msgid "Hold Aim Down Sight"
+msgstr "Nişan almak için basılı tut"
+
+#: Resources/Scripts/Gui/Preferences.as:1915
+msgctxt "Preferences"
+msgid "Mouse Sensitivity Type"
+msgstr "Fare hassasiyeti türü"
+
+#: Resources/Scripts/Gui/Preferences.as:1917
+msgctxt "Preferences"
+msgid "Mouse Sensitivity"
+msgstr "Fare hassasiyeti"
+
+#: Resources/Scripts/Gui/Preferences.as:1919
+msgctxt "Preferences"
+msgid "ADS Mouse Sens. Scale"
+msgstr "ADS fare hassasiyet ölçeği"
+
+#: Resources/Scripts/Gui/Preferences.as:1921
+msgctxt "Preferences"
+msgid "Mouse Acceleration"
+msgstr "Fare ivmesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1922
+msgctxt "Preferences"
+msgid "Exponential Power"
+msgstr "Üstel güç"
+
+#: Resources/Scripts/Gui/Preferences.as:1924
+msgctxt "Preferences"
+msgid "Invert Y-axis Mouse Input"
+msgstr "Y ekseni fare girişini ters çevir"
+
+#: Resources/Scripts/Gui/Preferences.as:1925
+msgctxt "Preferences"
+msgid "Reload"
+msgstr "Yeniden yükle"
+
+#: Resources/Scripts/Gui/Preferences.as:1926
+msgctxt "Preferences"
+msgid "Equip Spade"
+msgstr "Kürek kuşan"
+
+#: Resources/Scripts/Gui/Preferences.as:1927
+msgctxt "Preferences"
+msgid "Equip Block"
+msgstr "Blok kuşan"
+
+#: Resources/Scripts/Gui/Preferences.as:1928
+msgctxt "Preferences"
+msgid "Equip Weapon"
+msgstr "Silah kuşan"
+
+#: Resources/Scripts/Gui/Preferences.as:1929
+msgctxt "Preferences"
+msgid "Equip Grenade"
+msgstr "El bombası kuşan"
+
+#: Resources/Scripts/Gui/Preferences.as:1930
+msgctxt "Preferences"
+msgid "Last Used Tool"
+msgstr "Son kullanılan araç"
+
+#: Resources/Scripts/Gui/Preferences.as:1931
+msgctxt "Preferences"
+msgid "Switch Tools by Wheel"
+msgstr "Tekerle araç değiştir"
+
+#: Resources/Scripts/Gui/Preferences.as:1933
+msgctxt "Preferences"
+msgid "Movement"
+msgstr "Hareket"
+
+#: Resources/Scripts/Gui/Preferences.as:1934
+msgctxt "Preferences"
+msgid "Move Forward"
+msgstr "İleri git"
+
+#: Resources/Scripts/Gui/Preferences.as:1935
+msgctxt "Preferences"
+msgid "Move Backward"
+msgstr "Geri git"
+
+#: Resources/Scripts/Gui/Preferences.as:1936
+msgctxt "Preferences"
+msgid "Move Left"
+msgstr "Sola git"
+
+#: Resources/Scripts/Gui/Preferences.as:1937
+msgctxt "Preferences"
+msgid "Move Right"
+msgstr "Sağa git"
+
+#: Resources/Scripts/Gui/Preferences.as:1938
+msgctxt "Preferences"
+msgid "Crouch"
+msgstr "Çömel"
+
+#: Resources/Scripts/Gui/Preferences.as:1939
+msgctxt "Preferences"
+msgid "Sneak"
+msgstr "Sinsi yürü"
+
+#: Resources/Scripts/Gui/Preferences.as:1940
+msgctxt "Preferences"
+msgid "Jump"
+msgstr "Zıpla"
+
+#: Resources/Scripts/Gui/Preferences.as:1941
+msgctxt "Preferences"
+msgid "Sprint"
+msgstr "Koş"
+
+#: Resources/Scripts/Gui/Preferences.as:1943
+msgctxt "Preferences"
+msgid "Color Palette"
+msgstr "Renk paleti"
+
+#: Resources/Scripts/Gui/Preferences.as:1944
+msgctxt "Preferences"
+msgid "Capture Color"
+msgstr "Renk yakala"
+
+#: Resources/Scripts/Gui/Preferences.as:1945
+msgctxt "Preferences"
+msgid "Navigate up"
+msgstr "Yukarı git"
+
+#: Resources/Scripts/Gui/Preferences.as:1946
+msgctxt "Preferences"
+msgid "Navigate down"
+msgstr "Aşağı git"
+
+#: Resources/Scripts/Gui/Preferences.as:1947
+msgctxt "Preferences"
+msgid "Navigate left"
+msgstr "Sola git"
+
+#: Resources/Scripts/Gui/Preferences.as:1948
+msgctxt "Preferences"
+msgid "Navigate right"
+msgstr "Sağa git"
+
+#: Resources/Scripts/Gui/Preferences.as:1949
+msgctxt "Preferences"
+msgid "Toggle extended palette"
+msgstr "Genişletilmiş paleti aç/kapat"
+
+#: Resources/Scripts/Gui/Preferences.as:1952
+msgctxt "Preferences"
+msgid "Scoreboard"
+msgstr "Skor tablosu"
+
+#: Resources/Scripts/Gui/Preferences.as:1953
+msgctxt "Preferences"
+msgid "Hold Large Map"
+msgstr "Büyük haritayı basılı tut"
+
+#: Resources/Scripts/Gui/Preferences.as:1954
+msgctxt "Preferences"
+msgid "Minimap Scale"
+msgstr "Küçük harita ölçeği"
+
+#: Resources/Scripts/Gui/Preferences.as:1955
+msgctxt "Preferences"
+msgid "Toggle Map"
+msgstr "Haritayı aç/kapat"
+
+#: Resources/Scripts/Gui/Preferences.as:1956
+msgctxt "Preferences"
+msgid "Flashlight"
+msgstr "El feneri"
+
+#: Resources/Scripts/Gui/Preferences.as:1957
+msgctxt "Preferences"
+msgid "Global Chat"
+msgstr "Genel sohbet"
+
+#: Resources/Scripts/Gui/Preferences.as:1958
+msgctxt "Preferences"
+msgid "Team Chat"
+msgstr "Takım sohbeti"
+
+#: Resources/Scripts/Gui/Preferences.as:1959
+msgctxt "Preferences"
+msgid "Chat Log"
+msgstr "Sohbet günlüğü"
+
+#: Resources/Scripts/Gui/Preferences.as:1960
+msgctxt "Preferences"
+msgid "Chat Zoom"
+msgstr "Sohbet zum"
+
+#: Resources/Scripts/Gui/Preferences.as:1961
+msgctxt "Preferences"
+msgid "Pie Menu"
+msgstr "Dairesel menü"
+
+#: Resources/Scripts/Gui/Preferences.as:1962
+msgctxt "Preferences"
+msgid "Limbo Menu"
+msgstr "Limbo menüsü"
+
+#: Resources/Scripts/Gui/Preferences.as:1963
+msgctxt "Preferences"
+msgid "Save Map"
+msgstr "Haritayı kaydet"
+
+#: Resources/Scripts/Gui/Preferences.as:1964
+msgctxt "Preferences"
+msgid "Save Sceneshot"
+msgstr "Sceneshot kaydet"
+
+#: Resources/Scripts/Gui/Preferences.as:1965
+msgctxt "Preferences"
+msgid "Save Screenshot"
+msgstr "Screenshot kaydet"
+
+#: Resources/Scripts/Gui/Preferences.as:1966
+msgctxt "Preferences"
+msgid "Master Volume Up"
+msgstr "Ana sesi artır"
+
+#: Resources/Scripts/Gui/Preferences.as:1967
+msgctxt "Preferences"
+msgid "Master Volume Down"
+msgstr "Ana sesi azalt"
+
+#: Resources/Scripts/Gui/Preferences.as:1968
+msgctxt "Preferences"
+msgid "Network Graph"
+msgstr "Ağ grafiği"
+
+#: Resources/Scripts/Gui/Preferences.as:1969
+msgctxt "Preferences"
+msgid "Force Spectator Mode"
+msgstr "Seyirci modunu zorla"
+
+#: Resources/Scripts/Gui/Preferences.as:1985
+msgctxt "Preferences"
+msgid "FPS Limit"
+msgstr "FPS limiti"
+
+#: Resources/Scripts/Gui/Preferences.as:1988
+msgctxt "Preferences"
+msgid "Console Scrollback Lines"
+msgstr "Konsol geri kaydırma satırları"
+
+#: Resources/Scripts/Gui/Preferences.as:1990
+msgctxt "Preferences"
+msgid "Server List URL"
+msgstr "Sunucu listesi URL'si"
+
+#: Resources/Scripts/Gui/Preferences.as:1991
+msgctxt "Preferences"
+msgid "Server List Alt. URL"
+msgstr "Sunucu listesi alt. URL'si"
+
+#: Resources/Scripts/Gui/Preferences.as:1992
+msgctxt "Preferences"
+msgid "Mod List URL"
+msgstr "Mod listesi URL'si"
+
+#: Resources/Scripts/Gui/Preferences.as:1993
+msgctxt "Preferences"
+msgid "Allow Unicode"
+msgstr "Unicode'a izin ver"
+
+#: Resources/Scripts/Gui/Preferences.as:1994
+msgctxt "Preferences"
+msgid "Screenshot Format"
+msgstr "Screenshot formatı"
+
+#: Resources/Scripts/Gui/Preferences.as:1997
+msgctxt "Preferences"
+msgid "JPEG Quality"
+msgstr "JPEG kalitesi"
+
+#: Resources/Scripts/Gui/Preferences.as:1999
+msgctxt "Preferences"
+msgid "Enable Startup Window"
+msgstr "Başlangıç penceresini etkinleştir"
+
+#: Resources/Scripts/Gui/Preferences.as:2001
+msgctxt "Preferences"
+msgid "Demo Recording"
+msgstr "Demo kaydı"
+
+#: Resources/Scripts/Gui/Preferences.as:2002
+msgctxt "Preferences"
+msgid "Start/Stop Recording"
+msgstr "Kaydı başlat/durdur"
+
+#: Resources/Scripts/Gui/Preferences.as:2003
+msgctxt "Preferences"
+msgid "Auto Record"
+msgstr "Otomatik kayıt"
+
+#: Resources/Scripts/Gui/Preferences.as:2004
+msgctxt "Preferences"
+msgid "Auto Delete Old Demos"
+msgstr "Eski demoları otomatik sil"
+
+#: Resources/Scripts/Gui/Preferences.as:2005
+msgctxt "Preferences"
+msgid "Max Stored Demos"
+msgstr "Maks. depolanan demo"
+
+#: Resources/Scripts/Gui/Preferences.as:2008
+msgctxt "Preferences"
+msgid "Demo Playback"
+msgstr "Demo oynatma"
+
+#: Resources/Scripts/Gui/Preferences.as:2009
+msgctxt "Preferences"
+msgid "Pause/Resume"
+msgstr "Duraklat/Devam et"
+
+#: Resources/Scripts/Gui/Preferences.as:2010
+msgctxt "Preferences"
+msgid "Speed Up"
+msgstr "Hızlandır"
+
+#: Resources/Scripts/Gui/Preferences.as:2011
+msgctxt "Preferences"
+msgid "Slow Down"
+msgstr "Yavaşlat"
+
+#: Resources/Scripts/Gui/Preferences.as:2012
+msgctxt "Preferences"
+msgid "Seek Forward"
+msgstr "İleri al"
+
+#: Resources/Scripts/Gui/Preferences.as:2013
+msgctxt "Preferences"
+msgid "Seek Backward"
+msgstr "Geri al"
+
+#: Resources/Scripts/Gui/Preferences.as:2014
+msgctxt "Preferences"
+msgid "Toggle Demo HUD"
+msgstr "Demo HUD'u aç/kapat"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewFramework.as:499
+msgctxt "StartupScreen"
+msgid "Custom"
+msgstr "Özel"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewFramework.as:608
+msgctxt "StartupScreen"
+msgid "Close"
+msgstr "Kapat"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:55
+msgctxt "StartupScreen"
+msgid "Graphics Settings"
+msgstr "Grafik ayarları"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:60
+msgctxt "StartupScreen"
+msgid "Resolution"
+msgstr "Çözünürlük"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:70
+msgctxt "StartupScreen"
+msgid "Fullscreen Mode"
+msgstr "Tam ekran modu"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:76
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"By running in fullscreen mode OpenSpades occupies the screen, making it "
+"easier for you to concentrate on playing the game."
+msgstr ""
+"Tam ekran modunda çalıştırarak OpenSpades ekranı kaplar ve oyuna "
+"odaklanmanızı kolaylaştırır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:84
+msgctxt "StartupScreen"
+msgid "Renderer"
+msgstr "Oluşturucu"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:87
+msgctxt "StartupScreen"
+msgid "OpenGL"
+msgstr "OpenGL"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:93
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"OpenGL renderer uses your computer's graphics accelerator to generate the "
+"game screen."
+msgstr ""
+"OpenGL oluşturucu, oyun ekranını oluşturmak için bilgisayarınızın "
+"grafik hızlandırıcısını kullanır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:102
+msgctxt "StartupScreen"
+msgid "Software"
+msgstr "Yazılım"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:108
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Software renderer uses CPU to generate the game screen. Its quality and "
+"performance might be inferior to OpenGL renderer, but it works even with an "
+"unsupported GPU."
+msgstr ""
+"Yazılım oluşturucu, oyun ekranını oluşturmak için CPU kullanır. "
+"Kalitesi ve performansı OpenGL oluşturucusundan düşük olabilir, ancak "
+"desteklenmeyen GPU'larla da çalışır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:124
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Antialiasing:Enables a technique to improve the appearance of high-contrast "
+"edges.\n"
+"\n"
+"MSAA: Performs antialiasing by generating an intermediate high-resolution "
+"image. Looks best, but doesn't cope with some settings.\n"
+"\n"
+"FXAA: Performs antialiasing by smoothing artifacts out as a post-process.|"
+"Off|MSAA 2x|4x|FXAA"
+msgstr ""
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:132
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:206
+msgctxt "StartupScreen"
+msgid "Global Illumination"
+msgstr "Global aydınlatma"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:134
+msgctxt "StartupScreen"
+msgid "Enables a physically based simulation of light path for more realistic lighting."
+msgstr ""
+"Daha gerçekçi aydınlatma için fizik tabanlı ışık yolu simülasyonunu "
+"etkinleştirir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:138
+msgctxt "StartupScreen"
+msgid "Linear HDR Rendering"
+msgstr "Doğrusal HDR oluşturma"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:139
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Uses a number representation which allows wider dynamic range during "
+"rendering process. Additionally, this allows color calculation whose value "
+"is in linear correspondence with actual energy, that is, physically accurate "
+"blending can be achieved."
+msgstr ""
+"Oluşturma sürecinde daha geniş dinamik aralığa izin veren bir sayı "
+"temsili kullanır. Ayrıca, gerçek enerjiyle doğrusal ilişkide değer "
+"hesabı yaparak fiziksel açıdan doğru karışım elde edilebilir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:146
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Vertical Sync:Synchronizes screen updates to a monitor's refresh rate.|Off|"
+"On|Adaptive"
+msgstr ""
+"Dikey senkronizasyon:Ekran güncellemelerini monitörün yenileme hızıyla "
+"senkronize eder.|Kapalı|Açık|Uyarlanabilir"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:152
+msgctxt "StartupScreen"
+msgid "Camera Blur"
+msgstr "Kamera bulanıklığı"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:153
+msgctxt "StartupScreen"
+msgid "Blurs the screen when you turn quickly."
+msgstr "Hızlı döndüğünüzde ekranı bulanıklaştırır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:156
+msgctxt "StartupScreen"
+msgid "Lens Scattering Filter"
+msgstr "Mercek saçılma filtresi"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:157
+msgctxt "StartupScreen"
+msgid "Simulates light being scattered by dust on the camera lens."
+msgstr "Kamera merceğindeki toz tarafından saçılan ışığı simüle eder."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:160
+msgctxt "StartupScreen"
+msgid "Lens Flare"
+msgstr "Mercek parlaması"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:161
+msgctxt "StartupScreen"
+msgid "The Sun causes lens flare."
+msgstr "Güneş mercek parlamasına neden olur."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:164
+msgctxt "StartupScreen"
+msgid "Flares for Dynamic Lights."
+msgstr "Dinamik ışıklar için parlamalar."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:165
+msgctxt "StartupScreen"
+msgid "Enables lens flare for light sources other than the Sun."
+msgstr "Güneş dışındaki ışık kaynakları için mercek parlamasını etkinleştirir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:168
+msgctxt "StartupScreen"
+msgid "Color Correction"
+msgstr "Renk düzeltme"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:169
+msgctxt "StartupScreen"
+msgid "Applies cinematic color correction to make the image look better."
+msgstr "Görüntünün daha iyi görünmesi için sinematik renk düzeltmesi uygular."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:172
+msgctxt "StartupScreen"
+msgid "Depth of Field"
+msgstr "Alan derinliği"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:173
+msgctxt "StartupScreen"
+msgid "Blurs out-of-focus objects."
+msgstr "Odak dışı nesneleri bulanıklaştırır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:176
+msgctxt "StartupScreen"
+msgid "Screen Space Ambient Occlusion"
+msgstr "Ekran alanı ortam kapanması"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:177
+msgctxt "StartupScreen"
+msgid "Simulates soft shadows that occur between nearby objects."
+msgstr "Yakındaki nesneler arasında oluşan yumuşak gölgeleri simüle eder."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:179
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:224
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:241
+msgctxt "StartupScreen"
+msgid "Low"
+msgstr "Düşük"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:180
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:225
+msgctxt "StartupScreen"
+msgid "Medium"
+msgstr "Orta"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:181
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:226
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:243
+msgctxt "StartupScreen"
+msgid "High"
+msgstr "Yüksek"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:182
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:244
+msgctxt "StartupScreen"
+msgid "Ultra"
+msgstr "Ultra"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:185
+msgctxt "StartupScreen"
+msgid "Post-process"
+msgstr "Son işlem"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:186
+msgctxt "StartupScreen"
+msgid "Post-process modifies the image to make it look better and more realistic."
+msgstr "Son işlem, görüntüyü daha iyi ve daha gerçekçi göstermek için değiştirir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:192
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Particle Quality|Low:Artifact occurs when a particle intersects other "
+"objects.|Medium:Particle intersects objects smoothly.|High:Particle "
+"intersects objects smoothly, and some objects casts their shadow to "
+"particles."
+msgstr ""
+"Partikül kalitesi|Düşük:Bir partikül diğer nesnelerle kesiştiğinde "
+"yapay bozulma oluşur.|Orta:Partikül nesnelerle pürüzsüzce "
+"kesişir.|Yüksek:Partikül nesnelerle pürüzsüzce kesişir ve bazı "
+"nesneler partiküllere gölge düşürür."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:199
+msgctxt "StartupScreen"
+msgid "Volumetric Fog"
+msgstr "Hacimsel sis"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:200
+msgctxt "StartupScreen"
+msgid "None"
+msgstr "Hiçbiri"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:201
+msgctxt "StartupScreen"
+msgid "Disables the volumetric fog effect."
+msgstr "Hacimsel sis efektini devre dışı bırakır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:202
+msgctxt "StartupScreen"
+msgid "Level 1"
+msgstr "Seviye 1"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:203
+msgctxt "StartupScreen"
+msgid "Applies local illumination to the fog."
+msgstr "Sise yerel aydınlatma uygular."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:204
+msgctxt "StartupScreen"
+msgid "Level 2"
+msgstr "Seviye 2"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:205
+msgctxt "StartupScreen"
+msgid "Applies both local illumination and global illumination to the fog."
+msgstr "Sise hem yerel hem de global aydınlatma uygular."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:206
+msgctxt "StartupScreen"
+msgid "Warning: '{0}' must be enabled."
+msgstr "Uyarı: '{0}' etkinleştirilmelidir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:213
+msgctxt "StartupScreen"
+msgid "Dynamic Lights"
+msgstr "Dinamik ışıklar"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:214
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Gives some objects an ability to emit light to give them an energy-emitting "
+"impression."
+msgstr ""
+"Bazı nesnelere enerji yayan bir izlenim oluşturmak için ışık yayma "
+"yeteneği verir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:217
+msgctxt "StartupScreen"
+msgid "Shadows"
+msgstr "Gölgeler"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:218
+msgctxt "StartupScreen"
+msgid "Non-static object casts a shadow."
+msgstr "Statik olmayan nesne gölge düşürür."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:221
+msgctxt "StartupScreen"
+msgid "Physically Based Lighting"
+msgstr "Fizik tabanlı aydınlatma"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:222
+msgctxt "StartupScreen"
+msgid "Uses more accurate approximation techniques to decide the brightness of objects."
+msgstr ""
+"Nesnelerin parlaklığını belirlemek için daha doğru yaklaşım teknikleri "
+"kullanır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:229
+msgctxt "StartupScreen"
+msgid "Direct Lights"
+msgstr "Doğrudan ışıklar"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:230
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Controls how light encounting a material and atmosphere directly affects its "
+"appearance."
+msgstr ""
+"Bir malzeme ve atmosferle karşılaşan ışığın görünümünü doğrudan nasıl "
+"etkilediğini kontrol eder."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:239
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Water Shader|None:Water is rendered in the same way that normal blocks are "
+"done.|Level 1:Refraction and the reflected Sun are simulated.|Level 2:Waving "
+"water is simulated as well as reflection and refraction.|Level 3:Reflections "
+"and refractions are rendered at the highest quality using screen-space "
+"techniques."
+msgstr ""
+"Su gölgesi|Hiçbiri:Su, normal blokların yapıldığı gibi "
+"oluşturulur.|Seviye 1:Kırılma ve yansıyan Güneş simüle edilir.|Seviye "
+"2:Dalgalanan su ve yansıma/kırılma simüle edilir.|Seviye 3:Yansımalar "
+"ve kırılmalar ekran alanı teknikleri kullanılarak en yüksek kalitede "
+"oluşturulur."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:242
+msgctxt "StartupScreen"
+msgid "Med"
+msgstr "Orta"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:247
+msgctxt "StartupScreen"
+msgid "Shader Effects"
+msgstr "Gölge efektleri"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:248
+msgctxt "StartupScreen"
+msgid "Special effects."
+msgstr "Özel efektler."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:263
+msgctxt "StartupScreen"
+msgid "Fast Mode:Reduces the image resolution to make the rendering faster.|Off|2x|4x"
+msgstr ""
+"Hızlı mod:Oluşturmayı hızlandırmak için görüntü çözünürlüğünü "
+"azaltır.|Kapalı|2x|4x"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:473
+msgctxt "StartupScreen"
+msgid "Audio Settings"
+msgstr "Ses ayarları"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:478
+msgctxt "StartupScreen"
+msgid "Backend"
+msgstr "Arka uç"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:481
+msgctxt "StartupScreen"
+msgid "OpenAL"
+msgstr "OpenAL"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:487
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Uses an OpenAL-capable sound card to process sound. In most cases where "
+"there isn't such a sound card, software emulation is used."
+msgstr ""
+"Sesi işlemek için OpenAL uyumlu ses kartı kullanır. Böyle bir ses "
+"kartının olmadığı çoğu durumda yazılım emülasyonu kullanılır."
+
+#. ! The name of audio driver that outputs no audio.
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:498
+msgctxt "StartupScreen"
+msgid "Null"
+msgstr "Boş"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:501
+msgctxt "StartupScreen"
+msgid "Disables audio output."
+msgstr "Ses çıkışını devre dışı bırakır."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:511
+msgctxt "StartupScreen"
+msgid "Volume"
+msgstr "Ses seviyesi"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:516
+msgctxt "StartupScreen"
+msgid "Polyphonics"
+msgstr "Polifoniler"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:518
+msgctxt "StartupScreen"
+msgid ""
+msgid ""
+"Specifies how many sounds can be played simultaneously. Higher value needs "
+"more processing power, so setting this too high might cause an overload "
+"(especially with a software emulation)."
+msgstr ""
+"Kaç sesin aynı anda çalınabileceğini belirtir. Daha yüksek değer daha "
+"fazla işlem gücü gerektirir, bu yüzden çok yüksek ayarlamak aşırı "
+"yüklenmeye yol açabilir (özellikle yazılım emülasyonuyla)."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:524
+msgctxt "StartupScreen"
+msgid "EAX"
+msgstr "EAX"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:526
+msgctxt "StartupScreen"
+msgid "Enables extended features provided by the OpenAL driver to create more ambience."
+msgstr ""
+"Daha fazla ambiyans oluşturmak için OpenAL sürücüsünün sağladığı "
+"genişletilmiş özellikleri etkinleştirir."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:536
+msgctxt "StartupScreen"
+msgid "Output Device"
+msgstr "Çıkış cihazı"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:596
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:598
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:610
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:857
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:871
+msgctxt "StartupScreen"
+msgid "System default"
+msgstr "Sistem varsayılanı"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:652
+msgctxt "StartupScreen"
+msgid "Language"
+msgstr "Dil"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:664
+msgctxt "StartupScreen"
+msgid "Tools"
+msgstr "Araçlar"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:667
+msgctxt "StartupScreen"
+msgid "Reset All Settings"
+msgstr "Tüm ayarları sıfırla"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:676
+msgctxt "StartupScreen"
+msgid "Open Config Folder in Explorer"
+msgstr "Yapılandırma klasörünü Explorer'da aç"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:678
+msgctxt "StartupScreen"
+msgid "Reveal Config Folder in Finder"
+msgstr "Yapılandırma klasörünü Finder'da göster"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:680
+msgctxt "StartupScreen"
+msgid "Browse Config Folder"
+msgstr "Yapılandırma klasörüne gözat"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:687
+msgctxt "StartupScreen"
+msgid "Demo Recording"
+msgstr "Demo kaydı"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:690
+msgctxt "StartupScreen"
+msgid "Automatically record every game"
+msgstr "Her oyunu otomatik kaydet"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:698
+msgctxt "StartupScreen"
+msgid "Delete oldest demos when limit is reached"
+msgstr "Limite ulaşıldığında en eski demoları sil"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:705
+msgctxt "StartupScreen"
+msgid "Max stored demos"
+msgstr "Maks. depolanan demo"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:718
+msgctxt "StartupScreen"
+msgid "Demos Folder"
+msgstr "Demolar klasörü"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:723
+msgctxt "StartupScreen"
+msgid "Open Demos Folder in Explorer"
+msgstr "Demolar klasörünü Explorer'da aç"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:725
+msgctxt "StartupScreen"
+msgid "Reveal Demos Folder in Finder"
+msgstr "Demolar klasörünü Finder'da göster"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:727
+msgctxt "StartupScreen"
+msgid "Browse Demos Folder"
+msgstr "Demolar klasörüne gözat"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:761
+msgctxt "StartupScreen"
+msgid "An unknown error has occurred while opening the demos directory."
+msgstr "Demolar dizini açılırken bilinmeyen bir hata oluştu."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:771
+msgctxt "StartupScreen"
+msgid "An unknown error has occurred while opening the config directory."
+msgstr "Yapılandırma dizini açılırken bilinmeyen bir hata oluştu."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:779
+msgctxt "StartupScreen"
+msgid "Are you sure to reset all settings? They include (but are not limited to):"
+msgstr ""
+"Tüm ayarları sıfırlamak istediğinizden emin misiniz? Bunlar şunları "
+"içerir (ancak bunlarla sınırlı değil):"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:781
+msgctxt "StartupScreen"
+msgid "All graphics/audio settings"
+msgstr "Tüm grafik/ses ayarları"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:782
+msgctxt "StartupScreen"
+msgid "All key bindings"
+msgstr "Tüm tuş atamaları"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:783
+msgctxt "StartupScreen"
+msgid "Your player name"
+msgstr "Oyuncu adın"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:787
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:126
+msgctxt "StartupScreen"
+msgid "Advanced"
+msgstr "Gelişmiş"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:786
+msgctxt "StartupScreen"
+msgid "Other advanced settings only accessible through '{0}' tab and in-game commands."
+msgstr ""
+"Yalnızca '{0}' sekmesinden ve oyun içi komutlarla erişilebilen diğer "
+"gelişmiş ayarlar."
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:855
+msgctxt "StartupScreen"
+msgid "Unknown ({0})"
+msgstr "Bilinmeyen ({0})"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:920
+msgctxt "StartupScreen"
+msgid "Copy to Clipboard"
+msgstr "Panoya kopyala"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:948
+msgctxt "StartupScreen"
+msgid "Advanced Settings"
+msgstr "Gelişmiş ayarlar"
+
+#: Resources/Scripts/Gui/StartupScreen/ConfigViewTabs.as:956
+msgctxt "StartupScreen"
+msgid "Filter"
+msgstr "Filtre"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:57
+msgctxt "StartupScreen"
+msgid "Start"
+msgstr "Başlat"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:65
+msgctxt "StartupScreen"
+msgid "GitHub Repository"
+msgstr "GitHub Deposu"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:74
+msgctxt "StartupScreen"
+msgid "Compatible Mods"
+msgstr "Uyumlu modlar"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:83
+msgctxt "StartupScreen"
+msgid "Skip this screen next time"
+msgstr "Bir sonraki seferde bu ekranı atla"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:122
+msgctxt "StartupScreen"
+msgid "Graphics"
+msgstr "Grafik"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:123
+msgctxt "StartupScreen"
+msgid "Audio"
+msgstr "Ses"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:124
+msgctxt "StartupScreen"
+msgid "Generic"
+msgstr "Genel"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:125
+msgctxt "StartupScreen"
+msgid "System Info"
+msgstr "Sistem bilgisi"
+
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:138
+#: Resources/Scripts/Gui/StartupScreen/MainMenu.as:148
+msgctxt "StartupScreen"
+msgid "An unknown error has occurred while opening this url."
+msgstr "Bu URL açılırken bilinmeyen bir hata oluştu."

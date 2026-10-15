@@ -1,0 +1,255 @@
+/*
+ Copyright (c) 2013 yvt
+
+ This file is part of OpenSpades.
+
+ OpenSpades is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ OpenSpades is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with OpenSpades.  If not, see <http://www.gnu.org/licenses/>.
+
+ */
+
+#include <limits.h>
+
+#include "FallingBlock.h"
+#include "Client.h"
+#include "GameMap.h"
+#include "IModel.h"
+#include "IAudioChunk.h"
+#include "IAudioDevice.h"
+#include "IRenderer.h"
+#include "ParticleSpriteEntity.h"
+#include "SmokeSpriteEntity.h"
+#include "World.h"
+#include <Core/Debug.h>
+#include <Core/Exception.h>
+#include <Core/Settings.h>
+
+SPADES_SETTING(cg_particles);
+
+namespace spades {
+	namespace client {
+		FallingBlock::FallingBlock(Client* client, IAudioChunk* bounceSound,
+		                           std::vector<IntVector3> blocks)
+		    : client(client), renderer(client->GetRenderer()), bounceSound(bounceSound) {
+			if (blocks.empty())
+				SPRaise("No block given");
+
+			if (bounceSound)
+				bounceSound->AddRef();
+
+			// find min/max
+			int maxX, maxY, maxZ;
+			maxX = maxY = maxZ = -1;
+			int minX, minY, minZ;
+			minX = minY = minZ = INT_MAX;
+
+			uint64_t xSum, ySum, zSum;
+			xSum = ySum = zSum = 0;
+
+			numBlocks = (int)blocks.size();
+
+			for (const auto& v : blocks) {
+				if (v.x < minX) minX = v.x;
+				if (v.y < minY) minY = v.y;
+				if (v.z < minZ) minZ = v.z;
+				if (v.x > maxX) maxX = v.x;
+				if (v.y > maxY) maxY = v.y;
+				if (v.z > maxZ) maxZ = v.z;
+
+				xSum += v.x;
+				ySum += v.y;
+				zSum += v.z;
+			}
+
+			const Handle<GameMap>& map = client->GetWorld()->GetMap();
+			SPAssert(map);
+
+			// build voxel model
+			vmodel = new VoxelModel(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
+
+			for (const auto& v : blocks) {
+				uint32_t col = map->GetColor(v.x, v.y, v.z);
+
+				// apply block darkening
+				int health = col >> 24;
+				uint32_t f = (std::max(health, 32) << 8) / 100;
+				col = DarkenColor(col, f);
+
+				col = map->GetColorJit(col); // randomize color
+				col &= 0xFFFFFF; // use the default material
+				vmodel->SetSolid(v.x - minX, v.y - minY, v.z - minZ, col);
+			}
+
+			// center of gravity
+			Vector3 origin;
+			origin.x = (float)minX - (float)xSum / (float)numBlocks;
+			origin.y = (float)minY - (float)ySum / (float)numBlocks;
+			origin.z = (float)minZ - (float)zSum / (float)numBlocks;
+			vmodel->SetOrigin(origin);
+
+			// build renderer model
+			model = renderer.CreateModel(*vmodel).Unmanage();
+
+			Vector3 matTrans = MakeVector3((float)minX, (float)minY, (float)minZ);
+			matTrans += 0.5F; // voxelmodel's (0,0,0) origins on block center
+			matTrans -= origin; // cancel origin
+
+			matrix = Matrix4::Translate(matTrans);
+			velocity = {0.0F, 0.0F, 0.0F};
+			rotDir = SampleRandom() & 3; // random initial dir
+			time = 1.0F;
+		}
+
+		FallingBlock::~FallingBlock() {
+			model->Release();
+			vmodel->Release();
+
+			if (bounceSound)
+				bounceSound->Release();
+		}
+
+		bool FallingBlock::Update(float dt) {
+			time -= 1.0F / 5.0F * dt;
+
+			const auto& viewOrigin = client->GetLastSceneDef().viewOrigin;
+			float distSqr = (viewOrigin - matrix.GetOrigin()).GetSquaredLength2D();
+			if (distSqr > FOG_DISTANCE_SQ)
+				return false;
+
+			// destroy
+			if (time <= 0.0F) {
+				int w = vmodel->GetWidth();
+				int h = vmodel->GetHeight();
+				int d = vmodel->GetDepth();
+
+				Matrix4 vmat = matrix * Matrix4::Translate(vmodel->GetOrigin());
+
+				// block center
+				Vector3 vmOrigin = vmat.GetOrigin();
+				Vector3 vmAxis1 = vmat.GetAxis(0);
+				Vector3 vmAxis2 = vmat.GetAxis(1);
+				Vector3 vmAxis3 = vmat.GetAxis(2);
+
+				int particleMode = cg_particles;
+				if (!particleMode)
+					return false;
+
+				bool usePrecisePhysics = false;
+				if (distSqr < PARTICLE_BOUNCE_DIST_SQ && numBlocks < 512)
+					usePrecisePhysics = true;
+
+				Handle<IImage> img = renderer.RegisterImage("Gfx/White.tga");
+
+				auto* getRandom = SampleRandomFloat;
+
+				Vector3 velBias = {0, 0, -1.0F};
+
+				for (int x = 0; x < w; x++) {
+					Vector3 p1 = vmOrigin + vmAxis1 * (float)x;
+					for (int y = 0; y < h; y++) {
+						Vector3 p2 = p1 + vmAxis2 * (float)y;
+						for (int z = 0; z < d; z++) {
+							if (!vmodel->IsSolid(x, y, z))
+								continue;
+
+							// inner voxel?
+							if (x > 0 && y > 0 && z > 0 &&
+								x < (w - 1) && y < (h - 1) && z < (d - 1) &&
+							    vmodel->IsSolid(x + 1, y, z) &&
+								vmodel->IsSolid(x - 1, y, z) &&
+							    vmodel->IsSolid(x, y + 1, z) &&
+								vmodel->IsSolid(x, y - 1, z) &&
+							    vmodel->IsSolid(x, y, z + 1) &&
+								vmodel->IsSolid(x, y, z - 1))
+								continue;
+
+							uint32_t col = vmodel->GetColor(x, y, z);
+							Vector4 color = ConvertColorRGBA(IntVectorFromColor(col));
+
+							Vector3 p3 = p2 + vmAxis3 * (float)z;
+
+							for (int i = 0; i < 4; i++) {
+								auto ent = stmp::make_unique<ParticleSpriteEntity>(*client, img, color);
+								ent->SetTrajectory(p3, (RandomVector() + velBias * 0.5F) * 8.0F, 1.0F, 0.6F);
+								ent->SetRadius(0.4F + getRandom() * getRandom() * 0.1F);
+								ent->SetLifeTime(2.0F, 0.0F, 1.0F);
+								if (usePrecisePhysics)
+									ent->SetBlockHitAction(BlockHitAction::BounceWeak);
+								client->AddLocalEntity(std::move(ent));
+							}
+
+							if (particleMode >= 2) {
+								auto ent = stmp::make_unique<SmokeSpriteEntity>(*client, color, 70.0F);
+								ent->SetTrajectory(p3, RandomVector() * 0.2F, 1.0F, 0.0F);
+								ent->SetRotation(getRandom() * kTwoPi);
+								ent->SetRadius(1.0F, 0.5F);
+								ent->SetBlockHitAction(BlockHitAction::Ignore);
+								ent->SetLifeTime(1.0F + getRandom() * 0.5F, 0.0F, 1.0F);
+								client->AddLocalEntity(std::move(ent));
+							}
+						}
+					}
+				}
+
+				return false;
+			}
+
+			Matrix4 lastMat = matrix;
+
+			matrix = matrix * Matrix4::Rotate(MakeVector3(1, 0, 0),
+				((rotDir & 1) ? 1.0F : -1.0F) * dt);
+			matrix = matrix * Matrix4::Rotate(MakeVector3(0, 1, 0),
+				((rotDir & 2) ? 1.0F : -1.0F) * dt);
+			matrix = Matrix4::Translate(velocity * dt) * matrix;
+			velocity.z += dt * 32.0F;
+
+			const Handle<GameMap>& map = client->GetWorld()->GetMap();
+			SPAssert(map);
+
+			// Collision
+			IntVector3 lp = matrix.GetOrigin().Floor();
+
+			if (map->ClipWorld(lp.x, lp.y, lp.z)) { // hit a wall
+				if (fabsf(velocity.z) > BOUNCE_SOUND_THRESHOLD) {
+					if (bounceSound && !client->IsMuted()) {
+						IAudioDevice& dev = client->GetAudioDevice();
+						dev.Play(bounceSound, matrix.GetOrigin(), AudioParam());
+					}
+				}
+
+				IntVector3 lp2 = lastMat.GetOrigin().Floor();
+				if (lp.z != lp2.z &&
+				    ((lp.x == lp2.x && lp.y == lp2.y) || !map->ClipWorld(lp.x, lp.y, lp2.z))) {
+					velocity.z = -velocity.z;
+				} else {
+					return false;
+				}
+
+				matrix = lastMat;
+				velocity *= 0.46F; // lose some velocity due to friction
+				rotDir = (rotDir + 1) % 4;
+				time -= 0.36F;
+			}
+
+			return true;
+		}
+
+		void FallingBlock::Render3D() {
+			ModelRenderParam param;
+			param.ghost = true;
+			param.opacity = std::max(0.25F, time);
+			param.matrix = matrix;
+			renderer.RenderModel(*model, param);
+		}
+	} // namespace client
+} // namespace spades

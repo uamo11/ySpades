@@ -1,0 +1,2960 @@
+/*
+ Copyright (c) 2013 yvt
+ based on code of pysnip (c) Mathias Kaerlev 2011-2012.
+
+ This file is part of OpenSpades.
+
+ OpenSpades is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ OpenSpades is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with OpenSpades.	 If not, see <http://www.gnu.org/licenses/>.
+
+ */
+
+#include <algorithm>
+#include <cstdarg>
+#include <cstdlib>
+#include <vector>
+
+#include "Client.h"
+
+#include <Core/Bitmap.h>
+#include <Core/ConcurrentDispatch.h>
+#include <Core/FileManager.h>
+#include <Core/Settings.h>
+#include <Core/Strings.h>
+#include <Draw/SW/SWRenderer.h>
+
+#include "CTFGameMode.h"
+#include "CenterMessageView.h"
+#include "ChatWindow.h"
+#include "ClientPlayer.h"
+#include "ClientUI.h"
+#include "Fonts.h"
+#include "GameProperties.h"
+#include "HitTestDebugger.h"
+#include "HurtRingView.h"
+#include "IFont.h"
+#include "IGameMode.h"
+#include "LimboView.h"
+#include "MapView.h"
+#include "PaletteView.h"
+#include "PieMenuView.h"
+#include "ScreenShot.h"
+#include "ScoreboardView.h"
+#include "TCGameMode.h"
+#include "TCProgressView.h"
+#include "Teamplay.h"
+#include "TeamplayMarker.h"
+
+#include "GameMap.h"
+#include "Weapon.h"
+#include "World.h"
+
+#include "NetClient.h"
+
+DEFINE_SPADES_SETTING(cg_hitIndicator, "1");
+DEFINE_SPADES_SETTING(cg_debugAim, "0");
+SPADES_SETTING(cg_keyReloadWeapon);
+SPADES_SETTING(cg_keyJump);
+SPADES_SETTING(cg_keyAttack);
+SPADES_SETTING(cg_keyAltAttack);
+SPADES_SETTING(cg_keyCrouch);
+SPADES_SETTING(cg_keyLimbo);
+SPADES_SETTING(cg_keyToggleSpectatorNames);
+SPADES_SETTING(cg_keySpectatorZoom);
+SPADES_SETTING(cg_keyStaffSpectating);
+SPADES_SETTING(cg_keyDemoPlayPause);
+SPADES_SETTING(cg_keyDemoSeekForward);
+SPADES_SETTING(cg_keyDemoSeekBackward);
+SPADES_SETTING(cg_keyDemoRecord);
+SPADES_SETTING(cg_keyDemoSpeedUp);
+SPADES_SETTING(cg_keyDemoSlowDown);
+SPADES_SETTING(cg_keyDemoToggleHud);
+DEFINE_SPADES_SETTING(cg_stats, "0");
+DEFINE_SPADES_SETTING(cg_statsSmallFont, "0");
+DEFINE_SPADES_SETTING(cg_playerStats, "0");
+DEFINE_SPADES_SETTING(cg_playerStatsShowPlacedBlocks, "0");
+DEFINE_SPADES_SETTING(cg_playerStatsHeight, "70");
+DEFINE_SPADES_SETTING(cg_hideHud, "0");
+DEFINE_SPADES_SETTING(cg_hudColor, "0");
+DEFINE_SPADES_SETTING(cg_hudColorR, "255");
+DEFINE_SPADES_SETTING(cg_hudColorG, "255");
+DEFINE_SPADES_SETTING(cg_hudColorB, "255");
+DEFINE_SPADES_SETTING(cg_hudAmmoStyle, "0");
+DEFINE_SPADES_SETTING(cg_hudSafezoneX, "1");
+DEFINE_SPADES_SETTING(cg_hudSafezoneY, "1");
+DEFINE_SPADES_SETTING(cg_hudCompassBar, "1");
+DEFINE_SPADES_SETTING(cg_hudPlayerCount, "0");
+DEFINE_SPADES_SETTING(cg_hudHealthBar, "1");
+DEFINE_SPADES_SETTING(cg_hudHealthAnimation, "1");
+DEFINE_SPADES_SETTING(cg_hudReloadIndicator, "1");
+DEFINE_SPADES_SETTING(cg_playerNames, "2");
+DEFINE_SPADES_SETTING(cg_playerNameX, "0");
+DEFINE_SPADES_SETTING(cg_playerNameY, "0");
+DEFINE_SPADES_SETTING(cg_espBoxes, "0");
+DEFINE_SPADES_SETTING(cg_espNames, "0");
+DEFINE_SPADES_SETTING(cg_espTracers, "0");
+DEFINE_SPADES_SETTING(cg_playerNamesDead, "1");
+DEFINE_SPADES_SETTING(cg_debugHitTestSize, "128");
+DEFINE_SPADES_SETTING(cg_debugHitTestFadeTime, "10");
+// 0: off, 1: the numbers of bullet hits, 2: grenade hits too. On a server with the
+// Damage Markers extension every number comes from the server, which does not say
+// what dealt the damage, so any non-zero value shows them all, melee included.
+DEFINE_SPADES_SETTING(cg_damageIndicators, "1");
+DEFINE_SPADES_SETTING(cg_hurtScreenEffects, "1");
+DEFINE_SPADES_SETTING(cg_healScreenEffects, "1");
+
+DEFINE_SPADES_SETTING(cg_hudHotbar, "1");
+SPADES_SETTING(cg_keyToolSpade);
+SPADES_SETTING(cg_keyToolBlock);
+SPADES_SETTING(cg_keyToolWeapon);
+SPADES_SETTING(cg_keyToolGrenade);
+
+SPADES_SETTING(cg_hudPalette);
+SPADES_SETTING(cg_keyCaptureColor);
+SPADES_SETTING(cg_keyPaletteLeft);
+SPADES_SETTING(cg_keyPaletteRight);
+SPADES_SETTING(cg_keyPaletteUp);
+SPADES_SETTING(cg_keyPaletteDown);
+SPADES_SETTING(cg_keyExtendedPalette);
+
+SPADES_SETTING(cg_minimapSize);
+
+namespace spades {
+	namespace client {
+
+		namespace {
+			std::string TrKey(const std::string& name) {
+				if (name.empty()) {
+					return _Tr("Client", "Unbound");
+				} else if (name == "LeftMouseButton") {
+					return "LMB";
+				} else if (name == "RightMouseButton") {
+					return "RMB";
+				} else if (name == "MiddleMouseButton") {
+					return "MMB";
+				} else if (name == "MouseButton4") {
+					return "MB4";
+				} else if (name == "MouseButton5") {
+					return "MB5";
+				} else if (name == "Control") {
+					return "CTRL";
+				} else if (name == "Left Ctrl") {
+					return "LCTRL";
+				} else if (name == "Right Ctrl") {
+					return "RCTRL";
+				} else {
+					return ToUpperCase(name);
+				}
+			}
+		} // namespace
+
+		void Client::TakeScreenShot(bool sceneOnly, bool scoreboardOnly) {
+			SceneDefinition sceneDef = CreateSceneDefinition();
+			lastSceneDef = sceneDef;
+			UpdateMatrices();
+
+			// render scene
+			flashDlights = flashDlightsOld;
+			DrawScene();
+
+			if (scoreboardOnly) {
+				scoreboard->Draw();
+			} else if (!sceneOnly) {
+				// draw 2d
+				Draw2D();
+			}
+
+			// Well done!
+			renderer->FrameDone();
+
+			try {
+				auto name = SaveScreenShot(*renderer);
+
+				std::string msg = sceneOnly
+					? _Tr("Client", "Sceneshot saved: {0}", name)
+					: _Tr("Client", "Screenshot saved: {0}", name);
+				ShowAlert(msg, AlertType::Notice);
+
+				PlayScreenshotSound();
+			} catch (const Exception& ex) {
+				auto msg = _Tr("Client", "Screenshot failed: ");
+				msg += ex.GetShortMessage();
+				ShowAlert(msg, AlertType::Error);
+				SPLog("Screenshot failed: %s", ex.what());
+			} catch (const std::exception& ex) {
+				auto msg = _Tr("Client", "Screenshot failed: ");
+				msg += ex.what();
+				ShowAlert(msg, AlertType::Error);
+				SPLog("Screenshot failed: %s", ex.what());
+			}
+		}
+
+#pragma mark - HUD Drawings
+
+		void Client::DrawSplash() {
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, 1));
+			renderer->DrawImage(nullptr, AABB2(0, 0, sw, sh));
+
+			Handle<IImage> img = renderer->RegisterImage("Gfx/Title/Logo.png");
+
+			Vector2 size = {img->GetWidth(), img->GetHeight()};
+			size *= std::min(1.0F, sw / size.x);
+			size *= std::min(1.0F, sh / size.y);
+
+			float pulse = fabsf(sinf(time));
+			size *= 1.0F - (pulse * (pulse * 0.25F));
+
+			Vector2 pos = (MakeVector2(sw, sh) - size) * 0.5F;
+
+			renderer->SetColorAlphaPremultiplied(MakeVector4(1, 1, 1, 1));
+			renderer->DrawImage(img, AABB2(pos.x, pos.y, size.x, size.y));
+		}
+
+		void Client::DrawStartupScreen() {
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			DrawSplash();
+
+			IFont& font = fontManager->GetGuiFont();
+			std::string str = _Tr("Client", "NOW LOADING");
+			Vector2 size = font.Measure(str);
+			Vector2 pos = (MakeVector2(sw, sh) - 16.0F) - size;
+			font.DrawShadow(str, pos, 1.0F, MakeVector4(1, 1, 1, 1), MakeVector4(0, 0, 0, 0.5));
+		}
+
+		void Client::DrawDemoPlaybackHUD() {
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			const float duration = demoNet->GetDuration();
+			const float demoTime = demoNet->GetTime();
+			const float demoSpeed = demoNet->GetSpeed();
+			const float progress = (duration > 0.0F) ? (demoTime / duration) : 0.0F;
+
+			bool isPaused = demoNet->IsPaused();
+
+			Vector4 white = MakeVector4(1, 1, 1, 1);
+			Vector4 shadow = MakeVector4(0, 0, 0, 0.5F);
+
+			Vector4 barColor = isPaused
+				? MakeVector4(0.7F, 0.7F, 0.7F, 1)
+				: MakeVector4(0.2F, 0.8F, 1.0F, 1);
+			Vector4 barBackgroundColor = MakeVector4(0, 0, 0, 1) * 0.6F;
+			Vector4 barOutlineColor = MakeVector4(1, 1, 1, 1) * 0.1F;
+
+			// minimal HUD: just a 2px progress bar at the bottom
+			if (!demoHudVisible) {
+				const float barH = 2.0F;
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, 0.4F));
+				renderer->DrawFilledRect(0, sh - barH, sw, sh);
+				renderer->SetColorAlphaPremultiplied(barColor);
+				renderer->DrawFilledRect(0, sh - barH, sw * progress, sh);
+				return;
+			}
+
+			auto fmtTime = [](float t) -> std::string {
+				int mins = static_cast<int>(t) / 60;
+				int secs = static_cast<int>(t) % 60;
+				char buf[16];
+				snprintf(buf, sizeof(buf), "%d:%02d", mins, secs);
+				return buf;
+			};
+
+			const std::string curStr = fmtTime(demoTime);
+			const std::string durStr = fmtTime(duration);
+
+			char spdBuf[16];
+			snprintf(spdBuf, sizeof(spdBuf), (demoSpeed == 1.0F) ? "%.0fx" : "%.2gx", demoSpeed);
+
+			IFont& font = fontManager->GetGuiFont();
+
+			const Vector2 curSize = font.Measure(curStr);
+			const Vector2 durSize = font.Measure(durStr);
+			const Vector2 spdSize = font.Measure(spdBuf);
+
+			const float statusIconSize = 16.0F;
+			const float edgeMargin = 8.0F;
+			const float labelGap = 8.0F;
+			const float barGap = 6.0F;
+
+			const float statusX = edgeMargin;
+			const float speedFixedW = font.Measure("0.00x").x;
+			const float controlsW = statusIconSize + labelGap + speedFixedW;
+			const float timelineX = edgeMargin + controlsW + labelGap;
+			const float speedX = statusX + statusIconSize + labelGap;
+
+			const float barH = 8.0F;
+			const float barX = timelineX + curSize.x + barGap;
+			const float barY = (sh - edgeMargin) - barH;
+			const float barW = (sw - edgeMargin) - durSize.x - barGap - barX;
+			const float progressBarW = barW * progress;
+
+			const float textY = barY + (barH - curSize.y) * 0.5F;
+
+			// draw bar background
+			renderer->SetColorAlphaPremultiplied(barBackgroundColor);
+			renderer->DrawFilledRect(0, barY - edgeMargin, sw, sh);
+			renderer->SetColorAlphaPremultiplied(barOutlineColor);
+			renderer->DrawFilledRect(0, barY - edgeMargin - 1, sw, barY - edgeMargin);
+
+			// draw bar
+			renderer->SetColorAlphaPremultiplied(shadow);
+			renderer->DrawFilledRect(barX, barY, barX + barW, barY + barH);
+
+			// draw progress bar
+			renderer->SetColorAlphaPremultiplied(barColor);
+			renderer->DrawFilledRect(barX, barY, barX + progressBarW, barY + barH);
+
+			// draw bar outline
+			renderer->SetColorAlphaPremultiplied(barOutlineColor);
+			renderer->DrawOutlinedRect(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1);
+
+			// draw bar playhead
+			const float lineW = 4.0F;
+			const float lineH = 1.0F;
+			const float lineX = barX + progressBarW - lineW * 0.5F;
+			renderer->SetColorAlphaPremultiplied(barColor * MakeVector4(0.7F, 0.7F, 0.7F, 1));
+			renderer->DrawFilledRect(lineX, barY - lineH, lineX + lineW, barY + barH + lineH);
+			renderer->SetColorAlphaPremultiplied(shadow);
+			renderer->DrawOutlinedRect(lineX - 1, barY - lineH - 1, lineX + lineW + 1, barY + barH + lineH + 1);
+
+			// draw status playing/paused
+			Handle<IImage> playIcon = renderer->RegisterImage("Gfx/Demo/Play.png");
+			Handle<IImage> pauseIcon = renderer->RegisterImage("Gfx/Demo/Pause.png");
+			const float iconX = statusX;
+			const float iconY = barY + (barH - statusIconSize) * 0.5F;
+			renderer->SetColorAlphaPremultiplied(white);
+			renderer->DrawImage(isPaused ? pauseIcon : playIcon, AABB2(iconX, iconY, statusIconSize, statusIconSize));
+
+			// draw playback speed
+			const float speedTextX = speedX + (speedFixedW - spdSize.x) * 0.5F;
+			font.DrawShadow(spdBuf, MakeVector2(speedTextX, textY), 1.0F, white, shadow);
+
+			// draw time labels
+			font.DrawShadow(curStr, MakeVector2(timelineX, textY), 1.0F, white, shadow);
+			font.DrawShadow(durStr, MakeVector2((sw - edgeMargin) - durSize.x, textY), 1.0F, white, shadow);
+		}
+
+		void Client::DrawRecordingIndicator() {
+			float sw = renderer->ScreenWidth();
+
+			int recTime = static_cast<int>(net->GetDemoRecordingTime());
+			char timeBuf[16];
+			snprintf(timeBuf, sizeof(timeBuf), "%d:%02d", recTime / 60, recTime % 60);
+
+			const std::string recStr = "REC";
+
+			IFont& font = fontManager->GetSmallGuiFont();
+
+			const Vector2 recSize = font.Measure(recStr);
+			const float timeFixedW = font.Measure("00:00").x;
+
+			const float iconSize = 10.0F;
+			const float iconTextOffset = iconSize - 4.0F;
+			const float labelGap = 6.0F;
+			const float totalW = iconTextOffset + labelGap + recSize.x + labelGap + timeFixedW;
+
+			float minimapY = 8.0F;
+			const int statsMode = cg_stats;
+			if (statsMode == 2 || (statsMode >= 3 && scoreboardVisible))
+				minimapY += cg_statsSmallFont ? 10.0F : 20.0F;
+			float minimapSize = Clamp((float)cg_minimapSize, 32.0F, 256.0F);
+
+			const float x = (sw - 8.0F) - minimapSize - totalW;
+			const float y = minimapY;
+
+			Vector4 red = MakeVector4(1, 0.15F, 0.15F, 1);
+			Vector4 shadow = MakeVector4(0, 0, 0, 0.6F);
+
+			bool dotVisible = fmodf(time, 1.0F) < 0.6F;
+			if (dotVisible) {
+				float size = (iconSize - 2.0F) * 0.5F;
+				renderer->SetColorAlphaPremultiplied(shadow * 0.3F);
+				renderer->DrawOutlinedCircle(MakeVector2(x + size, y + size), size, 2.0F);
+				renderer->SetColorAlphaPremultiplied(red);
+				renderer->DrawFilledCircle(MakeVector2(x + size, y + size), size);
+			}
+
+			float textX = x + iconTextOffset + labelGap;
+			float textY = y + (iconSize - recSize.y) * 0.5F;
+
+			font.DrawShadow(recStr, MakeVector2(textX, textY), 1.0F, red, shadow);
+			font.DrawShadow(timeBuf, MakeVector2(textX + recSize.x + labelGap, textY), 1.0F, red, shadow);
+		}
+
+		void Client::DrawAlivePlayersCount() {
+			const int playerCountMode = cg_hudPlayerCount;
+			if (playerCountMode >= 3)
+				return; // draw on scoreboard
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			float teamBarW = 30.0F;
+			float teamBarH = 40.0F;
+
+			float x = sw * 0.5F;
+			float y = 8.0F;
+
+			const int statsMode = cg_stats;
+
+			bool isDemoMode = IsDemoMode();
+			bool statsOnTop = statsMode == 2
+				|| (statsMode >= 3 && scoreboardVisible)
+				|| (statsMode == 1 && isDemoMode);
+			bool playerCountOnTop = playerCountMode > 0
+				&& playerCountMode < 2
+				|| (playerCountMode >= 1 && playerCountMode < 3 && isDemoMode); // force on screen top for demo mode
+
+			// account for client stats height
+			if ((statsOnTop && playerCountOnTop)
+				|| ((statsMode > 0 && statsMode == 1) && !playerCountOnTop))
+				y += cg_statsSmallFont ? 10.0F : 20.0F;
+
+			float teamBarY = playerCountOnTop ? y : ((sh - y) - teamBarH);
+
+			Handle<IImage> img;
+			IFont& font = fontManager->GetHeadingFont();
+			Vector2 pos, size;
+			std::string str;
+
+			Vector4 white = MakeVector4(1, 1, 1, 1);
+			Vector4 col1 = ConvertColorRGBA(world->GetTeamColor(0));
+			Vector4 col2 = ConvertColorRGBA(world->GetTeamColor(1));
+			Vector4 brightCol1 = col1 + (white - col1) * 0.5F;
+			Vector4 brightCol2 = col2 + (white - col2) * 0.5F;
+			Vector4 shadowColor = MakeVector4(0, 0, 0, 0.5);
+
+			// draw team bar
+			img = renderer->RegisterImage("Gfx/White.tga");
+			size.y = 2.0F;
+			renderer->SetColorAlphaPremultiplied(brightCol1);
+			renderer->DrawImage(img, AABB2(x - teamBarW, teamBarY, teamBarW, size.y));
+			renderer->SetColorAlphaPremultiplied(brightCol2);
+			renderer->DrawImage(img, AABB2(x, teamBarY, teamBarW, size.y));
+
+			// draw shadow
+			const float shadowSolid = 12.0F;
+			const float shadowFade = 28.0F;
+			const float shadowTotal = shadowSolid + shadowFade;
+			Vector4 shadow1 = MakeVector4(0, 0, 0, 0.4F), shadow2 = MakeVector4(0, 0, 0, 0);
+			renderer->DrawFilledRectFadeSolid(
+				x - teamBarW, teamBarY + 2.0F, x + teamBarW, teamBarY + shadowTotal,
+				teamBarY + shadowSolid, teamBarY + shadowTotal, shadow1, shadow2
+			);
+
+			// draw player icon
+			img = renderer->RegisterImage("Gfx/User.png");
+			float iconSize = 12.0F;
+			float iconSpacing = 5.0F;
+			pos.x = x - (teamBarW * 0.5F) - (iconSize * 0.5F);
+			pos.y = (teamBarY - 2.0F) + iconSize - iconSpacing;
+			renderer->SetColorAlphaPremultiplied(shadowColor);
+			renderer->DrawImage(img, pos + MakeVector2(1, 1));
+			renderer->SetColorAlphaPremultiplied(brightCol1);
+			renderer->DrawImage(img, pos);
+
+			pos.x = x + (teamBarW * 0.5F) - (iconSize * 0.5F);
+			renderer->SetColorAlphaPremultiplied(shadowColor);
+			renderer->DrawImage(img, pos + MakeVector2(1, 1));
+			renderer->SetColorAlphaPremultiplied(brightCol2);
+			renderer->DrawImage(img, pos);
+
+			// count alive players
+			int numAliveTeam1 = 0, numAliveTeam2 = 0;
+			for (size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
+				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
+				if (!maybePlayer)
+					continue;
+				Player& player = maybePlayer.value();
+				if (!player.IsAlive())
+					continue;
+				int teamId = player.GetTeamId();
+				if (teamId == 0)
+					numAliveTeam1++;
+				else if (teamId == 1)
+					numAliveTeam2++;
+			}
+
+			// draw player count
+			str = ToString(numAliveTeam1);
+			size = font.Measure(str);
+			pos.x = x - (teamBarW * 0.5F) - (size.x * 0.5F);
+			pos.y = (teamBarY - 2.0F) + iconSize + iconSpacing;
+			font.Draw(str, pos + MakeVector2(1, 1), 1.0F, shadowColor);
+			font.Draw(str, pos, 1.0F, brightCol1);
+
+			str = ToString(numAliveTeam2);
+			size = font.Measure(str);
+			pos.x = x + (teamBarW * 0.5F) - (size.x * 0.5F);
+			font.Draw(str, pos + MakeVector2(1, 1), 1.0F, shadowColor);
+			font.Draw(str, pos, 1.0F, brightCol2);
+		}
+
+		void Client::DrawHurtSprites() {
+			float per = (time - lastHurtTime) / 1.5F;
+			if (per < 0.0F || per > 1.0F)
+				return;
+
+			Handle<IImage> img = renderer->RegisterImage("Gfx/HurtSprite.png");
+			Vector2 size = {img->GetWidth(), img->GetHeight()};
+
+			Vector2 scrSize = {renderer->ScreenWidth(), renderer->ScreenHeight()};
+			Vector2 scrCenter = scrSize * 0.5F;
+
+			float radius = scrSize.GetLength() * 0.5F;
+
+			for (const auto& spr : hurtSprites) {
+				float alpha = spr.strength - per;
+				if (alpha < 0.0F)
+					continue;
+				if (alpha > 1.0F)
+					alpha = 1.0F;
+
+				float c = cosf(spr.angle);
+				float s = sinf(spr.angle);
+
+				Vector2 radDir = {c, s};
+				Vector2 angDir = {-s, c};
+				float siz = spr.scale * radius;
+				Vector2 base = radDir * radius + scrCenter;
+				Vector2 centVect = radDir * (-siz);
+				Vector2 sideVect1 = angDir * (siz * 4.0F * (spr.horzShift));
+				Vector2 sideVect2 = angDir * (siz * 4.0F * (spr.horzShift - 1.0F));
+
+				Vector2 v1 = base + centVect + sideVect1;
+				Vector2 v2 = base + centVect + sideVect2;
+				Vector2 v3 = base + sideVect1;
+
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, alpha));
+				renderer->DrawImage(img, v1, v2, v3, AABB2(0, 8, size.x, size.y));
+			}
+		}
+
+		void Client::DrawScreenEffect(bool hurt, float fadeTime) {
+			SPADES_MARK_FUNCTION();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			Player& p = world->GetLocalPlayer().value();
+			float hpper = p.GetHealth() / 100.0F;
+
+			float lastEffectTime = hurt ? lastHurtTime : lastHealTime;
+			float timeSinceEffect = time - lastEffectTime;
+
+			if (time >= lastEffectTime && timeSinceEffect < fadeTime) {
+				float prg = 1.0F - (timeSinceEffect / fadeTime);
+				prg *= 0.3F + (1.0F - hpper) * 0.7F;
+				prg = 1.0F - std::min(prg, 0.9F);
+
+				if (dynamic_cast<draw::SWRenderer*>(&GetRenderer())) {
+					prg = (1.0F - prg) * 0.5F;
+					renderer->SetColorAlphaPremultiplied(hurt
+						? MakeVector4(prg, 0.0F, 0.0F, prg)
+						: MakeVector4(0.0F, prg, 0.0F, prg));
+					renderer->DrawImage(nullptr, AABB2(0, 0, sw, sh));
+				} else {
+					renderer->MultiplyScreenColor(hurt
+						? MakeVector3(1.0F, prg, prg)
+						: MakeVector3(prg, 1.0F, prg));
+
+					prg = (1.0F - prg) * 0.1F;
+					renderer->SetColorAlphaPremultiplied(hurt
+						? MakeVector4(prg, 0.0F, 0.0F, prg)
+						: MakeVector4(0.0F, prg, 0.0F, prg));
+					renderer->DrawImage(nullptr, AABB2(0, 0, sw, sh));
+				}
+			}
+		}
+
+		Vector4 Client::GetPlayerColor(Player& player) {
+			Vector4 playerColor = MakeVector4(1, 1, 1, 1);
+
+			Vector3 eye = lastSceneDef.viewOrigin;
+			Vector3 dir = player.GetEye() - eye;
+
+			float dist = dir.GetSquaredLength2D();
+
+			float fadeStart = FOG_DISTANCE + 10.0F;
+			float fadeEnd = fadeStart + 10.0F;
+			float fade = (sqrtf(dist) - fadeStart) / (fadeEnd - fadeStart);
+			float alpha = Clamp(1.0F - fade, 0.1F, 1.0F);
+
+			// camera coincides with the player's eye (e.g. mid-spectator-switch);
+			// skip the raycast since direction is undefined
+			GameMap::RayCastResult mapResult;
+			if (dir.GetSquaredLength() < 1.0E-6F) {
+				mapResult.hit = false;
+			} else {
+				mapResult = map->CastRay2(eye, dir, 256);
+			}
+
+			if (dist > FOG_DISTANCE_SQ) {
+				playerColor = MakeVector4(1, 0.75, 0, 1);
+			} else if (mapResult.hit && (mapResult.hitPos - eye).GetSquaredLength2D() < dist) {
+				playerColor = player.IsLocalPlayer() ? MakeVector4(0, 1, 1, 1)
+													 : ConvertColorRGBA(player.GetColor());
+			}
+
+			playerColor.w *= alpha;
+
+			return playerColor;
+		}
+
+		void Client::DrawPlayerName(Player& player, const Vector4& color) {
+			SPADES_MARK_FUNCTION();
+
+			Vector3 origin = player.GetEye();
+			origin.z -= 0.45F; // above player head
+
+			Vector2 scrPos;
+			if (Project(origin, scrPos)) {
+				scrPos.x += (int)cg_playerNameX;
+				scrPos.y += (int)cg_playerNameY;
+
+				std::string str = player.GetName();
+
+				// add distance
+				const float dist = (origin - lastSceneDef.viewOrigin).GetLength2D();
+				if ((int)cg_playerNames < 2 && dist <= FOG_DISTANCE) {
+					char buf[32];
+					snprintf(buf, sizeof(buf), " [%.1f]", dist);
+					str += buf;
+				}
+
+				IFont& font = fontManager->GetGuiFont();
+
+				Vector2 size = font.Measure(str);
+				scrPos.x -= size.x * 0.5F;
+				scrPos.y -= size.y;
+
+				// rounded for better pixel alignment
+				scrPos.x = floorf(scrPos.x);
+				scrPos.y = floorf(scrPos.y);
+
+				float luminosity = color.x + color.y + color.z;
+				Vector4 shadowColor = (luminosity > 0.9F)
+					? MakeVector4(0, 0, 0, 0.8F)
+					: MakeVector4(1, 1, 1, 0.8F);
+
+				shadowColor.w *= color.w;
+
+				font.DrawShadow(str, scrPos, 1.0F, color, shadowColor);
+			}
+		}
+
+		void Client::DrawHottrackedPlayerName() {
+			SPADES_MARK_FUNCTION();
+
+			auto hottracked = HotTrackedPlayer();
+			if (hottracked) {
+				Player& player = std::get<0>(*hottracked);
+				if (HasTeamplayChevronName(player))
+					return; // the chevron already names them, higher up
+				DrawPlayerName(player, MakeVector4(1, 1, 1, 1));
+			}
+		}
+
+		void Client::DrawPlayerBox(Player& player, const Vector4& color) {
+			SPADES_MARK_FUNCTION();
+
+			// get player aabb
+			const auto& box = player.GetBox().Inflate(0.25F);
+
+			// corners of the 3d box
+			std::array<Vector3, 8> corners = {{
+				{box.min.x, box.min.y, box.min.z},
+				{box.min.x, box.max.y, box.min.z},
+				{box.max.x, box.max.y, box.min.z},
+				{box.max.x, box.min.y, box.min.z},
+				{box.max.x, box.max.y, box.max.z},
+				{box.min.x, box.max.y, box.max.z},
+				{box.min.x, box.min.y, box.max.z},
+				{box.max.x, box.min.y, box.max.z}
+			}};
+
+			float left = std::numeric_limits<float>::max();
+			float top = std::numeric_limits<float>::max();
+			float right = -std::numeric_limits<float>::max();
+			float bottom = -std::numeric_limits<float>::max();
+
+			// get screen positions
+			Vector2 scrPos;
+			for (auto const& corner : corners) {
+				if (!Project(corner, scrPos))
+					return; // offscreen or behind camera
+
+				left = std::min(left, scrPos.x);
+				right = std::max(right, scrPos.x);
+				top = std::min(top, scrPos.y);
+				bottom = std::max(bottom, scrPos.y);
+			}
+
+			// rounded for better pixel alignment
+			left = floorf(left);
+			top = floorf(top);
+			right = ceilf(right);
+			bottom = ceilf(bottom);
+
+			// draw boxes
+			Vector4 shadowP = MakeVector4(0, 0, 0, 0.25F * color.w).Premultiplied();
+			Vector4 colorP = color.Premultiplied();
+
+			renderer->SetColorAlphaPremultiplied(shadowP);
+			renderer->DrawOutlinedRect(left - 1, top - 1, right + 1, bottom + 1);
+
+			renderer->SetColorAlphaPremultiplied(colorP);
+			renderer->DrawOutlinedRect(left, top, right, bottom);
+		}
+
+		void Client::DrawPubOVL() {
+			SPADES_MARK_FUNCTION();
+
+			auto cameraMode = GetCameraMode();
+			bool isFollowingNonLocal = FollowsNonLocalPlayer(cameraMode);
+
+			int focusedPlayerId = GetCameraTargetPlayerId();
+			stmp::optional<Player&> maybeTarget;
+			if (focusedPlayerId >= 0 && focusedPlayerId < static_cast<int>(world->GetNumPlayerSlots()))
+				maybeTarget = world->GetPlayer(focusedPlayerId);
+
+			for (size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
+				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
+				if (!maybePlayer)
+					continue; // player is non-existent
+
+				Player& p = maybePlayer.value();
+				if (p.IsSpectator() || !p.IsAlive())
+					continue; // don't draw dead players or spectators
+
+				// dont draw the focused player name when following non-local players
+				if (isFollowingNonLocal && maybeTarget && &p == &maybeTarget.value())
+					continue;
+
+				// don't draw on our own local player
+				if (world->GetLocalPlayer() && &p == world->GetLocalPlayer().get_pointer())
+					continue;
+
+				// Do not draw a player with an invalid state
+				if (p.GetFront().GetSquaredLength() < 0.01F)
+					continue;
+
+				const auto& color = GetPlayerColor(p);
+				if (staffSpectating || cg_espBoxes)
+					DrawPlayerBox(p, color);
+				if (((spectatorPlayerNames || cg_espNames) && !HasTeamplayChevronName(p)) || cg_espNames)
+					DrawPlayerName(p, color);
+				if (cg_espTracers) {
+					Vector2 scrPos;
+					if (Project(p.GetOrigin(), scrPos)) {
+						renderer->SetColorAlphaPremultiplied(color.Premultiplied());
+						renderer->DrawLine(MakeVector2(renderer->ScreenWidth() * 0.5F, renderer->ScreenHeight()),
+						                   scrPos, 1.5F);
+					}
+				}
+			}
+		}
+
+#pragma mark - Teamplay
+
+		Vector4 Client::GetTeamplayTeamColor(Player& p, float alpha) {
+			// The extension is explicit that a TEAM_ESP highlight uses the team colour
+			// the server sent in State Data, not the player's own block colour, so the
+			// highlight reads as team information at a glance.
+			Vector4 color = ConvertColorRGBA(world->GetTeamColor(p.GetTeamId()));
+			color.w = alpha;
+			return color;
+		}
+
+		bool Client::HasTeamplayChevronName(Player& p) {
+			SPADES_MARK_FUNCTION();
+
+			if (!world || !p.IsAlive() || p.IsSpectator())
+				return false;
+
+			auto maybeLocal = world->GetLocalPlayer();
+			if (!maybeLocal)
+				return false;
+
+			Player& local = maybeLocal.value();
+			if (&p == &local)
+				return false;
+
+			// DrawEspMarks draws the chevron for a mark that names the world surface, but
+			// names the player only when the server asked for it; with SHOW_NAME clear the
+			// ordinary label is left to do its own job, since it is the client's feature
+			// and not the mark speaking.
+			auto mark = teamplay->GetMark(p.GetId());
+			if (mark && (mark->surfaces & Teamplay::SurfaceWorld))
+				return mark->showName;
+
+			// DrawTeamOverlay draws one for every teammate while the key is held, marked
+			// or not, unless a world mark above took the chevron over.
+			return teamplay->IsTeamESPEnabled() && teamOverlayAlpha > 0.0F &&
+				   !local.IsSpectator() && local.IsTeammate(p);
+		}
+
+		void Client::DrawPlayerChevron(Player& p, const Vector4& color, bool showWeapon,
+									   bool showName, const std::string& note) {
+			SPADES_MARK_FUNCTION();
+
+			float alpha = color.w;
+			if (alpha <= 0.0F)
+				return;
+
+			Vector3 origin = p.GetEye();
+			origin.z -= 0.95F; // clear of the helmet at any pitch
+
+			Vector2 scrPos;
+			if (!Project(origin, scrPos))
+				return;
+
+			scrPos.x = floorf(scrPos.x) + 0.5F;
+			scrPos.y = floorf(scrPos.y) + 0.5F;
+
+			IFont& font = fontManager->GetGuiFont();
+
+			// Sized against the screen height so the marker keeps its apparent size on
+			// a high-DPI display instead of shrinking to nothing.
+			float sz = Clamp(renderer->ScreenHeight() * 0.012F, 9.0F, 22.0F);
+			float halfW = sz * 0.95F;
+			float depth = sz * 0.7F;
+			float thickShadow = std::max(3.0F, sz * 0.32F);
+			float thickOutline = std::max(1.5F, sz * 0.18F);
+
+			Vector2 tip = scrPos;
+			Vector2 wingL = MakeVector2(scrPos.x - halfW, scrPos.y - depth);
+			Vector2 wingR = MakeVector2(scrPos.x + halfW, scrPos.y - depth);
+
+			Vector4 shadow = MakeVector4(0, 0, 0, 0.6F * alpha);
+			Vector4 outline = color.Premultiplied();
+
+			renderer->SetColorAlphaPremultiplied(shadow);
+			renderer->DrawLine(wingL, tip, thickShadow);
+			renderer->DrawLine(tip, wingR, thickShadow);
+			renderer->SetColorAlphaPremultiplied(outline);
+			renderer->DrawLine(wingL, tip, thickOutline);
+			renderer->DrawLine(tip, wingR, thickOutline);
+
+			Vector4 textCol = MakeVector4(color.x, color.y, color.z, alpha);
+			Vector4 textShadow = MakeVector4(0, 0, 0, 0.7F * alpha);
+
+			// Stack the class weapon icon and then the name above the chevron. The class
+			// weapon is shown rather than the held tool: it says what role the player is
+			// playing, which is what a teammate needs to know at a glance.
+			float stackBottom = scrPos.y - depth - (floorf(sz * 0.35F) + 2.0F);
+
+			Handle<IImage> weaponIcon;
+			if (showWeapon) {
+				const char* path = "Gfx/Hotbar/Rifle.png";
+				switch (p.GetWeaponType()) {
+					case RIFLE_WEAPON: path = "Gfx/Hotbar/Rifle.png"; break;
+					case SMG_WEAPON: path = "Gfx/Hotbar/SMG.png"; break;
+					case SHOTGUN_WEAPON: path = "Gfx/Hotbar/Shotgun.png"; break;
+				}
+				weaponIcon = renderer->RegisterImage(path);
+			}
+
+			if (weaponIcon) {
+				const float iconH = 14.0F;
+				float iconW = weaponIcon->GetWidth() * (iconH / weaponIcon->GetHeight());
+				Vector2 iconPos = MakeVector2(floorf(scrPos.x - iconW * 0.5F),
+											  floorf(stackBottom - iconH));
+				AABB2 inRect(0, 0, weaponIcon->GetWidth(), weaponIcon->GetHeight());
+
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, 0.7F * alpha));
+				renderer->DrawImage(weaponIcon.GetPointerOrNull(),
+									AABB2(iconPos.x + 1, iconPos.y + 1, iconW, iconH), inRect);
+
+				renderer->SetColorAlphaPremultiplied(MakeVector4(alpha, alpha, alpha, alpha));
+				renderer->DrawImage(weaponIcon.GetPointerOrNull(),
+									AABB2(iconPos.x, iconPos.y, iconW, iconH), inRect);
+
+				stackBottom = iconPos.y;
+			}
+
+			// Whether the name goes with a mark is the server's decision, carried by the
+			// SHOW_NAME flag: the outline says where the player is, and the name would
+			// hand over who they are, which is not always what the server is revealing.
+			if (showName) {
+				const std::string& name = p.GetName();
+				Vector2 nameSize = font.Measure(name);
+				Vector2 namePos = MakeVector2(floorf(scrPos.x - nameSize.x * 0.5F),
+											  floorf(stackBottom - nameSize.y - 1.0F));
+				font.DrawShadow(name, namePos, 1.0F, textCol, textShadow);
+
+				stackBottom = namePos.y;
+			}
+
+			// Everything this marker has to say stays in one stack above the head, so
+			// it never collides with the ordinary name label lower down.
+			if (!note.empty()) {
+				Vector2 noteSize = font.Measure(note);
+				Vector2 notePos = MakeVector2(floorf(scrPos.x - noteSize.x * 0.5F),
+											  floorf(stackBottom - noteSize.y - 1.0F));
+				font.DrawShadow(note, notePos, 1.0F, textCol, textShadow);
+			}
+		}
+
+		bool Client::IsMarkBlinkPhase() const {
+			// Slow enough to read both colours, fast enough that a glance catches both.
+			constexpr float kBlinkPeriod = 1.0F;
+			return fmodf(time, kBlinkPeriod) < kBlinkPeriod * 0.5F;
+		}
+
+		bool Client::IsTeamESPRevealing(Player& p) {
+			if (!world || !teamplay->IsTeamESPEnabled() || teamOverlayAlpha <= 0.0F)
+				return false;
+
+			auto maybeLocal = world->GetLocalPlayer();
+			if (!maybeLocal)
+				return false;
+
+			Player& local = maybeLocal.value();
+			return &p != &local && !local.IsSpectator() && local.IsTeammate(p);
+		}
+
+		Vector3 Client::ResolveMarkColor(Player& p, const IntVector3& markColor) {
+			if (IsTeamESPRevealing(p) && !IsMarkBlinkPhase()) {
+				Vector4 teamColor = GetTeamplayTeamColor(p, 1.0F);
+				return MakeVector3(teamColor.x, teamColor.y, teamColor.z);
+			}
+
+			return Teamplay::ToRenderColor(markColor);
+		}
+
+		bool Client::ShouldRevealPlayer(Player& p, Vector3& outColor) {
+			SPADES_MARK_FUNCTION();
+
+			if (!world || !p.IsAlive() || p.IsSpectator())
+				return false;
+
+			// Never the player whose eyes we are looking through: they are not hidden
+			// from themselves, and their own outline would frame the whole screen.
+			auto maybeLocal = world->GetLocalPlayer();
+			if (maybeLocal && &p == &maybeLocal.value())
+				return false;
+
+			// A mark is an instruction from the server, so it is drawn whatever the
+			// TEAM_ESP bit says — but only on the surfaces the packet named.
+			auto mark = teamplay->GetMark(p.GetId());
+			if (mark && (mark->surfaces & Teamplay::SurfaceWorld)) {
+				outColor = ResolveMarkColor(p, mark->color);
+				return true;
+			}
+
+			// TEAM_ESP reveals the client's own teammates, in their team's colour, and
+			// only while the overlay key spends that permission.
+			if (!IsTeamESPRevealing(p))
+				return false;
+
+			Vector4 teamColor = GetTeamplayTeamColor(p, 1.0F);
+			outColor = MakeVector3(teamColor.x, teamColor.y, teamColor.z);
+			return true;
+		}
+
+		bool Client::HasRevealedPlayers() {
+			SPADES_MARK_FUNCTION();
+
+			// A mark reveals its player whatever the feature bits say, but only one that
+			// asked for the world surface puts anything through a wall.
+			for (const auto& entry : teamplay->GetMarks()) {
+				if (entry.second.surfaces & Teamplay::SurfaceWorld)
+					return true;
+			}
+
+			// The team overlay only reveals anybody while it is on screen.
+			return teamplay->IsTeamESPEnabled() && teamOverlayAlpha > 0.0F;
+		}
+
+		void Client::DrawTeamOverlay() {
+			SPADES_MARK_FUNCTION();
+
+			// TEAM_ESP is a permission, not an instruction: the server allows the client
+			// to reveal its own team, and this client spends that permission only while
+			// the overlay key is held, so the view stays clear the rest of the time.
+			if (!teamplay->IsTeamESPEnabled())
+				return;
+
+			constexpr float kOverlayOpacity = 0.9F;
+			float alpha = kOverlayOpacity * teamOverlayAlpha;
+			if (alpha <= 0.0F)
+				return;
+
+			auto maybeLocal = world->GetLocalPlayer();
+			if (!maybeLocal)
+				return;
+
+			Player& local = maybeLocal.value();
+			if (local.IsSpectator())
+				return;
+
+			for (size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
+				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
+				if (!maybePlayer)
+					continue;
+
+				Player& p = maybePlayer.value();
+				if (&p == &local || p.IsSpectator() || !p.IsAlive())
+					continue;
+				if (!local.IsTeammate(p))
+					continue;
+				if (p.GetFront().GetSquaredLength() < 0.01F)
+					continue; // invalid state
+
+				// A mark that names the world surface is drawn by DrawEspMarks with its
+				// own presentation; stacking both would double the name above their head.
+				// A mark shown only on the minimap or the compass leaves this one alone.
+				auto mark = teamplay->GetMark(p.GetId());
+				if (mark && (mark->surfaces & Teamplay::SurfaceWorld))
+					continue;
+
+				// Showing the name alongside a TEAM_ESP highlight is recommended by the
+				// extension and left to the client, which is what this does.
+				DrawPlayerChevron(p, GetTeamplayTeamColor(p, alpha), true, true);
+			}
+		}
+
+		void Client::DrawEspMarks() {
+			SPADES_MARK_FUNCTION();
+
+			// A mark is an instruction rather than a permission, so it is drawn whatever
+			// the TEAM_ESP bit says and without waiting for the overlay key.
+			if (!teamplay->HasMarks())
+				return;
+
+			int localPlayerId = world->GetLocalPlayerIndex().value_or(-1);
+
+			for (size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
+				int playerId = static_cast<int>(i);
+				if (playerId == localPlayerId)
+					continue; // shown as a notice instead, see below
+
+				auto mark = teamplay->GetMark(playerId);
+				if (!mark)
+					continue;
+
+				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
+				if (!maybePlayer)
+					continue;
+
+				// A mark that did not name the world surface says nothing here; it is
+				// on the minimap or the compass instead.
+				if (!(mark->surfaces & Teamplay::SurfaceWorld))
+					continue;
+
+				Player& p = maybePlayer.value();
+				if (p.IsSpectator() || !p.IsAlive())
+					continue;
+				if (p.GetFront().GetSquaredLength() < 0.01F)
+					continue; // invalid state
+
+				// The same colour the outline is drawn in, blink and all, so the label
+				// never contradicts the shape it belongs to.
+				Vector3 revealColor;
+				if (!ShouldRevealPlayer(p, revealColor))
+					continue;
+
+				constexpr float kMarkOpacity = 0.95F;
+				Vector4 color = MakeVector4(revealColor.x, revealColor.y, revealColor.z,
+											kMarkOpacity);
+
+				// The Reason, when the server sent one, rides above the name so the
+				// audience knows why this player and not another. It is rendered as
+				// received: the extension assigns no reason values.
+				// The body-and-weapon outline is the renderer's job, driven by
+				// ShouldRevealPlayer; here only the name and reason are drawn.
+				DrawPlayerChevron(p, color, false, mark->showName, mark->reason);
+			}
+		}
+
+		void Client::DrawLocalPlayerMarkedIndicator() {
+			SPADES_MARK_FUNCTION();
+
+			// The server chooses the audience of a mark, so being included in the
+			// recipients for one's own id is how a player learns they are being shown to
+			// others. Telling them is the honest reading of that.
+			if (!teamplay->HasMarks())
+				return;
+
+			auto localPlayerId = world->GetLocalPlayerIndex();
+			if (!localPlayerId)
+				return;
+
+			auto mark = teamplay->GetMark(localPlayerId.value());
+			if (!mark)
+				return;
+
+			std::string str = _Tr("Client", "YOU ARE MARKED");
+			if (!mark->reason.empty())
+				str += " — " + mark->reason;
+
+			// In the colour the server chose, so the notice says the same thing to its
+			// subject as the outline says to everybody else.
+			Vector3 col = Teamplay::ToRenderColor(mark->color);
+
+			IFont& font = fontManager->GetGuiFont();
+			Vector2 size = font.Measure(str);
+			Vector2 pos = MakeVector2(floorf((renderer->ScreenWidth() - size.x) * 0.5F),
+									  floorf(renderer->ScreenHeight() * 0.16F));
+
+			font.DrawShadow(str, pos, 1.0F, MakeVector4(col.x, col.y, col.z, 1.0F),
+							MakeVector4(0, 0, 0, 0.8F));
+		}
+
+		void Client::DrawTeamplayPings() {
+			SPADES_MARK_FUNCTION();
+
+			if (!teamplay->HasPings())
+				return;
+
+			IFont& font = fontManager->GetSmallFont();
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			// Sized against the screen height, like the chevron, and kept inside a
+			// margin so a ping just off the edge still tells you which way to look.
+			float sz = Clamp(sh * 0.014F, 10.0F, 26.0F);
+			float margin = sz * 2.0F;
+
+			// What is left of a marker the player is facing: enough to keep the callout
+			// on screen without hiding what it points at. Down the sights it thins
+			// further, since a shot being lined up is what a marker must least sit on,
+			// and it thins as the sights come up rather than stepping down when they
+			// arrive.
+			constexpr float kFacedAlpha = 0.2F;
+			constexpr float kScopedFacedAlpha = 0.05F;
+			const float aimDownState = GetAimDownState(); // only valid for the local player
+			float facedAlpha = Mix(kFacedAlpha, kScopedFacedAlpha, Clamp(aimDownState, 0.0F, 1.0F));
+
+			for (const auto& entry : teamplay->GetPings()) {
+				const Teamplay::Ping& ping = entry.second;
+
+				// The packet decides where it is shown; this is the world.
+				if (!(ping.surfaces & Teamplay::SurfaceWorld))
+					continue;
+
+				// Fade out over the last stretch of whatever lifetime the server gave
+				// it, rather than blinking out of existence. A ping the server keeps
+				// until it removes it never fades.
+				constexpr float kFadeOutTime = 0.75F;
+				float alpha = ping.GetFadeAlpha(kFadeOutTime);
+
+				Vector3 rel = ping.position - lastSceneDef.viewOrigin;
+				float forward = Vector3::Dot(rel, lastSceneDef.viewAxis[2]);
+
+				Vector2 scrPos;
+				bool onScreen = false;
+				if (forward > 0.0F && Project(ping.position, scrPos)) {
+					onScreen = scrPos.x >= margin && scrPos.x <= sw - margin &&
+							   scrPos.y >= margin && scrPos.y <= sh - margin;
+				} else {
+					// Behind the camera: place the marker on the edge in the direction
+					// the player has to turn, using the view-space offset.
+					float right = Vector3::Dot(rel, lastSceneDef.viewAxis[0]);
+					float up = Vector3::Dot(rel, lastSceneDef.viewAxis[1]);
+					Vector2 dir = MakeVector2(right, -up);
+					if (dir.GetSquaredLength() < 0.0001F)
+						dir = MakeVector2(0.0F, 1.0F);
+					dir = dir.Normalize();
+					scrPos = MakeVector2(sw * 0.5F, sh * 0.5F) + dir * (sh * 0.5F);
+				}
+
+				scrPos.x = Clamp(scrPos.x, margin, sw - margin);
+				scrPos.y = Clamp(scrPos.y, margin, sh - margin);
+
+				// A marker stands between the player and the thing it points at — often
+				// the marked enemy it was placed on — so it gets out of the way as the
+				// aim reaches it. Within half a diamond of the middle of the screen it
+				// is down to `facedAlpha`; by one and a half diamonds it is clear of the
+				// aim point and fully drawn. Nothing is lost by that: what is left is
+				// still legible, the copies on any other surface the ping asked for are
+				// untouched, and it is back in full the moment the aim moves off.
+				if (onScreen) {
+					float dist = (scrPos - MakeVector2(sw, sh) * 0.5F).GetLength();
+					alpha *= Mix(facedAlpha, 1.0F,
+								 SmoothStep(Clamp((dist - sz * 0.5F) / sz, 0.0F, 1.0F)));
+					if (alpha <= 0.0F)
+						continue;
+				}
+
+				// The colour the server chose, drawn as sent: which colour a ping should
+				// be is its business, and this client is never told what one means.
+				Vector3 pingCol = Teamplay::ToRenderColor(ping.color);
+				Vector4 color = MakeVector4(pingCol.x, pingCol.y, pingCol.z, alpha);
+
+				DrawPingDiamond(*renderer, scrPos, sz, pingCol, alpha, ping.age);
+
+				// Who pinged, and what they said, under the marker. A marker is never
+				// anonymous, so that a label is never read as coming from somebody who
+				// did not write it. An off-screen ping also gets its distance, which is
+				// the only cue left once the marker is pinned to the edge.
+				//
+				// Player ID 255 is the exception and shows no sender: there is no player
+				// behind it, and looking it up in the roster would put the marker under
+				// the name of whoever holds a nearby id.
+				std::string label;
+				if (ping.playerId != Teamplay::kServerPlayerId)
+					label = world->GetPlayerName(ping.playerId);
+
+				// Rendered as received: the extension assigns no reason values, so
+				// anything the client substituted would be putting words in the
+				// sender's mouth.
+				if (!ping.reason.empty())
+					label += label.empty() ? ping.reason : ": " + ping.reason;
+				if (!onScreen) {
+					char buf[32];
+					snprintf(buf, sizeof(buf), label.empty() ? "[%.0f]" : " [%.0f]",
+							 rel.GetLength());
+					label += buf;
+				}
+
+				// A server ping with no label has nothing to say in words; the marker
+				// says it all.
+				if (label.empty())
+					continue;
+
+				Vector2 size = font.Measure(label);
+				Vector2 pos = MakeVector2(floorf(scrPos.x - size.x * 0.5F),
+										  floorf(scrPos.y + GetPingDiamondExtent(sz) + 2.0F));
+				font.DrawShadow(label, pos, 1.0F, color, MakeVector4(0, 0, 0, 0.8F * alpha));
+			}
+		}
+
+		void Client::DrawDeadPlayers() {
+			SPADES_MARK_FUNCTION();
+
+			Vector3 eye = lastSceneDef.viewOrigin;
+
+			IFont& font = fontManager->GetGuiFont();
+
+			for (size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
+				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
+				if (!maybePlayer)
+					continue; // player is non-existent
+
+				Player& p = maybePlayer.value();
+				if (p.IsAlive())
+					continue;
+
+				// Do not draw a player with an invalid state
+				if (p.GetFront().GetSquaredLength() < 0.01F)
+					continue;
+
+				Vector3 origin = p.GetEye();
+				origin.z -= 0.9F; // above player
+
+				float dist = (origin - eye).GetLength();
+				float fadeStart = 2.0F;
+				float fadeEnd = fadeStart + 1.0F;
+				float fade = (dist - fadeStart) / (fadeEnd - fadeStart);
+				float alpha = Clamp(1.0F - fade, 0.0F, 1.0F);
+
+				if (alpha <= 0.0F)
+					continue;
+
+				Vector2 scrPos;
+				if (!Project(origin, scrPos))
+					continue;
+
+				std::string str = p.GetName();
+
+				Vector2 size = font.Measure(str);
+				scrPos.x -= size.x * 0.5F;
+				scrPos.y -= size.y;
+
+				// rounded for better pixel alignment
+				scrPos.x = floorf(scrPos.x);
+				scrPos.y = floorf(scrPos.y);
+
+				Vector4 playerColor = MakeVector4(1, 1, 1, 1);
+				Vector4 shadowColor = MakeVector4(0, 0, 0, 0.8F);
+
+				playerColor.w *= alpha;
+				shadowColor.w *= alpha;
+
+				font.DrawShadow(str, scrPos, 1.0F, playerColor, shadowColor);
+			}
+		}
+
+		Client::DamageIndicator Client::DamageIndicator::Make(int playerId, int damage,
+		                                                      const Vector3& position,
+		                                                      float time, bool scatter) {
+			DamageIndicator indicator;
+			indicator.damage = Clamp(damage, -kMaxDamage, kMaxDamage);
+			indicator.playerId = playerId;
+			indicator.position = position;
+			indicator.crit = indicator.damage >= kCritDamage;
+			indicator.velocity = (scatter && !indicator.crit) ? RandomVector() * 4.0F
+			                                                  : MakeVector3(0.0F, 0.0F, 0.0F);
+			indicator.velocity.z = -2.0F;
+			indicator.Refresh(time);
+			return indicator;
+		}
+
+		void Client::DamageIndicator::Accumulate(int more, float time) {
+			damage = Clamp(damage + Clamp(more, -kMaxDamage, kMaxDamage), -kMaxDamage,
+			               kMaxDamage);
+			if (!crit && damage >= kCritDamage) {
+				crit = true;
+				velocity = MakeVector3(0.0F, 0.0F, -2.0F);
+			}
+			Refresh(time);
+		}
+
+		void Client::DamageIndicator::Refresh(float time) {
+			fade = crit ? 2.0F : 1.5F;
+			lastHitTime = time;
+		}
+
+		void Client::UpdateDamageIndicators(float dt) {
+			for (auto it = damageIndicators.begin(); it != damageIndicators.end();) {
+				DamageIndicator& ent = *it;
+				ent.fade -= dt;
+				if (ent.fade < 0) {
+					std::list<DamageIndicator>::iterator tmp = it++;
+					damageIndicators.erase(tmp);
+					continue;
+				}
+
+				ent.position += ent.velocity * dt;
+
+				++it;
+			}
+		}
+		void Client::DrawDamageIndicators() {
+			SPADES_MARK_FUNCTION();
+
+			IFont& mediumFont = fontManager->GetMediumFont();
+			IFont& guiFont = fontManager->GetGuiFont();
+
+			for (const auto& dmg : damageIndicators) {
+				float fade = dmg.fade;
+				if (fade > 1.0F)
+					fade = 1.0F;
+
+				Vector2 scrPos;
+				if (Project(dmg.position, scrPos)) {
+					bool crit = dmg.crit;
+					IFont& font = crit ? mediumFont : guiFont;
+
+					// A negative amount is a heal, shown as a gain.
+					int damage = dmg.damage;
+					bool heal = damage < 0;
+					auto damageStr = heal ? "+" + ToString(-damage) : ToString(damage);
+					Vector2 size = font.Measure(damageStr);
+					scrPos -= size * 0.5F;
+
+					// rounded for better pixel alignment
+					scrPos.x = floorf(scrPos.x);
+					scrPos.y = floorf(scrPos.y);
+
+					float per = Clamp(damage / 100.0F, 0.0F, 1.0F);
+					Vector4 shadow = MakeVector4(0, 0, 0, 0.4F * fade);
+					Vector4 color = MakeVector4(1.0F, 1.0F - per, 0.0F, fade);
+
+					if (heal) {
+						color = MakeVector4(0.3F, 1.0F, 0.3F, fade);
+					} else if (crit) {
+						float pulse = (sinf((time - dmg.lastHitTime) * 10.0F) * 0.5F) + 0.5F;
+						color = MakeVector4(1.0F, pulse * 0.8F, pulse * 0.2F, fade);
+					}
+
+					font.DrawShadow(damageStr, scrPos + MakeVector2(1, 1), 1.0F, shadow, shadow);
+					font.Draw(damageStr, scrPos, 1.0F, color);
+				}
+			}
+		}
+
+		void Client::DrawDebugAim(Player& p) {
+			SPADES_MARK_FUNCTION();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			Weapon& weapon = p.GetWeapon();
+
+			float spread = weapon.GetSpread();
+
+			// halve spread when aiming
+			float aimDownState = clientPlayers[p.GetId()]->GetAimDownState();
+			if (aimDownState > 0.99F)
+				spread /= 2;
+
+			// halve spread when crouching (except for shotgun)
+			PlayerInput actualInput = p.GetInput();
+			WeaponType weaponType = weapon.GetWeaponType();
+			if (actualInput.crouch && weaponType != SHOTGUN_WEAPON)
+				spread /= 2;
+
+			float fovY = tanf(lastSceneDef.fovY * 0.5F);
+			float spreadDistance = (spread * 2) * (sh * 0.5F) / fovY;
+
+			Vector2 center;
+			center.x = sw * 0.5F;
+			center.y = sh * 0.5F;
+
+			Vector2 p1, p2;
+			p1.x = floorf(center.x - spreadDistance);
+			p1.y = floorf(center.y - spreadDistance);
+			p2.x = ceilf(center.x + spreadDistance);
+			p2.y = ceilf(center.y + spreadDistance);
+
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, 1));
+			renderer->DrawOutlinedRect(p1.x - 1, p1.y - 1, p2.x + 1, p2.y + 1);
+
+			renderer->SetColorAlphaPremultiplied(MakeVector4(1, 1, 1, 1));
+			renderer->DrawOutlinedRect(p1.x, p1.y, p2.x, p2.y);
+		}
+
+		void Client::DrawHitTestDebugger() {
+			SPADES_MARK_FUNCTION();
+
+			auto* debugger = world->GetHitTestDebugger();
+			if (!debugger)
+				return;
+
+			auto bmp = debugger->GetBitmap();
+			if (bmp) {
+				auto img = renderer->CreateImage(*bmp);
+				debugHitTestImage.Set(img.GetPointerOrNull());
+			}
+
+			if (!debugHitTestImage)
+				return;
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			float cfgWndSize = cg_debugHitTestSize;
+			Vector2 wndSize = {cfgWndSize, cfgWndSize};
+
+			Vector2 zoomedSize = {512, 512};
+			if (sw < zoomedSize.x || sh < zoomedSize.y)
+				zoomedSize *= 0.75F;
+
+			if (debugHitTestZoom) {
+				float per = debugHitTestZoomState;
+				per = 1.0F - per;
+				per *= per;
+				per = 1.0F - per;
+				per = Mix(0.0F, 1.0F, per);
+				zoomedSize = Mix(wndSize, zoomedSize, per);
+				wndSize = zoomedSize;
+			}
+
+			float winX = (sw - 8.0F) - wndSize.x;
+			float winY = (sh - 8.0F) - wndSize.y - 64.0F;
+
+			const int statsMode = cg_stats;
+			if (statsMode == 1)
+				winY -= cg_statsSmallFont ? 2.0F : 12.0F;
+
+			AABB2 inRect(128, 512 - 128, 256, 256 - 512); // flip Y axis
+			AABB2 outRect(winX, winY, wndSize.x, wndSize.y);
+			if (debugHitTestZoom) {
+				outRect.min = MakeVector2(sw - zoomedSize.x, sh - zoomedSize.y) * 0.5F;
+				outRect.max = MakeVector2(sw + zoomedSize.x, sh + zoomedSize.y) * 0.5F;
+			}
+
+			const float fadeOutStart = cg_debugHitTestFadeTime;
+			const float fadeDuration = 1.0F;
+			float timeSinceLastHit = world->GetTime() - lastHitTime;
+			float fade = timeSinceLastHit - fadeOutStart;
+			fade = 1.0F - (fade / fadeDuration);
+			fade = Clamp(fade, 0.0F, 1.0F);
+
+			float alpha = debugHitTestZoom ? debugHitTestZoomState : fade;
+			if (alpha <= 0.0F)
+				return;
+
+			renderer->SetColorAlphaPremultiplied(MakeVector4(alpha, alpha, alpha, alpha));
+			renderer->DrawImage(debugHitTestImage, outRect, inRect);
+
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, alpha));
+			renderer->DrawOutlinedRect(outRect.min.x - 1, outRect.min.y - 1, outRect.max.x + 1, outRect.max.y + 1);
+		}
+
+		void Client::DrawBlockPaletteHUD(float winY) {
+			SPADES_MARK_FUNCTION();
+
+			float sw = renderer->ScreenWidth();
+
+			IFont& font = fontManager->GetGuiFont();
+
+			std::vector<std::string> lines;
+			lines.push_back(_Tr("Client", "[{0}] Grab color", TrKey(cg_keyCaptureColor)));
+			lines.push_back(_Tr("Client", "[{0}/{1}] Navigate up/down",
+				TrKey(cg_keyPaletteUp), TrKey(cg_keyPaletteDown)));
+			lines.push_back(_Tr("Client", "[{0}/{1}] Navigate left/right",
+				TrKey(cg_keyPaletteLeft), TrKey(cg_keyPaletteRight)));
+			lines.push_back(_Tr("Client", "[{0}] Toggle extended palette", TrKey(cg_keyExtendedPalette)));
+
+			// add color information
+			if ((int)cg_hudPalette >= 2) {
+				IntVector3 color = world->GetLocalPlayer()->GetBlockColor();
+
+				char buf[8];
+				snprintf(buf, sizeof(buf), "%02X%02X%02X", color.x, color.y, color.z);
+				lines.push_back(_Tr("Client", "#{0} / RGB({1}, {2}, {3})",
+					std::string(buf), color.x, color.y, color.z));
+			}
+
+			float lh = 20.0F;
+			float totalHeight = (int)lines.size() * lh;
+
+			float x = sw - 8.0F;
+			float y = (winY - 8.0F) - totalHeight;
+
+			Vector4 color = MakeVector4(1, 1, 1, 1);
+			Vector4 shadow = MakeVector4(0, 0, 0, 0.7F);
+
+			// draw each line
+			for (const auto& line : lines) {
+				Vector2 pos = MakeVector2(x, y);
+				pos.x -= font.Measure(line).x;
+				font.DrawShadow(line, pos, 1.0F, color, shadow);
+				y += lh;
+			}
+		}
+
+		void Client::DrawPlayerStats() {
+			SPADES_MARK_FUNCTION();
+
+			Player& p = world->GetLocalPlayer().value();
+
+			IFont& font = fontManager->GetGuiFont();
+
+			float sh = renderer->ScreenHeight();
+
+			float x = 8.0F;
+			float y = sh * 0.5F;
+			y -= (float)cg_playerStatsHeight;
+
+			Vector4 color = MakeVector4(1, 1, 1, 1);
+			Vector4 shadow = MakeVector4(0, 0, 0, 0.7F);
+
+			float lh = 20.0F;
+			auto addLine = [&](const std::string& text) {
+				Vector2 pos = MakeVector2(x, y);
+				y += lh;
+				font.DrawShadow(text, pos, 1.0F, color, shadow);
+			};
+
+			const auto& weaponType = p.GetWeaponType();
+			int hits = weaponStats.hits[weaponType];
+			int shots = weaponStats.shots[weaponType];
+			int accPerc = int(100.0F * (float(hits) / float(std::max(1, shots))));
+			addLine(_Tr("Client", "Accuracy: {0}%", accPerc));
+
+			char buf[32];
+			snprintf(buf, sizeof(buf), "%.3g", curKills / float(std::max(1, curDeaths)));
+			addLine(_Tr("Client", "Kill/Death Ratio: {0}", std::string(buf)));
+			addLine(_Tr("Client", "Kill Streak: {0}, Best: {1}", curStreak, bestStreak));
+			addLine(_Tr("Client", "Melee Kills: {0}", meleeKills));
+			addLine(_Tr("Client", "Grenade Kills: {0}", grenadeKills));
+
+			if (cg_playerStatsShowPlacedBlocks && !activeNet->GetGameProperties()->isGameModeArena)
+				addLine(_Tr("Client", "Blocks Placed: {0}", placedBlocks));
+		}
+
+		void Client::DrawAlert() {
+			SPADES_MARK_FUNCTION();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			float fade = time - alertDisappearTime;
+			fade = std::min(1.0F - fade, 1.0F);
+			if (fade <= 0.0F)
+				return;
+
+			float borderFade = (time - alertAppearTime) / 0.5F;
+			borderFade = Clamp(1.0F - borderFade, 0.0F, 1.0F);
+
+			Handle<IImage> alertIcon = renderer->RegisterImage("Gfx/AlertIcon.png");
+
+			IFont& font = fontManager->GetGuiFont();
+			Vector2 textSize = font.Measure(alertContents);
+			Vector2 contentsSize = textSize;
+			contentsSize.y = std::max(contentsSize.y, 16.0F);
+			if (alertType != AlertType::Notice)
+				contentsSize.x += 22.0F;
+
+			// add margin
+			const float margin = 4.0F;
+			contentsSize += margin * 2.0F;
+			contentsSize = contentsSize.Floor(); // rounded
+
+			Vector2 pos = MakeVector2(sw, sh) - contentsSize;
+			pos *= MakeVector2(0.5F, 0.7F);
+			pos.y += 40.0F;
+			pos = pos.Floor(); // rounded
+
+			Vector4 shadowColor = MakeVector4(0, 0, 0, 0.5F);
+			Vector4 color = MakeVector4(0, 0, 0, 1);
+			switch (alertType) {
+				case AlertType::Notice: color = MakeVector4(0, 0, 0, 1); break;
+				case AlertType::Warning: color = MakeVector4(1, 1, 0, 1); break;
+				case AlertType::Error: color = MakeVector4(1, 0, 0, 1); break;
+			}
+
+			float x = pos.x - margin;
+			float y = pos.y;
+			float w = pos.x + contentsSize.x + margin;
+			float h = pos.y + contentsSize.y;
+
+			// draw background
+			renderer->SetColorAlphaPremultiplied(shadowColor * fade);
+			renderer->DrawFilledRect(x + 1, y + 1, w - 1, h - 1);
+
+			// draw border
+			renderer->SetColorAlphaPremultiplied(color * fade * (1.0F - borderFade));
+			renderer->DrawOutlinedRect(x, y, w, h);
+
+			// draw fading border
+			if (borderFade > 0.0F) {
+				float scale = 8.0F * (1.0F - borderFade);
+				renderer->SetColorAlphaPremultiplied(color * borderFade);
+				renderer->DrawOutlinedRect(x - scale, y - scale, w + scale, h + scale);
+			}
+
+			// draw alert icon
+			if (alertType != AlertType::Notice) {
+				Vector2 iconPos = pos;
+				iconPos.x += margin;
+				iconPos.y += (contentsSize.y - 16.0F) * 0.5F;
+
+				renderer->SetColorAlphaPremultiplied(color * fade);
+				renderer->DrawImage(alertIcon, iconPos);
+			}
+
+			// draw text
+			Vector2 textPos = pos;
+			textPos.x += (contentsSize.x - textSize.x) - margin;
+			textPos.y += (contentsSize.y - textSize.y) * 0.5F;
+
+			color = MakeVector4(1, 1, 1, fade);
+			shadowColor.w = 0.5F * fade;
+
+			font.DrawShadow(alertContents, textPos, 1.0F, color, shadowColor);
+		}
+
+		Vector4 Client::GetHUDColor(Player& p) {
+			IntVector3 col;
+			switch ((int)cg_hudColor) {
+				case 1: // team color
+					col = p.GetColor();
+					col += (MakeIntVector3(255, 255, 255) - col) / 2;
+					break;
+				case 2: col = MakeIntVector3(120, 200, 255); break; // light blue
+				case 3: col = MakeIntVector3(0, 100, 255); break; // blue
+				case 4: col = MakeIntVector3(230, 100, 255); break; // purple
+				case 5: col = MakeIntVector3(255, 50, 50); break; // red
+				case 6: col = MakeIntVector3(255, 120, 50); break; // orange
+				case 7: col = MakeIntVector3(255, 255, 0); break; // yellow
+				case 8: col = MakeIntVector3(0, 255, 0); break; // green
+				case 9: col = MakeIntVector3(0, 255, 120); break; // aqua
+				case 10: col = MakeIntVector3(255, 120, 150); break; // pink
+				default: // custom
+					col.x = (int)cg_hudColorR;
+					col.y = (int)cg_hudColorG;
+					col.z = (int)cg_hudColorB;
+					break;
+			}
+			return ConvertColorRGBA(col);
+		}
+
+		void Client::DrawJoinedAlivePlayerHUD() {
+			SPADES_MARK_FUNCTION();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			float ratio = (sw / sh);
+			float safeZoneXMin = 0.75F;
+			if (ratio < 0.26F)
+				safeZoneXMin = 0.28F;
+			else if (ratio < 0.56F)
+				safeZoneXMin = 0.475F;
+
+			float safeZoneX = Clamp((float)cg_hudSafezoneX, safeZoneXMin, 1.0F);
+			float safeZoneY = Clamp((float)cg_hudSafezoneY, 0.85F, 1.0F);
+
+			float x = (sw - 16.0F) * safeZoneX;
+			float y = (sh - 16.0F) * safeZoneY;
+
+			const int statsMode = cg_stats;
+			if (statsMode == 1)
+				y -= cg_statsSmallFont ? 2.0F : 12.0F;
+
+			// rounded for better pixel alignment
+			x = floorf(x);
+			y = floorf(y);
+
+			Player& p = world->GetLocalPlayer().value();
+			Weapon& weapon = p.GetWeapon();
+
+			Player::ToolType curToolType = p.GetTool();
+			WeaponType curWeaponType = weapon.GetWeaponType();
+
+			bool isToolWeapon = curToolType == Player::ToolWeapon;
+			bool awaitingReload = weapon.IsAwaitingReloadCompletion();
+			bool isReloading = awaitingReload && !weapon.IsReloadSlow();
+
+			Handle<IImage> ammoIcon;
+			float spacing = 2.0F;
+			int clipNum, clipSize, stockNum, stockMax;
+
+			IFont& squareFont = fontManager->GetSquareDesignFont();
+
+			Vector4 color = GetHUDColor(p);
+			float luminosity = color.x + color.y + color.z;
+			Vector4 shadowColor = (luminosity > 0.9F)
+				? MakeVector4(0, 0, 0, 0.5)
+				: MakeVector4(1, 1, 1, 0.5);
+
+			// premultiplied
+			Vector4 shadowP = shadowColor.Premultiplied();
+
+			Vector4 white = MakeVector4(1, 1, 1, 1);
+			Vector4 red = MakeVector4(1, 0, 0, 1);
+			Vector4 gray = MakeVector4(0.4F, 0.4F, 0.4F, 1);
+			Vector4 bgColor = (luminosity > 0.9F) ? color * gray : gray;
+
+			switch (curToolType) {
+				case Player::ToolSpade:
+				case Player::ToolBlock:
+					clipNum = stockNum = p.GetNumBlocks();
+					clipSize = stockMax = 50;
+					break;
+				case Player::ToolGrenade:
+					clipNum = stockNum = p.GetNumGrenades();
+					clipSize = stockMax = 3;
+					break;
+				case Player::ToolWeapon: {
+					switch (curWeaponType) {
+						case RIFLE_WEAPON:
+							ammoIcon = renderer->RegisterImage("Gfx/Bullet/7.62mm.png");
+							break;
+						case SMG_WEAPON:
+							ammoIcon = renderer->RegisterImage("Gfx/Bullet/9mm.png");
+							spacing = 1.0F;
+							break;
+						case SHOTGUN_WEAPON:
+							ammoIcon = renderer->RegisterImage("Gfx/Bullet/12gauge.png");
+							break;
+						default: SPInvalidEnum("weapon.GetWeaponType()", curWeaponType);
+					}
+
+					clipSize = weapon.GetClipSize();
+					clipNum = std::min(weapon.GetAmmo(), clipSize);
+					stockNum = weapon.GetStock();
+					stockMax = weapon.GetMaxStock();
+				} break;
+				default: SPInvalidEnum("p.GetTool()", curToolType);
+			}
+
+			// draw hitmarks
+			if (cg_hitIndicator && hitFeedbackIconState > 0.0F) {
+				Handle<IImage> img = renderer->RegisterImage("Gfx/HitFeedback.png");
+				Vector2 size = {img->GetWidth(), img->GetHeight()};
+
+				Vector4 color = hitFeedbackFriendly
+					? MakeVector4(0.02F, 1, 0.02F, 1)
+					: MakeVector4(1, 0.02F, 0.04F, 1);
+
+				renderer->SetColorAlphaPremultiplied(color * hitFeedbackIconState);
+				renderer->DrawImage(img, (MakeVector2(sw, sh) - size) * 0.5F);
+			}
+
+			// draw damage rings
+			hurtRingView->Draw();
+
+			// draw color palette
+			if (curToolType == Player::ToolBlock)
+				paletteView->Draw();
+
+			// draw hotbar when unable to use tool
+			if (cg_hudHotbar && (!CanLocalPlayerUseTool() || (isToolWeapon && isReloading))) {
+				IFont& font = fontManager->GetSmallFont();
+
+				// register tool icons
+				Handle<IImage> blockIcon = renderer->RegisterImage("Gfx/Hotbar/Block.png");
+				Handle<IImage> grenadeIcon = renderer->RegisterImage("Gfx/Hotbar/Grenade.png");
+				Handle<IImage> spadeIcon = renderer->RegisterImage("Gfx/Hotbar/Spade.png");
+				Handle<IImage> weaponIcon;
+				switch (curWeaponType) {
+					case RIFLE_WEAPON:
+						weaponIcon = renderer->RegisterImage("Gfx/Hotbar/Rifle.png");
+						break;
+					case SMG_WEAPON:
+						weaponIcon = renderer->RegisterImage("Gfx/Hotbar/SMG.png");
+						break;
+					case SHOTGUN_WEAPON:
+						weaponIcon = renderer->RegisterImage("Gfx/Hotbar/Shotgun.png");
+						break;
+				}
+
+				const int toolCount = 4;
+				Handle<IImage> toolIcons[toolCount] = {
+					spadeIcon, blockIcon,
+					weaponIcon, grenadeIcon
+				};
+				std::string hotKeys[toolCount] = {
+					cg_keyToolSpade, cg_keyToolBlock,
+					cg_keyToolWeapon, cg_keyToolGrenade
+				};
+
+				const float iconHeight = 20.0F;
+				const float iconSpacing = 10.0F;
+
+				float totalWidth = 0.0F;
+				for (int i = 0; i < toolCount; i++) {
+					if (!p.IsToolSelectable(static_cast<Player::ToolType>(i)))
+						continue;
+					totalWidth += toolIcons[i]->GetWidth() + iconSpacing;
+				}
+
+				Vector2 iconPos = MakeVector2((sw - totalWidth) * 0.5F, sh * 0.6F);
+
+				// rounded for better pixel alignment
+				iconPos.x = floorf(iconPos.x);
+				iconPos.y = floorf(iconPos.y);
+
+				for (int i = 0; i < toolCount; i++) {
+					const auto tool = static_cast<Player::ToolType>(i);
+					if (!p.IsToolSelectable(tool))
+						continue;
+
+					// draw icon
+					Handle<IImage> icon = toolIcons[i];
+					float iconWidth = icon->GetWidth();
+					Vector2 pos = iconPos;
+
+					Vector4 iconColor = color;
+					Vector4 iconShadow = shadowP;
+
+					// fade non-selected icons
+					if (tool != curToolType) {
+						iconColor *= 0.25F;
+						iconShadow *= 0.25F;
+					} else {
+						float state = 1.0F - hotBarIconState;
+						pos.y -= floorf(10.0F * state);
+					}
+
+					renderer->SetColorAlphaPremultiplied(iconShadow);
+					renderer->DrawImage(icon, pos + MakeVector2(1, 1));
+
+					renderer->SetColorAlphaPremultiplied(iconColor);
+					renderer->DrawImage(icon, pos);
+
+					// draw hotkey
+					Vector4 hotKeyColor = MakeVector4(1, 1, 1, 1);
+					Vector4 hotKeyShadow = MakeVector4(0, 0, 0, 0.8F);
+					std::string hotkeyStr = hotKeys[i];
+					Vector2 hotkeyPos = iconPos + MakeVector2(iconWidth - 1.0F, iconHeight - 1.0F);
+					font.DrawOutline(hotkeyStr, hotkeyPos, 1.0F, hotKeyColor, hotKeyShadow);
+
+					iconPos.x += iconWidth + iconSpacing;
+				}
+			}
+
+			// draw indicator when the player has the intel
+			stmp::optional<IGameMode&> mode = world->GetMode();
+			if (mode && mode->ModeType() == IGameMode::m_CTF) {
+				auto& ctf = static_cast<CTFGameMode&>(mode.value());
+				if (ctf.PlayerHasIntel(p)) {
+					Handle<IImage> img = renderer->RegisterImage("Gfx/Intel.png");
+					Vector2 size = {img->GetWidth(), img->GetHeight()};
+					Vector2 pos = MakeVector2(((sw - size.x) * 0.5F) - 64.0F, y - size.y);
+
+					// Strobe
+					float pulse = fabsf(sinf(time * 2.0F));
+					pulse *= pulse;
+
+					renderer->SetColorAlphaPremultiplied(shadowP * pulse);
+					renderer->DrawImage(img, pos + MakeVector2(1, 1));
+
+					renderer->SetColorAlphaPremultiplied(color * pulse);
+					renderer->DrawImage(img, pos);
+				}
+			}
+
+			// draw "press ... to reload"
+			if (isToolWeapon) {
+				std::string msg = "";
+				if (awaitingReload) {
+					int reloadIndicatorMode = cg_hudReloadIndicator;
+					if (reloadIndicatorMode == 1) {
+						msg = _Tr("Client", "Reloading");
+					} else if (reloadIndicatorMode == 2) {
+						float prg = weapon.GetReloadProgress();
+						const float fadeStart = 0.9F;
+						float alpha = 1.0F - Clamp((prg - fadeStart) / (1.0F - fadeStart), 0.0F, 1.0F);
+						DrawReloadIndicator(MakeVector4(color.x, color.y, color.z, alpha));
+					}
+				} else if (stockNum > 0 && clipNum < (clipSize / 4)) {
+					msg = _Tr("Client", "Press [{0}] to Reload", TrKey(cg_keyReloadWeapon));
+				}
+
+				if (!msg.empty()) {
+					IFont& font = fontManager->GetGuiFont();
+					Vector2 size = font.Measure(msg);
+					Vector2 pos = MakeVector2((sw - size.x) * 0.5F, sh * (2.0F / 3.0F));
+					font.DrawShadow(msg, pos, 1.0F, white, MakeVector4(0, 0, 0, 0.5F));
+				}
+			}
+
+			// draw remaining ammo counter
+			{
+				bool drawIcon = (int)cg_hudAmmoStyle < 1;
+
+				float per = Clamp((float)clipNum / (float)(clipSize / 3), 0.0F, 1.0F);
+				Vector4 ammoCol = color + (red - color) * (1.0F - per);
+
+				per = Clamp((float)stockNum / (float)(stockMax / 3), 0.0F, 1.0F);
+				Vector4 stockCol = color + (red - color) * (1.0F - per);
+
+				auto stockStr = ToString(stockNum);
+				if (!drawIcon && isToolWeapon)
+					stockStr = ToString(clipNum) + "-" + stockStr;
+
+				IFont& font = squareFont;
+				Vector2 size = font.Measure(stockStr);
+				Vector2 pos = MakeVector2(x, y) - size;
+
+				// draw ammo icon
+				if (drawIcon && isToolWeapon) {
+					Vector2 iconSize = MakeVector2(ammoIcon->GetWidth(), ammoIcon->GetHeight());
+					Vector2 iconPos = MakeVector2(x - (iconSize.x + spacing), y - iconSize.y);
+
+					float reloadPrg = weapon.GetReloadProgress();
+					int clip = isReloading ? (int)(clipSize * reloadPrg) : clipSize;
+
+					for (int i = 0; i < clipSize; i++) {
+						iconPos.x = x - ((float)(i + 1) * (iconSize.x + spacing));
+
+						// draw icon shadow
+						renderer->SetColorAlphaPremultiplied(shadowP);
+						renderer->DrawImage(ammoIcon, iconPos + MakeVector2(1, 1));
+
+						// draw icon
+						renderer->SetColorAlphaPremultiplied(
+						  isReloading ? ((i < clip) ? color : bgColor)
+									  : ((clipNum >= i + 1) ? ammoCol : bgColor));
+						renderer->DrawImage(ammoIcon, iconPos);
+					}
+
+					pos.y -= iconSize.y + 5.0F;
+				}
+
+				font.Draw(stockStr, pos + MakeVector2(1, 1), 1.0F, shadowColor);
+				font.Draw(stockStr, pos, 1.0F, drawIcon ? stockCol : ammoCol);
+			}
+
+			// draw player health
+			{
+				int hp = lastHealth; // player health
+				int maxHealth = 100; // server doesn't send this
+				int dmgTaken = damageTaken;
+
+				float hpFrac = Clamp((float)hp / (float)maxHealth, 0.0F, 1.0F);
+				float dmgFrac = Clamp((float)dmgTaken / (float)maxHealth, 0.0F, 1.0F);
+
+				Vector4 hpColor = color + (red - color) * (1.0F - hpFrac);
+
+				float timeSinceLastHurt = time - lastHurtTime;
+				float hurtTime = timeSinceLastHurt / 0.25F;
+				hurtTime = std::max(0.0F, 1.0F - hurtTime);
+
+				const float fadeOutStart = 0.4F;
+				const float fadeDuration = 0.3F;
+				float fade = timeSinceLastHurt - fadeOutStart;
+				fade = 1.0F - (fade / fadeDuration);
+				fade = Clamp(fade, 0.0F, 1.0F);
+
+				auto healthStr = ToString(cg_hudHealthAnimation
+					? ((int)(hp + dmgTaken * hurtTime)) : hp);
+				IFont& font = squareFont;
+				Vector2 size = font.Measure(healthStr);
+				Vector2 pos = MakeVector2(sw - x, y - size.y);
+
+				if (cg_hudHealthBar) {
+					float barW = 45.0F;
+					float barH = 4.0F;
+					float barX = sw - x;
+					float barY = y - barH;
+					float barPrg = std::max(1.0F, floorf(barW * hpFrac));
+
+					Handle<IImage> img = renderer->RegisterImage("Gfx/White.tga");
+
+					// draw shadow
+					renderer->SetColorAlphaPremultiplied(shadowP);
+					renderer->DrawImage(img, AABB2(barX + 1, barY + 1, barW, barH));
+
+					// draw background
+					if (hp < maxHealth) {
+						renderer->SetColorAlphaPremultiplied(bgColor);
+						renderer->DrawImage(img, AABB2(barX, barY, barW, barH));
+
+						// draw damaged portion
+						if (fade > 0.0F) {
+							Vector4 dmgColor = red + (white - red) * hurtTime;
+							float dmgBarW = std::min(ceilf(barW * dmgFrac), barW - barPrg);
+							for (float x2 = barPrg; x2 < barPrg + dmgBarW; x2 += 1.0F) {
+								float t = (x2 - barPrg) / dmgBarW;
+								float per = (1.0F - t * t) * fade;
+								renderer->SetColorAlphaPremultiplied(dmgColor * per);
+								renderer->DrawImage(img, AABB2(barX + x2, barY, 1.0F, barH));
+							}
+						}
+					}
+
+					// draw health bar
+					renderer->SetColorAlphaPremultiplied(color + (white - color) * hurtTime);
+					renderer->DrawImage(img, AABB2(barX, barY, barPrg, barH));
+
+					pos.y -= barH + 5.0F;
+				}
+
+				font.Draw(healthStr, pos + MakeVector2(1, 1), 1.0F, shadowColor);
+				font.Draw(healthStr, pos, 1.0F, hpColor + (white - hpColor) * hurtTime);
+			}
+		}
+
+		void Client::DrawFirstPersonHUD() {
+			SPADES_MARK_FUNCTION();
+
+			// draw weapon skin's 2D layer
+			int focusedPlayerId = GetCameraTargetPlayerId();
+			Player& p = world->GetPlayer(focusedPlayerId).value();
+			clientPlayers[focusedPlayerId]->Draw2D();
+
+			// The compass exists only where the server allows it: it is a client-side
+			// feature the extension governs, and a client never turns one on by itself.
+			// Where it is allowed, the player may still turn it off.
+			if (teamplay->IsCompassAllowed() && cg_hudCompassBar)
+				DrawCompassBar(p);
+
+			if (cg_debugAim && p.IsToolWeapon())
+				DrawDebugAim(p);
+		}
+
+		void Client::DrawDeadPlayerHUD() {
+			SPADES_MARK_FUNCTION();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			// draw respawn time
+			std::string msg = (lastRespawnCount > 0)
+				? _Tr("Client", "You will respawn in: {0}", lastRespawnCount)
+				: _Tr("Client", "Waiting for respawn");
+
+			Vector4 color = MakeVector4(1, 1, 1, 1);
+			Vector4 shadowColor = MakeVector4(0, 0, 0, 0.5F);
+
+			IFont& font = fontManager->GetGuiFont();
+			Vector2 size = font.Measure(msg);
+			Vector2 pos = MakeVector2((sw - size.x) * 0.5F, sh / 2.5F);
+			font.DrawShadow(msg, pos, 1.0F, color, shadowColor);
+
+			// draw deaths count
+			const float fadeOutStart = 1.3F;
+			const float fadeDuration = 1.0F;
+			float timeSinceDeath = time - lastAliveTime;
+			float fade = timeSinceDeath - fadeOutStart;
+			fade = 1.0F - (fade / fadeDuration);
+			fade = Clamp(fade, 0.0F, 1.0F);
+
+			if (fade > 0.0F) {
+				color.w = fade;
+				shadowColor.w = 0.5F * fade;
+
+				msg = ToString(curDeaths);
+				IFont& bigFont = fontManager->GetLargeFont();
+				size = bigFont.Measure(msg);
+				pos.x = (sw - size.x) * 0.5F;
+				pos.y += 30.0F;
+				bigFont.DrawShadow(msg, pos, 1.0F, color, shadowColor);
+			}
+		}
+
+		void Client::DrawSpectateHUD() {
+			SPADES_MARK_FUNCTION();
+
+			IFont& font = fontManager->GetGuiFont();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			stmp::optional<Player&> maybePlayer = world->GetLocalPlayer();
+
+			// In demo mode there's no local player, treat as spectator
+			bool isDemoMode = IsDemoMode();
+			bool localPlayerIsSpectator = maybePlayer && maybePlayer->IsSpectator();
+			bool isSpectating = localPlayerIsSpectator || isDemoMode || staffSpectating;
+
+			float x = sw - 8.0F;
+			float minY = sh * 0.5F;
+			minY -= 64.0F;
+
+			float y = cg_minimapSize;
+			if (y < minY)
+				y = minY;
+			if (y > 256.0F)
+				y = 256.0F;
+			y += 32.0F;
+
+			Vector4 color = MakeVector4(1, 1, 1, 1);
+			Vector4 shadow = MakeVector4(0, 0, 0, 0.7F);
+
+			float lh = 20.0F;
+			auto addLine = [&](const std::string& text) {
+				Vector2 pos = MakeVector2(x, y);
+				pos.x -= font.Measure(text).x;
+				y += lh;
+				font.DrawShadow(text, pos, 1.0F, color, shadow);
+			};
+
+			auto cameraMode = GetCameraMode();
+
+			// Help messages (make sure to synchronize these with the keyboard input handler)
+			if (FollowsNonLocalPlayer(cameraMode)) {
+				int focusedPlayerId = GetCameraTargetPlayerId();
+				auto maybeTarget = world->GetPlayer(focusedPlayerId);
+				if (maybeTarget) {
+					Player& camTarget = maybeTarget.value();
+					addLine(_Tr("Client", "Following {0} [#{1}]",
+						world->GetPlayerName(focusedPlayerId), focusedPlayerId));
+
+					int secs = (int)roundf(camTarget.GetTimeToRespawn());
+					if (secs > 0)
+						addLine(_Tr("Client", "Respawning in: {0}", secs));
+
+					y += lh * 0.5F;
+
+					if (camTarget.IsAlive())
+						addLine(_Tr("Client", "[{0}] Cycle camera mode", TrKey(cg_keyJump)));
+					addLine(_Tr("Client", "[{0}/{1}] Next/Prev player",
+						TrKey(cg_keyAttack), TrKey(cg_keyAltAttack)));
+					if (isSpectating)
+						addLine(_Tr("Client", "[{0}] Unfollow", TrKey(cg_keyReloadWeapon)));
+				}
+			} else {
+				addLine(_Tr("Client", "[{0}/{1}] Follow a player",
+					TrKey(cg_keyAttack), TrKey(cg_keyAltAttack)));
+			}
+
+			if (cameraMode == ClientCameraMode::Free) {
+				addLine(_Tr("Client", "[{0}/{1}] Go up/down",
+					TrKey(cg_keyJump), TrKey(cg_keyCrouch)));
+				addLine(_Tr("Client", "[{0}] Hold to Zoom", TrKey(cg_keySpectatorZoom)));
+			}
+
+			if (isSpectating) {
+				addLine(_Tr("Client", "[{0}] Toggle player names", TrKey(cg_keyToggleSpectatorNames)));
+				bool isStaff = activeNet && activeNet->GetGameProperties()->isStaff;
+				if (isStaff || isDemoMode)
+					addLine(_Tr("Client", "[{0}] Toggle ESP", TrKey(cg_keyStaffSpectating)));
+			}
+
+			y += lh * 0.5F;
+
+			// Demo playback controls
+			if (isDemoMode) {
+				addLine(demoNet->IsPaused()
+					? _Tr("Client", "[{0}] Resume", TrKey(cg_keyDemoPlayPause))
+					: _Tr("Client", "[{0}] Pause", TrKey(cg_keyDemoPlayPause)));
+				addLine(_Tr("Client", "[{0}/{1}] Seek +/-5s",
+					TrKey(cg_keyDemoSeekForward), TrKey(cg_keyDemoSeekBackward)));
+
+				char speedBuf[16];
+				snprintf(speedBuf, sizeof(speedBuf), "%.2g", demoNet->GetSpeed());
+				addLine(_Tr("Client", "[{0}/{1}] Speed: {2}x",
+					TrKey(cg_keyDemoSlowDown), TrKey(cg_keyDemoSpeedUp), std::string(speedBuf)));
+				addLine(_Tr("Client", "[{0}] Toggle Demo HUD", TrKey(cg_keyDemoToggleHud)));
+			} else if (!inGameLimbo) {
+				addLine(_Tr("Client", "[{0}] Select Team/Weapon", TrKey(cg_keyLimbo)));
+			}
+		}
+
+		void Client::DrawCompassBar(Player& p) {
+			const float sw = renderer->ScreenWidth();
+
+			const float barW = 280.0F;
+			const float barH = 18.0F;
+			const float barX = (sw - barW) * 0.5F;
+
+			float barY = 16.0F;
+
+			const int statsMode = cg_stats;
+			const int playerCountMode = cg_hudPlayerCount;
+
+			bool isDemoMode = IsDemoMode();
+			bool statsOnTop = statsMode == 2
+				|| (statsMode >= 3 && scoreboardVisible)
+				|| (statsMode == 1 && isDemoMode);
+			bool playerCountOnTop = playerCountMode > 0
+				&& playerCountMode < 2
+				|| (playerCountMode >= 1 && playerCountMode < 3 && isDemoMode); // force on screen top for demo mode
+
+			// account for client stats height
+			if (statsOnTop)
+				barY += cg_statsSmallFont ? 10.0F : 20.0F;
+
+			// account for alive player count height
+			if (playerCountOnTop)
+				barY += 40.0F;
+
+			const Vector4 color = GetHUDColor(p);
+			float luminosity = color.x + color.y + color.z;
+
+			const Vector4 shadow = MakeVector4(0, 0, 0, 0.8F);
+			const Vector4 gray = MakeVector4(0.4F, 0.4F, 0.4F, 1);
+			const Vector4 bgColor = (luminosity > 0.9F) ? color * gray : gray;
+
+			// premultiplied
+			Vector4 shadowP = shadow.Premultiplied();
+
+			// draw background
+			renderer->DrawFilledRectFade(barX, barY, barX + barW, barY + barH,
+				MakeVector4(0, 0, 0, 0), bgColor);
+
+			// draw border
+			const float sideH = barH * 0.5F;
+			auto drawBorder = [&](float x, float y, Vector4 col) {
+				renderer->SetColorAlphaPremultiplied(col);
+				renderer->DrawFilledRect(x - 1, y + (barH - sideH), x, y + barH + 1); // left
+				renderer->DrawFilledRect(x + barW, y + (barH - sideH), x + barW + 1, y + barH + 1); // right
+				renderer->DrawFilledRect(x, y + barH, x + barW,   y + barH + 1); // bottom
+			};
+			drawBorder(barX + 1, barY + 1, shadowP);
+			drawBorder(barX, barY, color);
+
+			IFont& font = fontManager->GetSmallFont();
+
+			// Every bearing on the bar, the heading included, is read against the north
+			// the server last sent in the Teamplay Config.
+			const float yawDeg = teamplay->GetBearing(p.GetFront2D().GetXY());
+			const float range = 120.0F;
+
+			// draw labels and ticks
+			std::array<std::string, 8> cardinalLabels = {
+				_Tr("Client", "N"),  _Tr("Client", "NE"),
+				_Tr("Client", "E"),  _Tr("Client", "SE"),
+				_Tr("Client", "S"),  _Tr("Client", "SW"),
+				_Tr("Client", "W"),  _Tr("Client", "NW"),
+			};
+			auto drawLabel = [&](const char* label, float px, float alpha) {
+				Vector2 size = font.Measure(label);
+				float tx = floorf(px - size.x * 0.5F);
+				float ty = floorf(barY + (barH - size.y) * 0.5F);
+				Vector4 colorLabel = MakeVector4(color.x, color.y, color.z, color.w * alpha);
+				Vector4 shadowLabel = MakeVector4(shadow.x, shadow.y, shadow.z, shadow.w * alpha);
+				font.DrawOutline(label, MakeVector2(tx, ty), 1.0F, colorLabel, shadowLabel);
+			};
+
+			const int tickStep = 5;
+			const int cardinalStep = 45;
+			const int intermediateOffset = (int)roundf(cardinalStep / 2.0F / tickStep) * tickStep;
+			for (int deg = 0; deg < 360; deg += tickStep) {
+				float delta = std::remainderf((float)deg - roundf(yawDeg), 360.0F);
+				if (fabsf(delta) > range * 0.5F)
+					continue;
+
+				float fadeStart = range * 0.42F;
+				float fadeEnd = range * 0.48F;
+				float edgeFade = 1.0F - (fabsf(delta) - fadeStart) / (fadeEnd - fadeStart);
+				edgeFade = Clamp(edgeFade, 0.0F, 1.0F);
+
+				const int degOffset = deg % cardinalStep;
+				bool isCardinal = degOffset == 0;
+				float px = roundf(barX + barW * 0.5F + (delta / range) * barW);
+				float tH = isCardinal ? barH * 0.55F : barH * 0.3F;
+
+				// draw tick marks
+				renderer->SetColorAlphaPremultiplied(shadowP * edgeFade);
+				renderer->DrawFilledRect(px + 1, barY + barH - tH, px + 2.0F, barY + barH);
+				renderer->SetColorAlphaPremultiplied(color * edgeFade);
+				renderer->DrawFilledRect(px, barY + barH - tH, px + 1.0F, barY + barH);
+
+				// draw cardinal labels
+				if (isCardinal) {
+					const auto& label = cardinalLabels[deg / cardinalStep];
+					drawLabel(label.c_str(), px, edgeFade);
+					continue;
+				}
+
+				// draw intermediate degree labels
+				if (degOffset == intermediateOffset) {
+					char degLabel[8];
+					snprintf(degLabel, sizeof(degLabel), "%d", deg);
+					drawLabel(degLabel, px, edgeFade * 0.5F);
+				}
+			}
+
+			// draw heading degrees
+			char degBuf[8];
+			snprintf(degBuf, sizeof(degBuf), "%d", (int)roundf(yawDeg) % 360);
+			Vector2 degSize = font.Measure(degBuf);
+			float degX = floorf(barX + barW * 0.5F - degSize.x * 0.5F);
+			float degY = barY + barH + 3.0F;
+			font.DrawOutline(degBuf, MakeVector2(degX, degY), 1.0F, color, shadow);
+
+			// draw icons
+			Vector2 pos2D = p.GetPosition().GetXY();
+
+			auto drawIcon = [&](Handle<IImage>& icon, Vector3 targetPos, Vector4 color, float size = 12.0F) {
+				Vector2 delta = targetPos.GetXY() - pos2D;
+				float angle = teamplay->GetBearing(delta);
+				float yawDelta = std::remainderf(angle - roundf(yawDeg), 360.0F);
+				if (fabsf(yawDelta) > range * 0.5F)
+					return;
+				float px = roundf(barX + barW * 0.5F + (yawDelta / range) * barW);
+				float fade = 1.0F - Clamp((fabsf(yawDelta) - range * 0.42F) / (range * 0.06F), 0.0F, 1.0F);
+				renderer->SetColorAlphaPremultiplied(color * fade);
+				renderer->DrawImage(icon, AABB2(px - size * 0.5F, barY + (barH - size) * 0.5F, size, size));
+			};
+
+			// draw map objects
+			stmp::optional<IGameMode&> mode = world->GetMode();
+			if (mode && mode->ModeType() == IGameMode::m_CTF) {
+				auto& ctf = dynamic_cast<CTFGameMode&>(mode.value());
+				Handle<IImage> baseIcon = renderer->RegisterImage("Gfx/Map/CommandPost.png");
+				Handle<IImage> intelIcon = renderer->RegisterImage("Gfx/Map/Intel.png");
+
+				for (int tId = 0; tId < 2; tId++) {
+					CTFGameMode::Team& team = ctf.GetTeam(tId);
+					CTFGameMode::Team& otherTeam = ctf.GetTeam(1 - tId);
+
+					// draw base
+					drawIcon(baseIcon, team.basePos, color);
+
+					// draw intel
+					if (!otherTeam.hasIntel)
+						drawIcon(intelIcon, team.flagPos, color);
+				}
+			} else if (mode && mode->ModeType() == IGameMode::m_TC) {
+				auto& tc = dynamic_cast<TCGameMode&>(mode.value());
+				Handle<IImage> baseIcon = renderer->RegisterImage("Gfx/Map/CommandPost.png");
+
+				// draw territories
+				for (int i = 0; i < tc.GetNumTerritories(); i++)
+					drawIcon(baseIcon, tc.GetTerritory(i).pos, color);
+			}
+
+			// The objectives above are on the compass by default; everything below is
+			// here because a ping or a mark asked for it. A bearing carries no distance
+			// and no position, only which way to turn, which is why a callout known by
+			// direction alone belongs on this surface.
+			//
+			// Where a bearing lands on the bar and how much the edge fade leaves of it;
+			// `false` when it is outside the visible range or fully faded.
+			auto locateBearing = [&](const Vector3& targetPos, float alpha, float& px,
+									 float& fade) {
+				Vector2 delta = targetPos.GetXY() - pos2D;
+				float angle = teamplay->GetBearing(delta);
+				float yawDelta = std::remainderf(angle - roundf(yawDeg), 360.0F);
+				if (fabsf(yawDelta) > range * 0.5F)
+					return false;
+
+				px = roundf(barX + barW * 0.5F + (yawDelta / range) * barW);
+				fade = 1.0F - Clamp((fabsf(yawDelta) - range * 0.42F) / (range * 0.06F),
+									0.0F, 1.0F);
+				fade *= alpha;
+				return fade > 0.0F;
+			};
+
+			// A mark follows a player, so it gets a full-height stripe rather than an
+			// icon: it reads as a direction, not as a thing sitting at a place.
+			auto drawBearing = [&](const Vector3& targetPos, const Vector3& col, float alpha) {
+				float px, fade;
+				if (!locateBearing(targetPos, alpha, px, fade))
+					return;
+
+				const float w = 2.0F;
+				renderer->SetColorAlphaPremultiplied(shadowP * fade);
+				renderer->DrawFilledRect(px, barY + 1.0F, px + w + 1.0F, barY + barH);
+				renderer->SetColorAlphaPremultiplied(
+				  MakeVector4(col.x * fade, col.y * fade, col.z * fade, fade));
+				renderer->DrawFilledRect(px, barY, px + w, barY + barH - 1.0F);
+			};
+
+			// A ping's pulse rings reach past the bar; keep them on it rather than over
+			// the heading readout underneath.
+			const bool clipPings = teamplay->HasPings();
+			if (clipPings)
+				renderer->BeginClippingRect(AABB2(barX, barY, barW, barH));
+
+			for (const auto& entry : teamplay->GetPings()) {
+				const Teamplay::Ping& ping = entry.second;
+				if (!(ping.surfaces & Teamplay::SurfaceCompass))
+					continue;
+
+				constexpr float kFadeOutTime = 0.75F;
+				float px, fade;
+				if (!locateBearing(ping.position, ping.GetFadeAlpha(kFadeOutTime), px, fade))
+					continue;
+
+				// The same diamond the ping wears in the world and on the minimap,
+				// centred on the bar and sized to sit inside it with its outline.
+				constexpr float kCompassPingHalfSize = 5.0F;
+				DrawPingDiamond(*renderer, MakeVector2(px, barY + barH * 0.5F),
+								kCompassPingHalfSize, Teamplay::ToRenderColor(ping.color), fade,
+								ping.age);
+			}
+
+			if (clipPings)
+				renderer->EndClippingRect();
+
+			for (const auto& entry : teamplay->GetMarks()) {
+				const Teamplay::Mark& mark = entry.second;
+				if (!(mark.surfaces & Teamplay::SurfaceCompass))
+					continue;
+
+				auto maybeMarked = world->GetPlayer(static_cast<unsigned int>(entry.first));
+				if (!maybeMarked)
+					continue;
+
+				Player& marked = maybeMarked.value();
+				if (marked.IsSpectator() || !marked.IsAlive())
+					continue;
+
+				// The blink runs on every surface the mark names, this one included.
+				drawBearing(marked.GetPosition(), ResolveMarkColor(marked, mark.color), 1.0F);
+			}
+		}
+
+		void Client::DrawReloadIndicator(const Vector4& col) {
+			SPADES_MARK_FUNCTION();
+
+			if (col.w <= 0.0F)
+				return;
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			const Vector2 center = MakeVector2(sw * 0.5F, sh * 0.5F);
+
+			const float radius = 16.0F;
+			const float thickness = 2.0F;
+			const float spinSpeed = kTwoPi * 0.75F;
+			const float sweepAngle = DEG2RAD(225.0F);
+			const float startAngle = fmodf(time * spinSpeed, kTwoPi);
+			const float fadeAngle = DEG2RAD(45.0F);
+
+			// draw background
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, 0.4F * col.w));
+			renderer->DrawOutlinedCircle(center, radius, thickness * 2.0F);
+
+			// draw outlined arc
+			const float inner = radius - (thickness * 0.5F);
+			const float outer = radius + (thickness * 0.5F);
+			const float sweepAbs = fabsf(sweepAngle);
+			const float fadeLength = std::min(sweepAbs, fadeAngle);
+
+			Vector2 prevInner = center + MakeVector2(cosf(startAngle), sinf(startAngle)) * inner;
+			Vector2 prevOuter = center + MakeVector2(cosf(startAngle), sinf(startAngle)) * outer;
+
+			const int segments = Clamp((int)radius, 16, 64);
+			for (int i = 1; i <= segments; i++) {
+				float t = (float)i / (float)segments;
+				float angle = startAngle + sweepAngle * t;
+
+				Vector2 curInner = center + MakeVector2(cosf(angle), sinf(angle)) * inner;
+				Vector2 curOuter = center + MakeVector2(cosf(angle), sinf(angle)) * outer;
+
+				float distFromStart = sweepAbs * t;
+				float segAlpha = (fadeLength > 0.0F)
+					? Clamp(distFromStart / fadeLength, 0.0F, 1.0F) : 1.0F;
+				segAlpha *= col.w;
+
+				renderer->SetColorAlphaPremultiplied(MakeVector4(col.x * segAlpha, col.y * segAlpha,
+																col.z * segAlpha, segAlpha));
+				renderer->DrawFilledTriangle(prevInner, prevOuter, curInner);
+				renderer->DrawFilledTriangle(prevOuter, curOuter, curInner);
+
+				prevInner = curInner;
+				prevOuter = curOuter;
+			}
+		}
+
+		void Client::Draw2DWithWorld() {
+			SPADES_MARK_FUNCTION();
+
+			bool isDemoMode = IsDemoMode();
+			bool shouldDrawHUD = hudVisible && !cg_hideHud;
+			bool isChatPanelVisible = scriptedUI->IsChatPanelOpen();
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			// fade the map when the world starts (draw)
+			const float fadeOutStart = 1.0F;
+			const float fadeDuration = 2.5F;
+			float timeSinceWorldStart = time - worldSetTime;
+			float fade = timeSinceWorldStart - fadeOutStart;
+			fade = 1.0F - (fade / fadeDuration);
+			fade = Clamp(fade, 0.0F, 1.0F);
+
+			if (fade > 0.0F) {
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0, 0, 0, fade));
+				renderer->DrawImage(nullptr, AABB2(0, 0, sw, sh));
+			}
+
+			for (const auto& ent : localEntities)
+				ent->Render2D();
+
+			stmp::optional<Player&> maybePlayer = world->GetLocalPlayer();
+
+			if (maybePlayer) { // joined local player
+				Player& player = maybePlayer.value();
+
+				if (cg_playerNamesDead)
+					DrawDeadPlayers();
+
+				bool localPlayerIsSpectator = player.IsSpectator() || staffSpectating;
+				if (!localPlayerIsSpectator) {
+					if (cg_hurtScreenEffects) {
+						DrawHurtSprites();
+						DrawScreenEffect(true);
+					}
+
+					if (cg_healScreenEffects)
+						DrawScreenEffect(false);
+
+					if (cg_playerNames)
+						DrawHottrackedPlayerName();
+
+					if (cg_damageIndicators)
+						DrawDamageIndicators();
+
+					if (cg_espBoxes || cg_espNames || cg_espTracers)
+						DrawPubOVL();
+				} else if (spectatorPlayerNames || cg_espBoxes || cg_espNames || cg_espTracers) { // only if we are spectating
+					DrawPubOVL();
+				}
+
+				// Teamplay marks and pings come from the server and are drawn
+				// whether or not the local player is spectating; the team overlay is the
+				// local player's own view of their team and is not.
+				DrawEspMarks();
+				DrawLocalPlayerMarkedIndicator();
+				DrawTeamplayPings();
+				if (!localPlayerIsSpectator)
+					DrawTeamOverlay();
+
+				if (shouldDrawHUD) {
+					// draw firstperson camera player HUD
+					if (IsFirstPerson(GetCameraMode()))
+						DrawFirstPersonHUD();
+
+					tcView->Draw();
+
+					if (cg_hudPlayerCount)
+						DrawAlivePlayersCount();
+
+					// draw map
+					bool largeMap = largeMapView->IsZoomed();
+					if (!largeMap)
+						mapView->Draw();
+
+					if (!localPlayerIsSpectator) { // player is not spectator
+						if (cg_playerStats)
+							DrawPlayerStats();
+						if (!player.IsToolBlock() && !debugHitTestZoom)
+							DrawHitTestDebugger();
+
+						if (player.IsAlive()) {
+							DrawJoinedAlivePlayerHUD();
+						} else {
+							DrawDeadPlayerHUD();
+							DrawSpectateHUD();
+						}
+					} else {
+						DrawSpectateHUD();
+					}
+
+					if (netgraphVisible && !isDemoMode)
+						DrawNetGraph();
+
+					// the chat panel shows the history by itself while it is open
+					if (!isChatPanelVisible)
+						chatWindow->Draw();
+					killfeedWindow->Draw();
+
+					if (debugHitTestZoom)
+						DrawHitTestDebugger();
+
+					// large map view should come in front
+					if (largeMap)
+						largeMapView->Draw();
+				}
+
+				if (pieMenuView && pieMenuView->IsOpen())
+					pieMenuView->Draw();
+
+				DrawAlert();
+				centerMessageView->Draw();
+				if (scoreboardVisible)
+					scoreboard->Draw();
+
+				// --- end "player is there" render
+			} else {
+				// world exists, but no local player: not joined (or demo mode)
+
+				if (isDemoMode) {
+					// Draw spectator HUD elements in demo mode.
+					// Boxes always render (staff use); names follow the toggle.
+					DrawPubOVL();
+
+					if (shouldDrawHUD) {
+						// draw firstperson camera player HUD
+						if (IsFirstPerson(GetCameraMode()))
+							DrawFirstPersonHUD();
+
+						tcView->Draw();
+
+						if (cg_hudPlayerCount)
+							DrawAlivePlayersCount();
+
+						// draw map
+						bool largeMap = largeMapView->IsZoomed();
+						if (!largeMap)
+							mapView->Draw();
+
+						DrawSpectateHUD();
+
+						if (!isChatPanelVisible)
+							chatWindow->Draw();
+						killfeedWindow->Draw();
+
+						// large map view should come in front
+						if (largeMap)
+							largeMapView->Draw();
+					}
+				}
+
+				// In demo mode, only show scoreboard when toggled
+				if (!isDemoMode || scoreboardVisible)
+					scoreboard->Draw();
+
+				centerMessageView->Draw();
+				DrawAlert();
+			}
+
+			if (shouldDrawHUD) {
+				// draw demo hud
+				if (isDemoMode)
+					DrawDemoPlaybackHUD();
+				if (net && net->IsDemoRecording())
+					DrawRecordingIndicator();
+
+				if (cg_stats)
+					DrawStats();
+			}
+
+			// draw limbo view (above everything)
+			if (IsLimboViewActive() && !scriptedUI->NeedsInput())
+				limboMenu->Draw();
+		}
+
+		void Client::Draw2DWithoutWorld() {
+			SPADES_MARK_FUNCTION();
+
+			DrawSplash();
+
+			// no world; loading?
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			const float prgBarW = 440.0F;
+			const float prgBarH = 8.0F;
+			const float prgBarX = (sw - prgBarW) * 0.5F;
+			const float prgBarY = sh - (prgBarH + 40.0F);
+			const float prgBarX1 = prgBarX + prgBarW;
+			const float prgBarY1 = prgBarY + prgBarH;
+
+			// draw background track
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.2F, 0.2F, 0.2F, 1.0F));
+			renderer->DrawFilledRect(prgBarX, prgBarY, prgBarX1, prgBarY1);
+
+			NetClientStatus status = activeNet->GetStatus();
+			if (status == NetClientStatusReceivingMap) {
+				const float progress = Clamp(mapReceivingProgressSmoothed, 0.0F, 1.0F);
+				// draw progress bar: horizontal gradient from dark to brighter blue
+				const float fillX1 = prgBarX + prgBarW * progress;
+				renderer->DrawFilledRectFade(prgBarX, prgBarY, fillX1, prgBarY1,
+						MakeVector4(0.0F, 0.25F, 0.5F, 1.0F),
+						MakeVector4(0.0F, 0.5F, 1.0F, 1.0F), true);
+			} else {
+				// draw indeterminate progress bar: a soft glow sweeping across the track
+				const float glowRadius = 200.0F;
+				const float peakAlpha = 0.55F;
+				const float progressPosition = fmodf(timeSinceInit * 0.7F, 1.0F);
+				const float centerX = prgBarX + progressPosition * (prgBarW + glowRadius * 2.0F) - glowRadius;
+
+				// glow alpha at a given x (linear falloff from the center)
+				auto glowColorAt = [&](float x) {
+					float a = 1.0F - fabsf(x - centerX) / glowRadius;
+					a = std::max(a, 0.0F) * peakAlpha;
+					return MakeVector4(0.5F, 0.5F, 0.5F, 1.0F) * a;
+				};
+
+				// draw one linear segment of the glow, clipped to the track
+				auto drawGlowSegment = [&](float xa, float xb) {
+					xa = std::max(xa, prgBarX);
+					xb = std::min(xb, prgBarX1);
+					if (xb <= xa)
+						return;
+					renderer->DrawFilledRectFade(xa, prgBarY, xb, prgBarY1,
+						glowColorAt(xa), glowColorAt(xb), true);
+				};
+
+				drawGlowSegment(centerX - glowRadius, centerX); // fade in
+				drawGlowSegment(centerX, centerX + glowRadius); // fade out
+			}
+
+			// draw outline
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.1F, 0.1F, 0.1F, 0.1F));
+			renderer->DrawOutlinedRect(prgBarX - 1, prgBarY - 1, prgBarX1 + 1, prgBarY1 + 1, 1);
+
+			// draw net status
+			Vector4 dim = MakeVector4(0.5F, 0.5F, 0.5F, 1.0F);
+			IFont& font = fontManager->GetGuiFont();
+			auto statusStr = activeNet->GetStatusString();
+			Vector2 size = font.Measure(statusStr);
+			Vector2 pos = MakeVector2((sw - size.x) * 0.5F, (prgBarY - 10.0F) - size.y);
+			font.Draw(statusStr, pos, 1.0F, dim);
+
+			// draw the server name and the cancel hint in the top-left corner
+			const float margin = 8.0F;
+			float y = margin;
+
+			// server name (empty in demo mode)
+			if (!serverName.empty()) {
+				IFont& headingFont = fontManager->GetHeadingFont();
+				std::string serverStr = _Tr("Client", "Connecting to {0}", serverName);
+				headingFont.Draw(serverStr, MakeVector2(margin, y), 1.0F, MakeVector4(1, 1, 1, 1));
+				y += headingFont.Measure(serverStr).y + 4.0F;
+			}
+
+			// cancel hint
+			std::string hintStr = _Tr("Client", "[Esc] Cancel");
+			font.Draw(hintStr, MakeVector2(margin, y), 1.0F, dim);
+		}
+
+		void Client::DrawStats() {
+			SPADES_MARK_FUNCTION();
+
+			bool isDemoMode = IsDemoMode();
+
+			// only draw stats when scoreboard is visible
+			const int statsMode = cg_stats;
+			if (statsMode >= 3 && !scoreboardVisible)
+				return;
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			char buf[64];
+			std::string str;
+
+			{
+				auto fps = fpsCounter.GetFps();
+				if (fps <= 0) {
+					str += "FPS: NA";
+				} else {
+					snprintf(buf, sizeof(buf), "%.0fFPS", fps);
+					str += buf;
+				}
+			}
+			{
+				// Display world updates per second
+				auto ups = upsCounter.GetFps();
+				if (ups <= 0) {
+					str += ", UPS: NA";
+				} else {
+					snprintf(buf, sizeof(buf), ", %.0fUPS", ups);
+					str += buf;
+				}
+			}
+
+			if (!isDemoMode && !netgraphVisible) {
+				auto ping = activeNet->GetPing();
+				snprintf(buf, sizeof(buf), ", ping: %dms", ping);
+				str += buf;
+
+				auto upbps = activeNet->GetUplinkBps() / 1000;
+				auto downbps = activeNet->GetDownlinkBps() / 1000;
+				snprintf(buf, sizeof(buf), ", up/down: %.02f/%.02fkbps", upbps, downbps);
+				str += buf;
+
+				auto loss = activeNet->GetPacketLoss() * 100.0F;
+				snprintf(buf, sizeof(buf), ", loss: %.0f%%", loss);
+				str += buf;
+
+				auto throttle = activeNet->GetPacketThrottle();
+				auto choke = (1.0F - throttle) * 100.0F;
+				snprintf(buf, sizeof(buf), ", choke: %.0f%%", choke);
+				str += buf;
+			}
+
+			// add margin
+			const float margin = 2.0F;
+			IFont& font = cg_statsSmallFont
+				? fontManager->GetSmallFont()
+				: fontManager->GetGuiFont();
+			Vector2 size = font.Measure(str) + (margin * 2.0F);
+			Vector2 pos = MakeVector2(sw, sh) - size;
+			pos *= MakeVector2(0.5F, (statsMode >= 2 || isDemoMode) ? 0.0F : 1.0F);
+
+			Vector4 color = MakeVector4(1, 1, 1, 1);
+			Vector4 outline = MakeVector4(0, 0, 0, 0.8F);
+
+			// draw text
+			pos += MakeVector2(margin, margin);
+			font.DrawOutline(str, pos, 1.0F, color, outline);
+		}
+
+		void Client::DrawNetGraph() {
+			SPADES_MARK_FUNCTION();
+
+			IFont& font = fontManager->GetSmallFont();
+
+			// const float sw = renderer->ScreenWidth();
+			const float sh = renderer->ScreenHeight();
+
+			const float margin = 4.0F;
+			const float graphW = 128.0F;
+			const float graphH = 64.0F;
+			const float graphX = margin;
+			const float graphY = (sh * 0.5F) - margin - graphH * 0.5F;
+
+			// label column to the right of the graph
+			const float labelColW = 64.0F;
+			const float panelX = graphX;
+			const float panelW = graphW + margin + labelColW;
+			const float panelH = graphH;
+			const float panelY = graphY;
+
+			// colors
+			const Vector4 white = MakeVector4(1, 1, 1, 1);
+			const Vector4 colDown = MakeVector4(0.2F, 1, 0.35F, 1);
+			const Vector4 colUp = MakeVector4(0.35F, 0.55F, 1, 1);
+			const Vector4 colPing = MakeVector4(1, 0.25F, 0.25F, 1);
+			const Vector4 outline = MakeVector4(0, 0, 0, 0.7F);
+			const Vector4 colBackground = MakeVector4(0, 0, 0, 0.55F);
+			const Vector4 colBorder = MakeVector4(0.6F, 0.6F, 0.6F, 0.6F);
+
+			// draw background
+			const float bgTop = panelY - margin;
+			const float bgBottom = panelY + panelH + margin;
+			const float solidEnd = graphX + graphW + margin;
+			const float fadeEnd = panelX + panelW + margin;
+			const Vector4 bgTransparent = MakeVector4(0, 0, 0, 0);
+			renderer->DrawFilledRectFadeSolid(0.0F, bgTop, fadeEnd, bgBottom,
+											  solidEnd, fadeEnd,
+											  colBackground, bgTransparent, true);
+
+			// compute max values for scaling
+			float maxBw = 8.0F; // kbps floor
+			float maxPing = 300.0F; // ms floor
+			for (int i = 0; i < kNetGraphSamples; i++) {
+				const auto& s = netGraph.At(i);
+				maxBw = std::max({maxBw, s.downKbps, s.upKbps});
+				maxPing = std::max(maxPing, s.pingMs);
+			}
+
+			// round up to a clean headroom ceiling
+			maxBw *= 2.0F;
+			maxPing *= 2.0F;
+
+			// draw graph lines (one pixel-wide column per sample)
+			const float colW = graphW / static_cast<float>(kNetGraphSamples);
+			for (int i = 0; i < kNetGraphSamples; i++) {
+				const auto& s = netGraph.At(i);
+				const float x = graphX + float(i) * colW;
+
+				float downH = (s.downKbps / maxBw) * graphH;
+				float upH = (s.upKbps / maxBw) * graphH;
+				float pingH = (s.pingMs / maxPing) * graphH;
+				float baseH = graphY + graphH;
+
+				{
+					float top = std::max(baseH - downH, graphY);
+					renderer->SetColorAlphaPremultiplied(colDown);
+					renderer->DrawFilledRect(x, top, x + colW, baseH);
+					baseH = top;
+				}
+				{
+					float top = std::max(baseH - upH, graphY);
+					renderer->SetColorAlphaPremultiplied(colUp);
+					renderer->DrawFilledRect(x, top, x + colW, baseH);
+					baseH = top;
+				}
+				{
+					float top = std::max(baseH - pingH, graphY);
+					renderer->SetColorAlphaPremultiplied(colPing);
+					renderer->DrawFilledRect(x, top, x + colW, baseH);
+				}
+			}
+
+			// graph border
+			renderer->SetColorAlphaPremultiplied(colBorder);
+			renderer->DrawOutlinedRect(graphX - 1, graphY - 1, graphX + graphW + 1, graphY + graphH + 1);
+
+			// draw labels (right-aligned text in the label column)
+			const float downKbps = std::min(static_cast<float>(activeNet->GetDownlinkBps() / 1000.0), 999.0F);
+			const float upKbps = std::min(static_cast<float>(activeNet->GetUplinkBps() / 1000.0), 999.0F);
+			const float pingMs = std::min(static_cast<float>(activeNet->GetPing()), 999.0F);
+			const float lossPer = activeNet->GetPacketLoss() * 100.0F;
+
+			char buf[64];
+			const float lh = graphH / 4.0F;
+			Vector2 labelPos = MakeVector2(graphX + graphW + margin, panelY);
+			auto drawLabel = [&](const std::string& label, const std::string& value, const Vector4& col) {
+				float ty = labelPos.y + (lh - font.Measure(label).y) * 0.5F;
+				font.DrawOutline(label, MakeVector2(labelPos.x, ty), 1.0F, col, outline);
+				font.DrawOutline(value, MakeVector2(labelPos.x + labelColW - font.Measure(value).x, ty), 1.0F, col, outline);
+				labelPos.y += lh;
+			};
+
+			snprintf(buf, sizeof(buf), "%.0fkbps", downKbps);
+			drawLabel("in", buf, colDown);
+			snprintf(buf, sizeof(buf), "%.0fkbps", upKbps);
+			drawLabel("out", buf, colUp);
+			snprintf(buf, sizeof(buf), "%dms", static_cast<int>(pingMs));
+			drawLabel("ping", buf, colPing);
+			snprintf(buf, sizeof(buf), "%.0f%%", lossPer);
+			drawLabel("loss", buf, white);
+		}
+
+		void Client::Draw2D() {
+			SPADES_MARK_FUNCTION();
+
+			if (GetWorld())
+				Draw2DWithWorld();
+			else
+				Draw2DWithoutWorld();
+		}
+	} // namespace client
+} // namespace spades

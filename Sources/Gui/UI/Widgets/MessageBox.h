@@ -1,0 +1,88 @@
+/*
+ Copyright (c) 2026 Fran6nd, ZeroSpades developers.
+
+ This file is part of ZeroSpades, a fork of OpenSpades.
+
+ OpenSpades is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ OpenSpades is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with OpenSpades.  If not, see <http://www.gnu.org/licenses/>.
+
+ */
+
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include <Gui/UI/Framework/UIElement.h>
+
+namespace spades {
+	namespace gui {
+		/**
+		 * A modal dialog with a text body and a row of buttons. While shown it
+		 * disables its owner; `resultIndex` is the pressed button (or -1).
+		 */
+		class MessageBoxScreen : public ui::UIElement {
+			float contentsTop, contentsHeight;
+
+			ui::UIElement* owner; // weak
+
+			void OnClosed();
+
+		public:
+			ui::EventHandler closed;
+			int resultIndex = -1;
+
+			/**
+			 * @param allowLinks When true, http(s) URLs in `text` are drawn as links and
+			 *                   a click on one asks for confirmation before opening it.
+			 *                   Leave it off for dialogs that display a URL themselves
+			 *                   (such as the link confirmation), or the URL would become a
+			 *                   link to another confirmation.
+			 */
+			MessageBoxScreen(ui::UIElement* owner, const std::string& text,
+			                 const std::vector<std::string>& buttons, float height = 200.0F,
+			                 bool showOverlay = false, bool allowLinks = false);
+
+			void EndDialog(int result);
+			void Close();
+			void Run();
+			void Render() override;
+		};
+
+		/** A message box with a single OK button. */
+		class AlertScreen : public MessageBoxScreen {
+		public:
+			AlertScreen(ui::UIElement* owner, const std::string& text, float height = 200.0F,
+			            bool showOverlay = false, bool allowLinks = false);
+			void HotKey(const std::string& key) override;
+		};
+
+		/** A message box with OK / Cancel buttons; `GetResult()` is true for OK. */
+		class ConfirmScreen : public MessageBoxScreen {
+		public:
+			ConfirmScreen(ui::UIElement* owner, const std::string& text, float height = 200.0F,
+			              bool showOverlay = false);
+
+			bool GetResult() const { return resultIndex == 0; }
+
+			void HotKey(const std::string& key) override;
+		};
+
+		/**
+		 * Asks the user to confirm before opening `url` in the system browser.
+		 * Only http and https URLs are accepted. `owner` must be a full-screen
+		 * element that has a parent, since the dialog is attached next to it.
+		 */
+		void ConfirmOpenLink(ui::UIElement* owner, const std::string& url);
+	} // namespace gui
+} // namespace spades
