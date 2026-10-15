@@ -23,6 +23,7 @@
 
 #include "MainMenu.h"
 #include "MainScreenUI.h"
+#include "SkinSelectScreen.h"
 #include <Client/Fonts.h>
 #include <Client/IImage.h>
 #include <Client/IRenderer.h>
@@ -751,6 +752,15 @@ namespace spades {
 			}
 			{
 				Handle<MenuIconButton> button =
+				    Handle<MenuIconButton>::New(manager, GuiIconType::Skin);
+				skinsButton = button.GetPointerOrNull();
+				skinsButton->caption = _Tr("MainScreen", "Skins");
+				skinsButton->SetBounds(AABB2(contentsLeft + 115.0F, footerPos, 110.0F, 30.0F));
+				skinsButton->activated = [this](UIElement& s) { OnSkinsPressed(s); };
+				AddChild(skinsButton);
+			}
+			{
+				Handle<MenuIconButton> button =
 				    Handle<MenuIconButton>::New(manager, GuiIconType::Quit);
 				button->caption = _Tr("MainScreen", "Quit");
 				button->SetBounds(
@@ -1269,6 +1279,12 @@ namespace spades {
 				ui->OpenDetailedSettings();
 			};
 			al->Run();
+		}
+
+		void MainScreenMainMenu::OnSkinsPressed(UIElement&) {
+			Handle<SkinSelectScreen> screen =
+			    Handle<SkinSelectScreen>::New(this, &ui->GetFontManager());
+			screen->Run();
 		}
 
 		void MainScreenMainMenu::Connect() {

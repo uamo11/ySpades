@@ -21,6 +21,7 @@
 #include "LobbyScreen.h"
 
 #include "MainScreenUI.h"
+#include "SkinSelectScreen.h"
 #include <Client/Fonts.h>
 #include <Client/IFont.h>
 #include <Client/IRenderer.h>
@@ -38,6 +39,7 @@ namespace spades {
 
 		enum class LobbyIconType {
 			Play,
+			Skins,
 			Settings,
 			Quit
 		};
@@ -71,6 +73,8 @@ namespace spades {
 				if (hover) {
 					if (iconType == LobbyIconType::Play)
 						borderColor = MakeVector4(0.35F, 0.85F, 0.55F, 0.9F);
+					else if (iconType == LobbyIconType::Skins)
+						borderColor = MakeVector4(0.85F, 0.50F, 1.0F, 0.9F);
 					else if (iconType == LobbyIconType::Settings)
 						borderColor = MakeVector4(0.45F, 0.75F, 1.0F, 0.9F);
 					else if (iconType == LobbyIconType::Quit)
@@ -89,6 +93,8 @@ namespace spades {
 				if (hover) {
 					if (iconType == LobbyIconType::Play)
 						iconCol = MakeVector4(0.40F, 1.0F, 0.60F, 1.0F);
+					else if (iconType == LobbyIconType::Skins)
+						iconCol = MakeVector4(0.92F, 0.65F, 1.0F, 1.0F);
 					else if (iconType == LobbyIconType::Settings)
 						iconCol = MakeVector4(0.60F, 0.85F, 1.0F, 1.0F);
 					else if (iconType == LobbyIconType::Quit)
@@ -109,6 +115,26 @@ namespace spades {
 						float halfH = 13.0F * (1.0F - t);
 						r.DrawLine(MakeVector2(x, cy - halfH), MakeVector2(x, cy + halfH), 1.5F);
 					}
+				} else if (iconType == LobbyIconType::Skins) {
+					// Draw Character / T-shirt skin silhouette
+					float s = 1.6F;
+					// Shoulders
+					r.DrawLine(MakeVector2(cx - 7.0F * s, cy - 2.5F * s), MakeVector2(cx - 2.5F * s, cy - 5.5F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx + 2.5F * s, cy - 5.5F * s), MakeVector2(cx + 7.0F * s, cy - 2.5F * s), 2.0F * s);
+					// V-neck collar
+					r.DrawLine(MakeVector2(cx - 2.5F * s, cy - 5.5F * s), MakeVector2(cx, cy - 2.0F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx + 2.5F * s, cy - 5.5F * s), MakeVector2(cx, cy - 2.0F * s), 2.0F * s);
+					// Sleeves
+					r.DrawLine(MakeVector2(cx - 7.0F * s, cy - 2.5F * s), MakeVector2(cx - 8.5F * s, cy + 1.5F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx - 8.5F * s, cy + 1.5F * s), MakeVector2(cx - 5.5F * s, cy + 2.0F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx + 7.0F * s, cy - 2.5F * s), MakeVector2(cx + 8.5F * s, cy + 1.5F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx + 8.5F * s, cy + 1.5F * s), MakeVector2(cx + 5.5F * s, cy + 2.0F * s), 2.0F * s);
+					// Torso sides & bottom hem
+					r.DrawLine(MakeVector2(cx - 5.5F * s, cy + 2.0F * s), MakeVector2(cx - 5.5F * s, cy + 7.5F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx + 5.5F * s, cy + 2.0F * s), MakeVector2(cx + 5.5F * s, cy + 7.5F * s), 2.0F * s);
+					r.DrawLine(MakeVector2(cx - 5.5F * s, cy + 7.5F * s), MakeVector2(cx + 5.5F * s, cy + 7.5F * s), 2.0F * s);
+					// Head
+					r.DrawImage(nullptr, AABB2(cx - 3.2F * s, cy - 10.5F * s, 6.4F * s, 4.5F * s));
 				} else if (iconType == LobbyIconType::Settings) {
 					// Draw gear icon
 					// 8 teeth spokes
@@ -126,12 +152,54 @@ namespace spades {
 					r.DrawLine(MakeVector2(cx - 10.0F, cy - 10.0F), MakeVector2(cx + 10.0F, cy + 10.0F), 3.5F);
 					r.DrawLine(MakeVector2(cx - 10.0F, cy + 10.0F), MakeVector2(cx + 10.0F, cy - 10.0F), 3.5F);
 				}
+
+				// Hover tooltip pill to the right of button
+				if (hover && font) {
+					std::string tipText;
+					Vector4 tipColor(1.0F, 1.0F, 1.0F, 1.0F);
+					if (iconType == LobbyIconType::Play) {
+						tipText = _Tr("MainScreen", "JUGAR");
+						tipColor = MakeVector4(0.40F, 1.0F, 0.60F, 1.0F);
+					} else if (iconType == LobbyIconType::Skins) {
+						tipText = _Tr("MainScreen", "SKINS");
+						tipColor = MakeVector4(0.92F, 0.65F, 1.0F, 1.0F);
+					} else if (iconType == LobbyIconType::Settings) {
+						tipText = _Tr("MainScreen", "AJUSTES");
+						tipColor = MakeVector4(0.60F, 0.85F, 1.0F, 1.0F);
+					} else if (iconType == LobbyIconType::Quit) {
+						tipText = _Tr("MainScreen", "SALIR");
+						tipColor = MakeVector4(1.0F, 0.45F, 0.45F, 1.0F);
+					}
+
+					if (!tipText.empty()) {
+						float tipW = font->MeasureString(tipText) + 20.0F;
+						float tipH = 28.0F;
+						float tipX = pos.x + sz.x + 12.0F;
+						float tipY = cy - tipH * 0.5F;
+
+						SetColorNP(r, MakeVector4(0.04F, 0.06F, 0.10F, 0.90F));
+						r.DrawImage(nullptr, AABB2(tipX, tipY, tipW, tipH));
+
+						SetColorNP(r, borderColor);
+						r.DrawImage(nullptr, AABB2(tipX, tipY, tipW, 1.0F));
+						r.DrawImage(nullptr, AABB2(tipX, tipY + tipH - 1.0F, tipW, 1.0F));
+						r.DrawImage(nullptr, AABB2(tipX, tipY, 1.0F, tipH));
+						r.DrawImage(nullptr, AABB2(tipX + tipW - 1.0F, tipY, 1.0F, tipH));
+
+						client::FontRenderParam fp;
+						fp.color = tipColor;
+						fp.shadow = true;
+						fp.shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
+						font->DrawString(tipText, MakeVector2(tipX + 10.0F, tipY + (tipH - font->GetPixelHeight()) * 0.5F), fp);
+					}
+				}
 			}
 		};
 
 		LobbyScreen::LobbyScreen(MainScreenUI* ui)
 		    : UIElement(&ui->GetUIManager()), ui(ui) {
 			UIManager* manager = &GetManager();
+			SetFont(&ui->GetFontManager().GetGuiFont());
 
 			SetBounds(manager->GetRootElement().GetBounds());
 
@@ -142,6 +210,15 @@ namespace spades {
 				btn->activated = [this](UIElement& s) { OnPlayPressed(s); };
 				playButton = btn.GetPointerOrNull();
 				AddChild(playButton);
+			}
+
+			// Skins Button (icon only)
+			{
+				Handle<LobbyIconButton> btn =
+				    Handle<LobbyIconButton>::New(manager, LobbyIconType::Skins);
+				btn->activated = [this](UIElement& s) { OnSkinsPressed(s); };
+				skinsButton = btn.GetPointerOrNull();
+				AddChild(skinsButton);
 			}
 
 			// Settings Button (icon only)
@@ -172,10 +249,10 @@ namespace spades {
 
 			float btnSize = 56.0F;
 			float btnGap = 16.0F;
-			float totalH = 3.0F * btnSize + 2.0F * btnGap;
+			float totalH = 4.0F * btnSize + 3.0F * btnGap;
 			float startY = (sh - totalH) * 0.5F;
-			if (startY < 80.0F)
-				startY = 80.0F;
+			if (startY < 60.0F)
+				startY = 60.0F;
 
 			float btnX = 64.0F;
 			if (sw < 640.0F)
@@ -184,15 +261,24 @@ namespace spades {
 			if (playButton)
 				playButton->SetBounds(AABB2(btnX, startY, btnSize, btnSize));
 
+			if (skinsButton)
+				skinsButton->SetBounds(AABB2(btnX, startY + btnSize + btnGap, btnSize, btnSize));
+
 			if (settingsButton)
-				settingsButton->SetBounds(AABB2(btnX, startY + btnSize + btnGap, btnSize, btnSize));
+				settingsButton->SetBounds(AABB2(btnX, startY + 2.0F * (btnSize + btnGap), btnSize, btnSize));
 
 			if (quitButton)
-				quitButton->SetBounds(AABB2(btnX, startY + 2.0F * (btnSize + btnGap), btnSize, btnSize));
+				quitButton->SetBounds(AABB2(btnX, startY + 3.0F * (btnSize + btnGap), btnSize, btnSize));
 		}
 
 		void LobbyScreen::OnPlayPressed(UIElement&) {
 			ui->ShowServerBrowser();
+		}
+
+		void LobbyScreen::OnSkinsPressed(UIElement&) {
+			Handle<SkinSelectScreen> screen =
+			    Handle<SkinSelectScreen>::New(this, &ui->GetFontManager());
+			screen->Run();
 		}
 
 		void LobbyScreen::OnSettingsPressed(UIElement&) {
@@ -231,16 +317,16 @@ namespace spades {
 
 			float btnSize = 56.0F;
 			float btnGap = 16.0F;
-			float totalH = 3.0F * btnSize + 2.0F * btnGap;
+			float totalH = 4.0F * btnSize + 3.0F * btnGap;
 			float startY = (sz.y - totalH) * 0.5F;
-			if (startY < 80.0F)
-				startY = 80.0F;
+			if (startY < 60.0F)
+				startY = 60.0F;
 
 			float btnX = 64.0F;
 			if (sz.x < 640.0F)
 				btnX = 24.0F;
 
-			// Sleek backdrop card behind the 3 buttons
+			// Sleek backdrop card behind the 4 buttons
 			SetColorNP(r, MakeVector4(0.02F, 0.04F, 0.07F, 0.60F));
 			r.DrawImage(nullptr, AABB2(btnX - 12.0F, startY - 14.0F, btnSize + 24.0F, totalH + 28.0F));
 

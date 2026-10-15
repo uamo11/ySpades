@@ -45,6 +45,7 @@ namespace spades {
 	namespace {
 		std::regex const v075regex{"(.*):0?\\.?75"};
 		std::regex const v076regex{"(.*):0?\\.?76"};
+		std::regex const vYregex{"(.*):(1\\.?0|y|Y|11)"};
 	} // namespace
 
 	ServerAddress::ServerAddress(std::string address, ProtocolVersion version)
@@ -56,6 +57,9 @@ namespace spades {
 			mAddress = matchResult[1];
 		} else if (std::regex_match(address, matchResult, v076regex)) {
 			version = ProtocolVersion::v076;
+			mAddress = matchResult[1];
+		} else if (std::regex_match(address, matchResult, vYregex)) {
+			version = ProtocolVersion::vY;
 			mAddress = matchResult[1];
 		}
 	}

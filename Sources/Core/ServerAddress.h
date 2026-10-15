@@ -27,7 +27,7 @@ struct _ENetAddress;
 typedef _ENetAddress ENetAddress;
 
 namespace spades {
-	enum class ProtocolVersion { Unknown = 0, v075 = 3, v076 = 4 };
+	enum class ProtocolVersion { Unknown = 0, v075 = 3, v076 = 4, vY = 11 };
 	class ServerAddress {
 		std::string mAddress;
 		ProtocolVersion mVersion;

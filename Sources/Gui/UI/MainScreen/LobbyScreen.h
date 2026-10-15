@@ -35,10 +35,12 @@ namespace spades {
 			MainScreenUI* ui; // weak
 
 			LobbyIconButton* playButton = nullptr;
+			LobbyIconButton* skinsButton = nullptr;
 			LobbyIconButton* settingsButton = nullptr;
 			LobbyIconButton* quitButton = nullptr;
 
 			void OnPlayPressed(ui::UIElement& sender);
+			void OnSkinsPressed(ui::UIElement& sender);
 			void OnSettingsPressed(ui::UIElement& sender);
 			void OnQuitPressed(ui::UIElement& sender);
 

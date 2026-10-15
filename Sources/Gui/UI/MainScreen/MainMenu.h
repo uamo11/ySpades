@@ -108,6 +108,7 @@ namespace spades {
 			ui::Field* addressField = nullptr;
 			MenuIconButton* connectButton = nullptr;
 			MenuIconButton* toggleIpButton = nullptr;
+			MenuIconButton* skinsButton = nullptr;
 			ui::Label* goldNoticeLabel = nullptr;
 			bool showDirectConnect = false;
 
@@ -201,6 +202,7 @@ namespace spades {
 			void OnQuitPressed(ui::UIElement& sender);
 			void OnCreditsPressed(ui::UIElement& sender);
 			void OnSetupPressed(ui::UIElement& sender);
+			void OnSkinsPressed(ui::UIElement& sender);
 			void Connect();
 
 		public:

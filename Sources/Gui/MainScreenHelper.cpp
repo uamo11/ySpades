@@ -526,9 +526,12 @@ namespace spades {
 						break;
 					}
 				}
-			}
-			return mainScreen->Connect(ServerAddress(
-			  hostname, protocolVersion == 3 ? ProtocolVersion::v075 : ProtocolVersion::v076));
+			ProtocolVersion ver = ProtocolVersion::v075;
+			if (protocolVersion == 4)
+				ver = ProtocolVersion::v076;
+			else if (protocolVersion == 11)
+				ver = ProtocolVersion::vY;
+			return mainScreen->Connect(ServerAddress(hostname, ver));
 		}
 
 		std::string MainScreenHelper::GetServerListQueryMessage() {

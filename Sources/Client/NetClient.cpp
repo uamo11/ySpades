@@ -290,6 +290,10 @@ namespace spades {
 					SPLog("Using Ace of Spades 0.76 protocol");
 					protocolVersion = 4;
 					break;
+				case ProtocolVersion::vY:
+					SPLog("Using ySpades 1.0 (Protocol Y) protocol");
+					protocolVersion = 11;
+					break;
 				default: SPRaise("Invalid ProtocolVersion"); break;
 			}
 

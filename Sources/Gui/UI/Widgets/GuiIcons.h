@@ -33,6 +33,7 @@ namespace spades {
 			Settings,
 			Quit,
 			Credits,
+			Skin,
 			// Server Browser
 			AddServer,
 			Minus,
@@ -87,6 +88,21 @@ namespace spades {
 				r.DrawImage(nullptr, AABB2(cx - 1.0F * s, cy - 5.0F * s, 2.0F * s, 2.0F * s));
 				r.DrawLine(MakeVector2(cx - 2.0F * s, cy - 1.0F * s), MakeVector2(cx, cy - 1.0F * s), 1.5F * s);
 				r.DrawLine(MakeVector2(cx - 2.5F * s, cy + 5.0F * s), MakeVector2(cx + 2.5F * s, cy + 5.0F * s), 1.5F * s);
+				break;
+			}
+			case GuiIconType::Skin: {
+				// Character / T-shirt silhouette
+				r.DrawLine(MakeVector2(cx - 5.5F * s, cy - 2.5F * s), MakeVector2(cx - 2.0F * s, cy - 5.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 2.0F * s, cy - 5.0F * s), MakeVector2(cx + 5.5F * s, cy - 2.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 2.0F * s, cy - 5.0F * s), MakeVector2(cx, cy - 2.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 2.0F * s, cy - 5.0F * s), MakeVector2(cx, cy - 2.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 5.5F * s, cy - 2.5F * s), MakeVector2(cx - 7.0F * s, cy + 1.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 7.0F * s, cy + 1.0F * s), MakeVector2(cx - 4.5F * s, cy + 1.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 5.5F * s, cy - 2.5F * s), MakeVector2(cx + 7.0F * s, cy + 1.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 7.0F * s, cy + 1.0F * s), MakeVector2(cx + 4.5F * s, cy + 1.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 4.5F * s, cy + 1.5F * s), MakeVector2(cx - 4.5F * s, cy + 6.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 4.5F * s, cy + 1.5F * s), MakeVector2(cx + 4.5F * s, cy + 6.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 4.5F * s, cy + 6.0F * s), MakeVector2(cx + 4.5F * s, cy + 6.0F * s), 1.5F * s);
 				break;
 			}
 			case GuiIconType::AddServer: {
