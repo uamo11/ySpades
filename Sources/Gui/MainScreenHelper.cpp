@@ -352,7 +352,7 @@ namespace spades {
 
 				int maxPlayers = -1;
 				MainScreenServerItem* topServer = nullptr;
-				std::string forcedAddr = cg_goldServerAddress.GetString();
+				std::string forcedAddr = cg_goldServerAddress;
 
 				for (const auto& item : result->list) {
 					if (!forcedAddr.empty() && item->GetAddress() == forcedAddr) {
