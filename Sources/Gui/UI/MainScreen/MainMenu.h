@@ -100,6 +100,13 @@ namespace spades {
 			int activeTabIndex = 0;
 		};
 
+		enum class ServerVersionFilter {
+			All = 0,
+			v075,
+			v076,
+			vY
+		};
+
 		/** The main menu: server browser, demo browser, mod manager, footer. */
 		class MainScreenMainMenu : public ui::UIElement {
 			MainScreenUI* ui;         // weak
@@ -114,28 +121,33 @@ namespace spades {
 
 			void UpdateDirectConnectVisibility();
 
-			ui::Button* protocol3Button;
-			ui::Button* protocol4Button;
+			ui::Button* versionFilterButton = nullptr;
+			ServerVersionFilter currentVersionFilter = ServerVersionFilter::All;
+			void CycleVersionFilter();
 
-			ui::Button* filterProtocol3Button;
-			ui::Button* filterProtocol4Button;
-			ui::Button* filterFullButton;
-			ui::Field* filterField;
+			MenuIconButton* searchFilterButton = nullptr;
+			bool showSearchFilter = false;
+			void UpdateSearchFilterVisibility();
 
-			ui::ListView* serverList;
-			MainScreenServerListLoadingView* loadingView;
-			MainScreenServerListErrorView* errorView;
+			ui::Label* filterLabel = nullptr;
+			ui::Button* filterFullButton = nullptr;
+			ui::Field* filterField = nullptr;
+
+			ui::ListView* serverList = nullptr;
+			MainScreenServerListLoadingView* loadingView = nullptr;
+			MainScreenServerListErrorView* errorView = nullptr;
 			bool loading = false, loaded = false;
 
 			Handle<ServerListModel> currentServerListModel;
 			int serverListUpdateTimer = 5;
 			std::string selectedMapName;
 
-			TabPanel* serverPanel;
+			TabPanel* serverPanel = nullptr;
+			TabPanel* worldsPanel = nullptr;
 
 			// Demo tab state
-			TabPanel* demoPanel;
-			ui::ListView* demoList;
+			TabPanel* demoPanel = nullptr;
+			ui::ListView* demoList = nullptr;
 			Handle<DemoListModel> currentDemoListModel;
 			std::string selectedDemoPath;
 			ui::Field* demoNameField;
@@ -199,9 +211,6 @@ namespace spades {
 			void OnAddressChanged(ui::UIElement& sender);
 			void SetProtocolVersion(int ver);
 
-			void OnQuitPressed(ui::UIElement& sender);
-			void OnCreditsPressed(ui::UIElement& sender);
-			void OnSetupPressed(ui::UIElement& sender);
 			void OnSkinsPressed(ui::UIElement& sender);
 			void Connect();
 

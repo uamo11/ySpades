@@ -30,6 +30,7 @@
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/Settings/PreferenceView.h>
 #include <Gui/UI/Widgets/DrawUtils.h>
+#include <Gui/UpdateChecker.h>
 
 namespace spades {
 	namespace gui {
@@ -334,6 +335,18 @@ namespace spades {
 			r.DrawImage(nullptr, AABB2(btnX - 12.0F, startY - 14.0F, 2.5F, totalH + 28.0F));
 
 			UIElement::Render();
+
+			// Small subtle version text in bottom-right corner of lobby
+			client::IFont* font = GetFont();
+			if (font) {
+				std::string verText = _Tr("MainScreen", "Actualizado ") + ReleaseVersion::Current().ToString();
+				Vector2 vSize = font->Measure(verText);
+				float scale = 0.72F;
+				Vector2 vPos = MakeVector2(sz.x - vSize.x * scale - 20.0F, sz.y - vSize.y * scale - 14.0F);
+				Vector4 col = MakeVector4(0.50F, 0.85F, 0.55F, 0.70F);
+				Vector4 shadow = MakeVector4(0.0F, 0.0F, 0.0F, 0.50F);
+				font->DrawShadow(verText, vPos, scale, col, shadow);
+			}
 		}
 	} // namespace gui
 } // namespace spades

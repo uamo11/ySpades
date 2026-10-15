@@ -156,6 +156,9 @@ namespace spades {
 				lobbyScreen->visible = false;
 			if (mainMenu) {
 				mainMenu->visible = true;
+				MainScreenMainMenuState state;
+				state.activeTabIndex = 0; // Default to servers tab
+				mainMenu->SetState(state);
 				mainMenu->LoadServerList();
 			}
 		}

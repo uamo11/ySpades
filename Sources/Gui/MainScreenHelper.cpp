@@ -526,6 +526,7 @@ namespace spades {
 						break;
 					}
 				}
+			}
 			ProtocolVersion ver = ProtocolVersion::v075;
 			if (protocolVersion == 4)
 				ver = ProtocolVersion::v076;

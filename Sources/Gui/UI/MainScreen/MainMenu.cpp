@@ -285,6 +285,11 @@ namespace spades {
 				serverPanel = serverPanelH.GetPointerOrNull();
 				serverPanel->SetBounds(AABB2(0.0F, 0.0F, sw, sh));
 
+				Handle<TabPanel> worldsPanelH = Handle<TabPanel>::New(manager);
+				worldsPanel = worldsPanelH.GetPointerOrNull();
+				worldsPanel->SetBounds(AABB2(0.0F, 0.0F, sw, sh));
+				worldsPanel->visible = false;
+
 				Handle<TabPanel> demoPanelH = Handle<TabPanel>::New(manager);
 				demoPanel = demoPanelH.GetPointerOrNull();
 				demoPanel->SetBounds(AABB2(0.0F, 0.0F, sw, sh));
@@ -322,7 +327,7 @@ namespace spades {
 					Handle<Label> label = Handle<Label>::New(manager);
 					goldNoticeLabel = label.GetPointerOrNull();
 					goldNoticeLabel->SetBounds(
-					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 190.0F, 30.0F));
+					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 230.0F, 30.0F));
 					goldNoticeLabel->alignment = MakeVector2(0.0F, 0.5F);
 					goldNoticeLabel->backgroundColor = MakeVector4(0.18F, 0.14F, 0.04F, 0.65F);
 					goldNoticeLabel->outlineColor = MakeVector4(0.85F, 0.70F, 0.20F, 0.60F);
@@ -361,45 +366,49 @@ namespace spades {
 					serverPanel->AddChild(connectButton);
 				}
 
+				// Search filter button (toggles filter bar on touch)
+				{
+					Handle<MenuIconButton> button =
+					    Handle<MenuIconButton>::New(manager, GuiIconType::Search, true);
+					searchFilterButton = button.GetPointerOrNull();
+					searchFilterButton->toggle = true;
+					searchFilterButton->toggled = false;
+					searchFilterButton->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 175.0F, 200.0F, 34.0F, 30.0F));
+					searchFilterButton->activated = [this](UIElement&) {
+						showSearchFilter = !showSearchFilter;
+						UpdateSearchFilterVisibility();
+						if (showSearchFilter && filterField) {
+							GetManager().SetActiveElement(filterField);
+						}
+					};
+					serverPanel->AddChild(searchFilterButton);
+				}
+
 				// Refresh button
 				{
 					Handle<RefreshButton> button = Handle<RefreshButton>::New(manager);
 					button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 145.0F, 200.0F, 30.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 135.0F, 200.0F, 30.0F, 30.0F));
 					button->activated = [this](UIElement&) { LoadServerList(); };
 					serverPanel->AddChild(button.GetPointerOrNull());
 				}
 
-				// 0.75 protocol button
+				// Single unified version selector button (ALL -> 0.75 -> 0.76 -> Y -> ALL)
 				{
-					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
-					protocol3Button = button.GetPointerOrNull();
-					protocol3Button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 110.0F, 200.0F, 50.0F, 30.0F));
-					protocol3Button->caption = _Tr("MainScreen", "0.75");
-					protocol3Button->activated = [this](UIElement&) { SetProtocolVersion(3); };
-					protocol3Button->toggle = true;
-					protocol3Button->toggled = static_cast<int>(cg_protocolVersion) == 3;
-					serverPanel->AddChild(protocol3Button);
-				}
-
-				// 0.76 protocol button
-				{
-					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
-					protocol4Button = button.GetPointerOrNull();
-					protocol4Button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 56.0F, 200.0F, 56.0F, 30.0F));
-					protocol4Button->caption = _Tr("MainScreen", "0.76");
-					protocol4Button->activated = [this](UIElement&) { SetProtocolVersion(4); };
-					protocol4Button->toggle = true;
-					protocol4Button->toggled = static_cast<int>(cg_protocolVersion) == 4;
-					serverPanel->AddChild(protocol4Button);
+					Handle<Button> button = Handle<Button>::New(manager);
+					versionFilterButton = button.GetPointerOrNull();
+					versionFilterButton->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 100.0F, 200.0F, 100.0F, 30.0F));
+					versionFilterButton->caption = _Tr("MainScreen", "Ver: ALL");
+					versionFilterButton->activated = [this](UIElement&) { CycleVersionFilter(); };
+					serverPanel->AddChild(versionFilterButton);
 				}
 				{
 					Handle<ListView> list = Handle<ListView>::New(manager);
 					serverList = list.GetPointerOrNull();
 					serverList->SetBounds(
-					    AABB2(contentsLeft, listPos, contentsWidth, footerPos - listPos - 44.0F));
+					    AABB2(contentsLeft, listPos, contentsWidth, footerPos - listPos - 8.0F));
 					serverPanel->AddChild(serverList);
 				}
 				{
@@ -471,60 +480,83 @@ namespace spades {
 					serverPanel->AddChild(errorView);
 				}
 
-				// Server filter footer elements (placed directly above bottom bar)
+				// Server search & filter bar (hidden by default, toggled with search button)
 				float filterY = footerPos - 36.0F;
 				{
 					Handle<Label> label = Handle<Label>::New(manager);
-					label->text = _Tr("MainScreen", "Filter");
-					label->SetBounds(AABB2(contentsLeft, filterY, 48.0F, 26.0F));
-					label->alignment = MakeVector2(0.0F, 0.5F);
-					serverPanel->AddChild(label.GetPointerOrNull());
+					filterLabel = label.GetPointerOrNull();
+					filterLabel->text = _Tr("MainScreen", "Buscar:");
+					filterLabel->SetBounds(AABB2(contentsLeft, filterY, 60.0F, 26.0F));
+					filterLabel->alignment = MakeVector2(0.0F, 0.5F);
+					filterLabel->visible = false;
+					serverPanel->AddChild(filterLabel);
 				}
+
 				{
-					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
-					filterProtocol3Button = button.GetPointerOrNull();
-					filterProtocol3Button->SetBounds(
-					    AABB2(contentsLeft + 52.0F, filterY, 40.0F, 26.0F));
-					filterProtocol3Button->caption = _Tr("MainScreen", "0.75");
-					filterProtocol3Button->activated = [this](UIElement&) {
-						filterProtocol4Button->toggled = false;
-						UpdateServerList();
-					};
-					filterProtocol3Button->toggle = true;
-					serverPanel->AddChild(filterProtocol3Button);
-				}
-				{
-					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
-					filterProtocol4Button = button.GetPointerOrNull();
-					filterProtocol4Button->SetBounds(
-					    AABB2(contentsLeft + 94.0F, filterY, 40.0F, 26.0F));
-					filterProtocol4Button->caption = _Tr("MainScreen", "0.76");
-					filterProtocol4Button->activated = [this](UIElement&) {
-						filterProtocol3Button->toggled = false;
-						UpdateServerList();
-					};
-					filterProtocol4Button->toggle = true;
-					serverPanel->AddChild(filterProtocol4Button);
+					Handle<Field> field = Handle<Field>::New(manager);
+					filterField = field.GetPointerOrNull();
+					filterField->SetBounds(AABB2(contentsLeft + 65.0F, filterY, 210.0F, 26.0F));
+					filterField->placeholder = _Tr("MainScreen", "Nombre, mapa o modo...");
+					filterField->changed = [this](UIElement&) { UpdateServerList(); };
+					filterField->visible = false;
+					serverPanel->AddChild(filterField);
 				}
 
 				{
 					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
 					filterFullButton = button.GetPointerOrNull();
 					filterFullButton->SetBounds(
-					    AABB2(contentsLeft + 138.0F, filterY, 74.0F, 26.0F));
-					filterFullButton->caption = _Tr("MainScreen", "Not Full");
+					    AABB2(contentsLeft + 285.0F, filterY, 95.0F, 26.0F));
+					filterFullButton->caption = _Tr("MainScreen", "Ocultar Llenos");
 					filterFullButton->activated = [this](UIElement&) { UpdateServerList(); };
 					filterFullButton->toggle = true;
+					filterFullButton->visible = false;
 					serverPanel->AddChild(filterFullButton);
 				}
 
+				// --- Worlds panel contents (Mundos) ---
 				{
-					Handle<Field> field = Handle<Field>::New(manager);
-					filterField = field.GetPointerOrNull();
-					filterField->SetBounds(AABB2(contentsLeft + 216.0F, filterY, 140.0F, 26.0F));
-					filterField->placeholder = _Tr("MainScreen", "Filter");
-					filterField->changed = [this](UIElement&) { UpdateServerList(); };
-					serverPanel->AddChild(filterField);
+					Handle<Label> titleLabel = Handle<Label>::New(manager);
+					titleLabel->text = _Tr("MainScreen", "MUNDOS Y MAPAS - Un Jugador & Sandbox");
+					titleLabel->textColor = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
+					titleLabel->alignment = MakeVector2(0.0F, 0.5F);
+					titleLabel->SetBounds(AABB2(contentsLeft, 200.0F, contentsWidth - 260.0F, 30.0F));
+					worldsPanel->AddChild(titleLabel.GetPointerOrNull());
+
+					Handle<Button> createWorldBtn = Handle<Button>::New(manager);
+					createWorldBtn->caption = _Tr("MainScreen", "Crear Mundo");
+					createWorldBtn->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 250.0F, 200.0F, 120.0F, 30.0F));
+					createWorldBtn->activated = [this](UIElement&) {
+						helper->ConnectServer("127.0.0.1:32887", 3, "");
+					};
+					worldsPanel->AddChild(createWorldBtn.GetPointerOrNull());
+
+					Handle<Button> playWorldBtn = Handle<Button>::New(manager);
+					playWorldBtn->caption = _Tr("MainScreen", "Jugar Sandbox");
+					playWorldBtn->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 125.0F, 200.0F, 125.0F, 30.0F));
+					playWorldBtn->activated = [this](UIElement&) {
+						helper->ConnectServer("127.0.0.1:32887", 3, "");
+					};
+					worldsPanel->AddChild(playWorldBtn.GetPointerOrNull());
+
+					float cardY = listPos;
+					float cardH = footerPos - listPos - 12.0F;
+					Handle<Label> infoBg = Handle<Label>::New(manager);
+					infoBg->backgroundColor = MakeVector4(0.03F, 0.05F, 0.09F, 0.70F);
+					infoBg->outlineColor = MakeVector4(0.20F, 0.35F, 0.60F, 0.40F);
+					infoBg->textColor = MakeVector4(0.85F, 0.90F, 0.95F, 0.90F);
+					infoBg->text = _Tr(
+					    "MainScreen",
+					    " [MUNDOS LOCALES Y SANDBOX]\n\n"
+					    " - Modo Un Jugador / Práctica: Carga el mundo local predeterminado (127.0.0.1)\n"
+					    " - Generador Voxel ySpades: Compatible con mapas de bloques (.vxl, .kv6)\n"
+					    " - Compatibilidad Minecraft Legacy: Importación de estructuras y chunks en desarrollo\n\n"
+					    " Selecciona 'Crear Mundo' o 'Jugar Sandbox' para iniciar tu servidor local.");
+					infoBg->alignment = MakeVector2(0.05F, 0.15F);
+					infoBg->SetBounds(AABB2(contentsLeft, cardY, contentsWidth, cardH));
+					worldsPanel->AddChild(infoBg.GetPointerOrNull());
 				}
 
 				// --- Demo panel contents ---
@@ -715,6 +747,7 @@ namespace spades {
 				}
 
 				AddChild(serverPanel);
+				AddChild(worldsPanel);
 				AddChild(demoPanel);
 				AddChild(modsPanel);
 
@@ -723,7 +756,8 @@ namespace spades {
 					Handle<SimpleTabStrip> tabStrip = Handle<SimpleTabStrip>::New(manager);
 					tabStrip->SetBounds(AABB2(contentsLeft, tabStripPos, contentsWidth, 24.0F));
 					AddChild(tabStrip.GetPointerOrNull());
-					tabStrip->AddItem(_Tr("MainScreen", "Servers"), serverPanel);
+					tabStrip->AddItem(_Tr("MainScreen", "Servidores"), serverPanel);
+					tabStrip->AddItem(_Tr("MainScreen", "Mundos"), worldsPanel);
 					tabStrip->AddItem(_Tr("MainScreen", "Demos"), demoPanel);
 					// Hide the Mods tab while trying a single mod (--try-mod):
 					// the mod manager is irrelevant and its enabled set is bypassed.
@@ -735,6 +769,8 @@ namespace spades {
 				// Coming back from an apply-triggered relaunch — open the Mods tab.
 				if (helper->ShouldOpenModsTab()) {
 					serverPanel->visible = false;
+					if (worldsPanel)
+						worldsPanel->visible = false;
 					demoPanel->visible = false;
 					modsPanel->visible = true;
 				}
@@ -758,42 +794,6 @@ namespace spades {
 				skinsButton->SetBounds(AABB2(contentsLeft + 115.0F, footerPos, 110.0F, 30.0F));
 				skinsButton->activated = [this](UIElement& s) { OnSkinsPressed(s); };
 				AddChild(skinsButton);
-			}
-			{
-				Handle<MenuIconButton> button =
-				    Handle<MenuIconButton>::New(manager, GuiIconType::Quit);
-				button->caption = _Tr("MainScreen", "Quit");
-				button->SetBounds(
-				    AABB2(contentsLeft + contentsWidth - 100.0F, footerPos, 100.0F, 30.0F));
-				button->activated = [this](UIElement& s) { OnQuitPressed(s); };
-				AddChild(button.GetPointerOrNull());
-			}
-			{
-				Handle<MenuIconButton> button =
-				    Handle<MenuIconButton>::New(manager, GuiIconType::Credits);
-				button->caption = _Tr("MainScreen", "Credits");
-				button->SetBounds(
-				    AABB2(contentsLeft + contentsWidth - 205.0F, footerPos, 100.0F, 30.0F));
-				button->activated = [this](UIElement& s) { OnCreditsPressed(s); };
-				AddChild(button.GetPointerOrNull());
-			}
-			{
-				Handle<MenuIconButton> button =
-				    Handle<MenuIconButton>::New(manager, GuiIconType::Settings);
-				button->caption = _Tr("MainScreen", "Setup");
-				button->SetBounds(
-				    AABB2(contentsLeft + contentsWidth - 320.0F, footerPos, 110.0F, 30.0F));
-				button->activated = [this](UIElement& s) { OnSetupPressed(s); };
-				AddChild(button.GetPointerOrNull());
-			}
-
-			// Above the title logo: the new release banner, or a small up-to-date
-			// mark once the check has confirmed this build is the latest.
-			{
-				Handle<UpdateNotice> notice = Handle<UpdateNotice>::New(
-				  manager, [this] { this->ui->shouldExit = true; }, true);
-				notice->SetBounds(AABB2(contentsLeft, 20.0F, contentsWidth, 30.0F));
-				AddChild(notice.GetPointerOrNull());
 			}
 
 			LoadServerList();
@@ -831,25 +831,33 @@ namespace spades {
 
 		void MainScreenMainMenu::OnTabChanged(UIElement&) {
 			// Refresh demo list when switching to demos tab
-			if (demoPanel->visible)
+			if (demoPanel && demoPanel->visible)
 				LoadDemoList();
-			if (modsPanel->visible)
+			if (modsPanel && modsPanel->visible)
 				LoadModList();
 		}
 
 		MainScreenMainMenuState MainScreenMainMenu::GetState() {
 			MainScreenMainMenuState state;
-			if (demoPanel->visible)
+			if (worldsPanel && worldsPanel->visible)
 				state.activeTabIndex = 1;
-			else if (modsPanel->visible)
+			else if (demoPanel && demoPanel->visible)
 				state.activeTabIndex = 2;
+			else if (modsPanel && modsPanel->visible)
+				state.activeTabIndex = 3;
+			else
+				state.activeTabIndex = 0;
 			return state;
 		}
 
 		void MainScreenMainMenu::SetState(const MainScreenMainMenuState& state) {
-			serverPanel->visible = state.activeTabIndex == 0;
-			demoPanel->visible = state.activeTabIndex == 1;
-			modsPanel->visible = state.activeTabIndex == 2;
+			serverPanel->visible = (state.activeTabIndex == 0);
+			if (worldsPanel)
+				worldsPanel->visible = (state.activeTabIndex == 1);
+			if (demoPanel)
+				demoPanel->visible = (state.activeTabIndex == 2);
+			if (modsPanel)
+				modsPanel->visible = (state.activeTabIndex == 3);
 
 			// A restored tab is populated by the same path a clicked one is: the
 			// constructor only fills the server list.
@@ -1120,6 +1128,9 @@ namespace spades {
 				SetProtocolVersion(3);
 			} else if (item.GetProtocol() == "0.76") {
 				SetProtocolVersion(4);
+			} else if (item.GetProtocol() == "Y" || item.GetProtocol() == "y" ||
+			           item.GetProtocol() == "1.0" || item.GetProtocol() == "11") {
+				SetProtocolVersion(11);
 			}
 			addressField->SelectAll();
 		}
@@ -1166,16 +1177,19 @@ namespace spades {
 			}
 
 			// filter the server list
-			bool filterProtocol3 = filterProtocol3Button->toggled;
-			bool filterProtocol4 = filterProtocol4Button->toggled;
-			bool filterFull = filterFullButton->toggled;
-			std::string filterText = filterField->GetText();
+			bool filterFull = filterFullButton ? filterFullButton->toggled : false;
+			std::string filterText = filterField ? filterField->GetText() : "";
 			std::vector<Handle<MainScreenServerItem>> list2;
 			for (const Handle<MainScreenServerItem>& item : list) {
-				if (filterProtocol3 && (item->GetProtocol() != "0.75"))
+				if (currentVersionFilter == ServerVersionFilter::v075 && item->GetProtocol() != "0.75")
 					continue;
-				if (filterProtocol4 && (item->GetProtocol() != "0.76"))
+				if (currentVersionFilter == ServerVersionFilter::v076 && item->GetProtocol() != "0.76")
 					continue;
+				if (currentVersionFilter == ServerVersionFilter::vY &&
+				    item->GetProtocol() != "Y" && item->GetProtocol() != "y" &&
+				    item->GetProtocol() != "1.0" && item->GetProtocol() != "11")
+					continue;
+
 				if (filterFull && (item->GetNumPlayers() >= item->GetMaxPlayers()))
 					continue;
 				if (filterText.size() > 0) {
@@ -1256,29 +1270,63 @@ namespace spades {
 		}
 
 		void MainScreenMainMenu::SetProtocolVersion(int ver) {
-			protocol3Button->toggled = (ver == 3);
-			protocol4Button->toggled = (ver == 4);
 			cg_protocolVersion = ver;
 		}
 
-		void MainScreenMainMenu::OnQuitPressed(UIElement&) { ui->shouldExit = true; }
-
-		void MainScreenMainMenu::OnCreditsPressed(UIElement&) {
-			Handle<AlertScreen> al = Handle<AlertScreen>::New(
-			    this, helper->GetCredits(), std::min(500.0F, GetManager().screenHeight - 100.0F),
-			    true);
-			al->Run();
+		void MainScreenMainMenu::CycleVersionFilter() {
+			switch (currentVersionFilter) {
+				case ServerVersionFilter::All:
+					currentVersionFilter = ServerVersionFilter::v075;
+					cg_protocolVersion = 3;
+					if (versionFilterButton)
+						versionFilterButton->caption = _Tr("MainScreen", "Ver: 0.75");
+					break;
+				case ServerVersionFilter::v075:
+					currentVersionFilter = ServerVersionFilter::v076;
+					cg_protocolVersion = 4;
+					if (versionFilterButton)
+						versionFilterButton->caption = _Tr("MainScreen", "Ver: 0.76");
+					break;
+				case ServerVersionFilter::v076:
+					currentVersionFilter = ServerVersionFilter::vY;
+					cg_protocolVersion = 11;
+					if (versionFilterButton)
+						versionFilterButton->caption = _Tr("MainScreen", "Ver: Y");
+					break;
+				case ServerVersionFilter::vY:
+				default:
+					currentVersionFilter = ServerVersionFilter::All;
+					if (versionFilterButton)
+						versionFilterButton->caption = _Tr("MainScreen", "Ver: ALL");
+					break;
+			}
+			UpdateServerList();
 		}
 
-		void MainScreenMainMenu::OnSetupPressed(UIElement&) {
-			PreferenceViewOptions opt;
-			opt.showOverlay = true;
-			Handle<PreferenceView> al =
-			    Handle<PreferenceView>::New(this, opt, &ui->GetFontManager());
-			al->onDetailedRequested = [this](UIElement&) {
-				ui->OpenDetailedSettings();
-			};
-			al->Run();
+		void MainScreenMainMenu::UpdateSearchFilterVisibility() {
+			if (searchFilterButton)
+				searchFilterButton->toggled = showSearchFilter;
+			if (filterLabel)
+				filterLabel->visible = showSearchFilter;
+			if (filterField)
+				filterField->visible = showSearchFilter;
+			if (filterFullButton)
+				filterFullButton->visible = showSearchFilter;
+
+			float sw = GetManager().screenWidth;
+			float sh = GetManager().screenHeight;
+			float contentsWidth = std::min(sw - 16.0F, 750.0F);
+			float contentsLeft = (sw - contentsWidth) * 0.5F;
+			float footerPos = sh - 50.0F;
+			float headerPos = 260.0F;
+			float headerHeight = 24.0F;
+			float listPos = headerPos + headerHeight;
+
+			float bottomMargin = showSearchFilter ? 44.0F : 8.0F;
+			if (serverList) {
+				serverList->SetBounds(
+				    AABB2(contentsLeft, listPos, contentsWidth, footerPos - listPos - bottomMargin));
+			}
 		}
 
 		void MainScreenMainMenu::OnSkinsPressed(UIElement&) {
