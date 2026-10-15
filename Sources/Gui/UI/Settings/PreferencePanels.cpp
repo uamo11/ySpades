@@ -395,6 +395,17 @@ namespace spades {
 			l.headingNav = nav;
 
 			l.AddHeading(_Tr("Preferences", "General"));
+			l.AddButtonField(_Tr("Preferences", "Resolución y Video"), _Tr("Preferences", "Detallado..."),
+			    [this](UIElement&) {
+				    UIElement* p = this;
+				    while (p && !dynamic_cast<PreferenceView*>(p))
+					    p = p->GetParent();
+				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
+					    pv->Close();
+					    if (pv->onDetailedRequested)
+						    pv->onDetailedRequested(*pv);
+				    }
+			    });
 			l.AddSliderField(_Tr("Preferences", "Render Scale"), "r_scale", 0.2F, 1, 0.01F,
 			                 NumberFormatter(0, "%", "", 100));
 			l.AddSliderField(_Tr("Preferences", "Render Scaling Filter"), "r_scaleFilter", 0, 2, 1,

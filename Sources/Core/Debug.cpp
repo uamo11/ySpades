@@ -196,10 +196,20 @@ namespace spades {
 
 	void StartLog() {
 		attemptedToInitializeLog = true;
-		logStream = FileManager::OpenForWriting("SystemMessages.log");
+		try {
+			logStream = FileManager::OpenForWriting("SystemMessages.log");
+		} catch (...) {
+			try {
+				logStream = FileManager::OpenForWriting("SystemMessages_2.log");
+			} catch (...) {
+				logStream.reset();
+			}
+		}
 
-		logStream->Write(accumlatedLog);
-		accumlatedLog.clear();
+		if (logStream) {
+			logStream->Write(accumlatedLog);
+			accumlatedLog.clear();
+		}
 	}
 
 	void StopLog() {

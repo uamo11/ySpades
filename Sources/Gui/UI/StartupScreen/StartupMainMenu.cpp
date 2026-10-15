@@ -50,7 +50,7 @@ namespace spades {
 
 			{
 				Handle<Button> button = Handle<Button>::New(manager);
-				button->caption = _Tr("StartupScreen", "Start");
+				button->caption = _Tr("StartupScreen", "Aplicar");
 				button->hotKeyText = _Tr("Client", "[Enter]");
 				button->SetBounds(AABB2(sw - 170.0F, 20.0F, 150.0F, 30.0F));
 				button->activated = [this](UIElement&) { Start(); };
@@ -73,6 +73,7 @@ namespace spades {
 				button->caption = _Tr("StartupScreen", "Skip this screen next time");
 				float capSize = GetFont()->Measure(button->caption).x;
 				button->SetBounds(AABB2(8.0F, 45.0F, capSize + 18.0F, 20.0F));
+				button->visible = false;
 				AddChild(button.GetPointerOrNull());
 				bypassStartupWindowCheck = button.GetPointerOrNull();
 				button->activated = [this](UIElement& s) {
@@ -189,7 +190,8 @@ namespace spades {
 
 		void StartupScreenMainMenu::Start() {
 			helper->Start();
-			ui->shouldExit = true; // we have to exit from the startup screen to start the game
+			Settings::GetInstance()->Flush();
+			ui->shouldExit = true; // exit from the startup screen to return to the game
 		}
 
 		void StartupScreenMainMenu::HotKey(const std::string& key) {

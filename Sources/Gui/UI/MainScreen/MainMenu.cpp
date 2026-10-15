@@ -1147,6 +1147,9 @@ namespace spades {
 			opt.showOverlay = true;
 			Handle<PreferenceView> al =
 			    Handle<PreferenceView>::New(this, opt, &ui->GetFontManager());
+			al->onDetailedRequested = [this](UIElement&) {
+				ui->OpenDetailedSettings();
+			};
 			al->Run();
 		}
 

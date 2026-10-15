@@ -541,6 +541,11 @@ namespace spades {
 		bool MainScreenHelper::IsTryingMod() { return spades::g_tryMod; }
 		void MainScreenHelper::RelaunchForMods() { spades::RelaunchForMods(); }
 
+		void MainScreenHelper::OpenStartupScreen() {
+			if (mainScreen)
+				mainScreen->OpenStartupScreen();
+		}
+
 		std::string MainScreenHelper::GetPendingErrorMessage() {
 			std::string s = errorMessage;
 			errorMessage.clear();

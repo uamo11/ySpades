@@ -95,6 +95,7 @@ namespace spades {
 			void ShowServerBrowser();
 			void SetCountry(const std::string& code);
 			void RebuildFlagModel();
+			void OpenDetailedSettings();
 
 			void SetupRenderer();
 

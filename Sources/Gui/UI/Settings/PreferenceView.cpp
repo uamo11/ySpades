@@ -130,7 +130,21 @@ namespace spades {
 			           .GetPointerOrNull(),
 			       _Tr("Preferences", "Misc"), miscNav.GetPointerOrNull());
 
-			float backButtonTop = tabTop + static_cast<float>(tabs.size()) * tabRowHeight + 5.0F;
+			float detailedButtonTop = tabTop + static_cast<float>(tabs.size()) * tabRowHeight + 5.0F;
+
+			{
+				Handle<PreferenceTabButton> button = Handle<PreferenceTabButton>::New(manager);
+				button->caption = _Tr("Preferences", "Detallado");
+				button->SetBounds(AABB2(tabLeft, detailedButtonTop, tabWidth, tabRowHeight));
+				button->activated = [this](UIElement&) {
+					Close();
+					if (onDetailedRequested)
+						onDetailedRequested(*this);
+				};
+				AddChild(button.GetPointerOrNull());
+			}
+
+			float backButtonTop = detailedButtonTop + tabRowHeight + 4.0F;
 
 			{
 				Handle<PreferenceTabButton> button = Handle<PreferenceTabButton>::New(manager);

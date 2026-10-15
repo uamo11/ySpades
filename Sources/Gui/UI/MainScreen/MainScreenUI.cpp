@@ -167,6 +167,11 @@ namespace spades {
 			RebuildFlagModel();
 		}
 
+		void MainScreenUI::OpenDetailedSettings() {
+			if (helper)
+				helper->OpenStartupScreen();
+		}
+
 		void MainScreenUI::InitLobby3D() {
 			playerTorsoModel = renderer->RegisterModel("Models/Player/Torso.kv6");
 			playerHeadModel = renderer->RegisterModel("Models/Player/Head.kv6");

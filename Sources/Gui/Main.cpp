@@ -758,16 +758,8 @@ int main(int argc, char** argv) {
 		// start log output to SystemMessages.log
 		try {
 			spades::StartLog();
-		} catch (const std::exception& ex) {
-			SDL_InitSubSystem(SDL_INIT_VIDEO);
-			auto msg = spades::Format(
-			  "Failed to start recording log because of the following error:\n{0}\n\n"
-			  "ZeroSpades will continue to run, but any critical events are not logged.",
-			  ex.what());
-			if (SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "ZeroSpades Log System Failure",
-			                             msg.c_str(), splashWindow->GetWindow())) {
-				// showing dialog failed.
-			}
+		} catch (...) {
+			// Second instance or log lock: continue without blocking message box
 		}
 		SPLog("Log Started.");
 

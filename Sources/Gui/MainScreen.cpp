@@ -27,6 +27,8 @@
 #include <Core/Exception.h>
 #include <Core/Settings.h>
 #include <Core/Strings.h>
+#include <Gui/StartupScreen.h>
+#include <Gui/StartupScreenHelper.h>
 #include <Gui/UI/MainScreen/MainScreenUI.h>
 #include <ScriptBindings/ScriptManager.h>
 
@@ -318,6 +320,12 @@ namespace spades {
 				return ex.what();
 			}
 			return "";
+		}
+
+		void MainScreen::OpenStartupScreen() {
+			auto sHelper = Handle<StartupScreenHelper>::New();
+			sHelper->ExamineSystem();
+			subview = Handle<StartupScreen>::New(renderer, audioDevice, sHelper.GetPointerOrNull(), fontManager).Cast<View>();
 		}
 	} // namespace gui
 } // namespace spades

@@ -127,6 +127,7 @@ namespace spades {
 			bool ShouldOpenModsTab();
 			bool IsTryingMod();
 			void RelaunchForMods();
+			void OpenStartupScreen();
 		};
 	}
 }
