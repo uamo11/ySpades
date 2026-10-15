@@ -70,6 +70,8 @@
 #include <Core/Settings.h>
 #include <Core/Stopwatch.h>
 
+SPADES_SETTING(cg_fog);
+
 namespace spades {
 	namespace draw {
 		// TODO: raise error for any calls after Shutdown().
@@ -366,6 +368,12 @@ namespace spades {
 			fogColor = v;
 			if (smoothedFogColor.x < 0.0F)
 				smoothedFogColor = fogColor;
+		}
+
+		float GLRenderer::GetFogDistance() {
+			if (!cg_fog)
+				return 999999.0F;
+			return fogDistance;
 		}
 
 		Vector3 GLRenderer::GetFogColorForSolidPass() {
@@ -910,7 +918,7 @@ namespace spades {
 					std::swap(view, viewMatrix);
 					projectionViewMatrix = projectionMatrix * viewMatrix;
 
-					if (settings.r_fogShadow && mapShadowRenderer) {
+					if (cg_fog && settings.r_fogShadow && mapShadowRenderer) {
 						GLProfiler::Context p(*profiler, "Volumetric Fog");
 
 						GLFramebufferManager::BufferHandle handle;
@@ -1022,7 +1030,7 @@ namespace spades {
 					handle = fbManager->StartPostProcessing();
 				}
 
-				if (settings.r_fogShadow && mapShadowRenderer) {
+				if (cg_fog && settings.r_fogShadow && mapShadowRenderer) {
 					GLProfiler::Context p(*profiler, "Volumetric Fog");
 					if (settings.ShouldUseFogFilter2()) {
 						if (!fogFilter2)

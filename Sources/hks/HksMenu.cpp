@@ -72,7 +72,7 @@ namespace spades {
 
 			tabWidth = PreferenceMetrics::tabWidth;
 			tabRowHeight = 30.0F;
-			tabTop = contentsTop + 2.0F;
+			tabTop = contentsTop + 48.0F;
 			tabLeft = contentsLeft + PreferenceMetrics::tabInset;
 
 			float panelBorderOffset = 14.0F;
@@ -142,7 +142,8 @@ namespace spades {
 				    "Maximum reach in blocks when Extended Reach is enabled (Default 8 blocks, up to 24)."));
 
 				layouter->FinishLayout();
-				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Building"), nav.GetPointerOrNull());
+				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Building"), nav.GetPointerOrNull(),
+				       gui::GuiIconType::Building);
 			}
 
 			// ==========================================
@@ -184,7 +185,8 @@ namespace spades {
 				    "Negates falling momentum and disables taking impact damage when falling from any height."));
 
 				layouter->FinishLayout();
-				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Flight"), nav.GetPointerOrNull());
+				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Flight"), nav.GetPointerOrNull(),
+				       gui::GuiIconType::Flight);
 			}
 
 			// ==========================================
@@ -229,7 +231,8 @@ namespace spades {
 				    "Automatically jumps the frame you hit the ground as long as [Space] is held."));
 
 				layouter->FinishLayout();
-				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Movement"), nav.GetPointerOrNull());
+				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Movement"), nav.GetPointerOrNull(),
+				       gui::GuiIconType::Movement);
 			}
 
 			// ==========================================
@@ -261,8 +264,29 @@ namespace spades {
 				layouter->AddHelp(_Tr("Preferences",
 				    "Draws colored lines from the bottom-center of the screen directly to each player."));
 
+				layouter->AddHeading(_Tr("Preferences", "Head Hitbox & Chroma"));
+
+				layouter->AddToggleField(_Tr("Preferences", "Head Border Box"), "cg_espHead");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Draws a crisp border box outline directly around the player head hitbox."));
+
+				layouter->AddToggleField(_Tr("Preferences", "RGB Chroma Head Outline"), "cg_espHeadRgb");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Cycles the player head outline border with an animated rainbow RGB chroma spectrum."));
+
+				layouter->AddHeading(_Tr("Preferences", "Filters & Environment"));
+
+				layouter->AddToggleField(_Tr("Preferences", "Enemies Only (No Teammates)"), "cg_espEnemiesOnly");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Excludes teammates from all ESP features (boxes, names, tracers, and head outline borders)."));
+
+				layouter->AddToggleField(_Tr("Preferences", "Niebla del Mundo (Fog)"), "cg_fog");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Activa o desactiva la niebla del juego. Desactivarla permite ver con total nitidez a través de todo el mapa."));
+
 				layouter->FinishLayout();
-				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Visuals"), nav.GetPointerOrNull());
+				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Visuals"), nav.GetPointerOrNull(),
+				       gui::GuiIconType::Visuals);
 			}
 
 			// ==========================================
@@ -280,7 +304,37 @@ namespace spades {
 				    Handle<StandardPreferenceLayouter>::New(panel.GetPointerOrNull(), &ui->GetFontManager());
 				layouter->headingNav = nav;
 
-				layouter->AddHeading(_Tr("Preferences", "Weapon Modifications"));
+				layouter->AddHeading(_Tr("Preferences", "Aimbot & Aim Assist"));
+
+				layouter->AddToggleField(_Tr("Preferences", "Aimbot"), "cg_aimbot");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Automatically aligns crosshair and locks onto the nearest visible enemy head."));
+
+				layouter->AddSliderField(_Tr("Preferences", "Aimbot FOV"), "cg_aimbotFov",
+				                         10.0F, 180.0F, 5.0F, NumberFormatter(0, " deg"));
+				layouter->AddHelp(_Tr("Preferences",
+				    "Maximum field of view angle within which the aimbot will acquire enemy targets."));
+
+				layouter->AddSliderField(_Tr("Preferences", "Aimbot Smoothness"), "cg_aimbotSmooth",
+				                         0.0F, 1.0F, 0.05F, NumberFormatter(2, "x", "Instant Snap"));
+				layouter->AddHelp(_Tr("Preferences",
+				    "Smoothness of aim correction. 0.00 = Instant snap, higher values = smooth gentle assist."));
+
+				layouter->AddHeading(_Tr("Preferences", "Triggerbot & Automatic Actions"));
+
+				layouter->AddToggleField(_Tr("Preferences", "Triggerbot"), "cg_triggerbot");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Automatically fires your weapon the instant an enemy enters your crosshair."));
+
+				layouter->AddToggleField(_Tr("Preferences", "Rapid Fire (Semi-Auto)"), "cg_rapidFire");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Fires semi-automatic rifles and shotguns continuously at maximum cyclic rate while holding fire."));
+
+				layouter->AddToggleField(_Tr("Preferences", "Auto Reload"), "cg_autoReload");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Automatically initiates reload as soon as your active weapon magazine runs out of ammo."));
+
+				layouter->AddHeading(_Tr("Preferences", "Accuracy & Recoil"));
 
 				layouter->AddToggleField(_Tr("Preferences", "No Recoil"), "cg_noRecoil");
 				layouter->AddHelp(_Tr("Preferences",
@@ -291,13 +345,15 @@ namespace spades {
 				    "Removes all bullet and pellet dispersion. Weapons shoot with laser pinpoint accuracy."));
 
 				layouter->FinishLayout();
-				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Combat"), nav.GetPointerOrNull());
+				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Combat"), nav.GetPointerOrNull(),
+				       gui::GuiIconType::Combat);
 			}
 
 			// Left sidebar Back to Game button (below tab buttons)
 			float backBtnY = tabTop + static_cast<float>(tabs.size()) * tabRowHeight + 5.0F;
 			{
-				Handle<PreferenceTabButton> backBtn = Handle<PreferenceTabButton>::New(manager);
+				Handle<PreferenceTabButton> backBtn =
+				    Handle<PreferenceTabButton>::New(manager, gui::GuiIconType::Back);
 				backBtn->caption = _Tr("Preferences", "Back");
 				backBtn->hotKeyText = _Tr("Client", "[Esc] / [Ins]");
 				backBtn->SetBounds(AABB2(tabLeft, backBtnY, tabWidth, tabRowHeight));
@@ -317,11 +373,12 @@ namespace spades {
 			}
 		}
 
-		void HksMenu::AddTab(UIElement* panel, const std::string& caption, HeadingNavIndex* nav) {
+		void HksMenu::AddTab(UIElement* panel, const std::string& caption, HeadingNavIndex* nav,
+		                     gui::GuiIconType icon) {
 			UIManager* manager = &GetManager();
 			float tabY = tabTop + static_cast<float>(tabs.size()) * tabRowHeight;
 
-			Handle<PreferenceTabButton> tabBtn = Handle<PreferenceTabButton>::New(manager);
+			Handle<PreferenceTabButton> tabBtn = Handle<PreferenceTabButton>::New(manager, icon);
 			tabBtn->toggle = true;
 			tabBtn->caption = caption;
 			tabBtn->SetBounds(AABB2(tabLeft, tabY, tabWidth, tabRowHeight));
@@ -333,7 +390,7 @@ namespace spades {
 			AddChild(tabBtn.GetPointerOrNull());
 
 			float tabRight = tabLeft + tabWidth;
-			panel->SetBounds(AABB2(tabRight, tabTop, contentsRight - tabRight, contentsHeight - 6.0F));
+			panel->SetBounds(AABB2(tabRight, tabTop, contentsRight - tabRight, contentsHeight - (tabTop - (panelTop + 14.0F))));
 			panel->visible = (tabs.empty());
 			AddChild(panel);
 
@@ -398,6 +455,29 @@ namespace spades {
 			SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.07F));
 			r.DrawImage(nullptr, AABB2(pos.x, pos.y + panelTop, sz.x, 1.0F));
 			r.DrawImage(nullptr, AABB2(pos.x, pos.y + panelBottom, sz.x, 1.0F));
+
+			// Top amethyst glowing line for HKS panel
+			SetColorNP(r, MakeVector4(0.85F, 0.45F, 1.0F, 0.85F));
+			r.DrawImage(nullptr, AABB2(pos.x, pos.y + panelTop, sz.x, 2.0F));
+
+			// Draw HKS Title and Subtitle in left sidebar header
+			client::FontManager& fm = ui->GetFontManager();
+			client::IFont& largeFont = fm.GetLargeFont();
+			client::IFont& guiFont = fm.GetGuiFont();
+
+			Vector2 titlePos = MakeVector2(pos.x + tabLeft + 4.0F, pos.y + (panelTop + 14.0F) + 2.0F);
+			largeFont.DrawShadow("HKS", titlePos, 1.25F,
+			                     MakeVector4(0.92F, 0.55F, 1.0F, 1.0F),
+			                     MakeVector4(0.0F, 0.0F, 0.0F, 0.9F));
+
+			Vector2 subPos = MakeVector2(pos.x + tabLeft + 4.0F, pos.y + (panelTop + 14.0F) + 26.0F);
+			guiFont.DrawShadow("CHEAT & ASSISTANT", subPos, 0.70F,
+			                   MakeVector4(0.70F, 0.78F, 0.95F, 0.80F),
+			                   MakeVector4(0.0F, 0.0F, 0.0F, 0.7F));
+
+			// Accent divider line below HKS title
+			SetColorNP(r, MakeVector4(0.85F, 0.45F, 1.0F, 0.45F));
+			r.DrawImage(nullptr, AABB2(pos.x + tabLeft, pos.y + (panelTop + 14.0F) + 40.0F, tabWidth - 6.0F, 1.5F));
 
 			UIElement::Render();
 		}

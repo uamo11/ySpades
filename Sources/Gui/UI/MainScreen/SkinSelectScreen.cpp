@@ -293,31 +293,30 @@ namespace spades {
 			// Header Title
 			if (fontManager) {
 				client::IFont& font = fontManager->GetGuiFont();
-				client::FontRenderParam fp;
-				fp.color = MakeVector4(0.95F, 0.92F, 1.0F, 1.0F);
-				fp.shadow = true;
-				fp.shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
-				font.DrawString(_Tr("MainScreen", "GESTOR DE SKINS Y COSMÉTICOS"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 16.0F), fp);
+				Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
 
-				fp.color = MakeVector4(0.65F, 0.75F, 0.95F, 0.85F);
-				font.DrawString(_Tr("MainScreen", "Personalización 3D, Capas y Accesorios para la Versión Y / 1.0"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 38.0F), fp);
+				font.DrawShadow(_Tr("MainScreen", "GESTOR DE SKINS Y COSMÉTICOS"),
+				                MakeVector2(dlgX + 24.0F, dlgY + 16.0F), 1.0F,
+				                MakeVector4(0.95F, 0.92F, 1.0F, 1.0F), shadowCol);
+
+				font.DrawShadow(_Tr("MainScreen", "Personalización 3D, Capas y Accesorios para la Versión Y / 1.0"),
+				                MakeVector2(dlgX + 24.0F, dlgY + 38.0F), 1.0F,
+				                MakeVector4(0.65F, 0.75F, 0.95F, 0.85F), shadowCol);
 
 				// Section Header: Modelo de Skin
-				fp.color = MakeVector4(0.90F, 0.70F, 1.0F, 1.0F);
-				font.DrawString(_Tr("MainScreen", "1. Modelo de Skin (3D Voxel / MC Extrusion)"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 74.0F), fp);
+				font.DrawShadow(_Tr("MainScreen", "1. Modelo de Skin (3D Voxel / MC Extrusion)"),
+				                MakeVector2(dlgX + 24.0F, dlgY + 74.0F), 1.0F,
+				                MakeVector4(0.90F, 0.70F, 1.0F, 1.0F), shadowCol);
 
 				// Section Header: Capa Física
-				fp.color = MakeVector4(0.90F, 0.70F, 1.0F, 1.0F);
-				font.DrawString(_Tr("MainScreen", "2. Capa Física (Trailing Cloak Physics)"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 164.0F), fp);
+				font.DrawShadow(_Tr("MainScreen", "2. Capa Física (Trailing Cloak Physics)"),
+				                MakeVector2(dlgX + 24.0F, dlgY + 164.0F), 1.0F,
+				                MakeVector4(0.90F, 0.70F, 1.0F, 1.0F), shadowCol);
 
 				// Section Header: Accesorio Cabeza
-				fp.color = MakeVector4(0.90F, 0.70F, 1.0F, 1.0F);
-				font.DrawString(_Tr("MainScreen", "3. Accesorio / Cosmético"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 254.0F), fp);
+				font.DrawShadow(_Tr("MainScreen", "3. Accesorio / Cosmético"),
+				                MakeVector2(dlgX + 24.0F, dlgY + 254.0F), 1.0F,
+				                MakeVector4(0.90F, 0.70F, 1.0F, 1.0F), shadowCol);
 			}
 
 			UIElement::Render();

@@ -166,6 +166,7 @@ namespace spades {
 			Handle<HeadingNavIndex> rendererNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> controlsNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> miscNav = Handle<HeadingNavIndex>::New();
+			Handle<HeadingNavIndex> detailedNav = Handle<HeadingNavIndex>::New();
 
 			AddTab(Handle<GameOptionsPanel>::New(manager, options, fontManager,
 			                                     gameNav.GetPointerOrNull())
@@ -194,23 +195,13 @@ namespace spades {
 			           .GetPointerOrNull(),
 			       _Tr("Preferences", "Misc"), miscNav.GetPointerOrNull(),
 			       GuiIconType::Misc);
+			AddTab(Handle<DetailedOptionsPanel>::New(manager, options, fontManager,
+			                                         detailedNav.GetPointerOrNull())
+			           .GetPointerOrNull(),
+			       _Tr("Preferences", "Detallado"), detailedNav.GetPointerOrNull(),
+			       GuiIconType::Detailed);
 
-			float detailedButtonTop = tabTop + static_cast<float>(tabs.size()) * tabRowHeight + 5.0F;
-
-			{
-				Handle<PreferenceTabButton> button =
-				    Handle<PreferenceTabButton>::New(manager, GuiIconType::Detailed);
-				button->caption = _Tr("Preferences", "Detallado");
-				button->SetBounds(AABB2(tabLeft, detailedButtonTop, tabWidth, tabRowHeight));
-				button->activated = [this](UIElement&) {
-					Close();
-					if (onDetailedRequested)
-						onDetailedRequested(*this);
-				};
-				AddChild(button.GetPointerOrNull());
-			}
-
-			float backButtonTop = detailedButtonTop + tabRowHeight + 4.0F;
+			float backButtonTop = tabTop + static_cast<float>(tabs.size()) * tabRowHeight + 5.0F;
 
 			{
 				Handle<PreferenceTabButton> button =
@@ -354,6 +345,13 @@ namespace spades {
 					selectedTabIndex = static_cast<int>(i);
 					UpdateTabs();
 				}
+			}
+		}
+
+		void PreferenceView::SelectTab(int index) {
+			if (index >= 0 && index < static_cast<int>(tabs.size())) {
+				selectedTabIndex = index;
+				UpdateTabs();
 			}
 		}
 

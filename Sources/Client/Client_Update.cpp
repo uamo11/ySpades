@@ -66,6 +66,12 @@ DEFINE_SPADES_SETTING(cg_killfeedStreaks, "1");
 DEFINE_SPADES_SETTING(cg_classicSprinting, "0");
 DEFINE_SPADES_SETTING(cg_autoUnscope, "0");
 DEFINE_SPADES_SETTING(cg_spectatorNoclip, "0");
+DEFINE_SPADES_SETTING(cg_aimbot, "0");
+DEFINE_SPADES_SETTING(cg_aimbotFov, "60.0");
+DEFINE_SPADES_SETTING(cg_aimbotSmooth, "0.0");
+DEFINE_SPADES_SETTING(cg_triggerbot, "0");
+DEFINE_SPADES_SETTING(cg_rapidFire, "0");
+DEFINE_SPADES_SETTING(cg_autoReload, "0");
 
 SPADES_SETTING(cg_centerMessage);
 SPADES_SETTING(cg_holdAimDownSight);
@@ -671,6 +677,115 @@ namespace spades {
 						winp.secondary = false;
 					}
 				}
+
+				// Auto Reload
+				if (cg_autoReload && weapon.GetAmmo() == 0 && weapon.GetStock() > 0 &&
+				    !weapon.IsAwaitingReloadCompletion() && CanLocalPlayerReloadWeapon()) {
+					reloadKeyPressed = true;
+				}
+
+				// Triggerbot (auto fires when an enemy crosses the crosshair)
+				if (cg_triggerbot && weapon.GetAmmo() > 0 && !weapon.IsAwaitingReloadCompletion()) {
+					Vector3 eye = player.GetEye();
+					Vector3 dir = player.GetFront();
+					float maxRange = weapon.GetRange();
+					if (maxRange <= 0.0F)
+						maxRange = 128.0F;
+
+					IntVector3 mapHit;
+					float blockDist = maxRange;
+					if (world->GetMap() && world->GetMap()->RayCast(eye, dir * maxRange, &mapHit)) {
+						blockDist = (MakeVector3(mapHit.x + 0.5F, mapHit.y + 0.5F, mapHit.z + 0.5F) - eye).GetLength();
+					}
+
+					for (size_t i = 0; i < world->GetNumPlayerSlots(); ++i) {
+						auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(i));
+						if (!maybeTarget)
+							continue;
+						Player& target = maybeTarget.value();
+						if (!target.IsAlive() || &target == &player || player.IsTeammate(target))
+							continue;
+
+						auto hb = target.GetHitBox();
+						Vector3 hitPos;
+						if (hb.head.RayCast(eye, dir * blockDist, &hitPos) ||
+						    hb.torso.RayCast(eye, dir * blockDist, &hitPos) ||
+						    hb.limbs[0].RayCast(eye, dir * blockDist, &hitPos) ||
+						    hb.limbs[1].RayCast(eye, dir * blockDist, &hitPos) ||
+						    hb.limbs[2].RayCast(eye, dir * blockDist, &hitPos)) {
+							winp.primary = true;
+							break;
+						}
+					}
+				}
+
+				// Aimbot / Aim Assist (locks or smoothly assists aim to nearest enemy head)
+				if (cg_aimbot && (winp.primary || winp.secondary)) {
+					Vector3 eye = player.GetEye();
+					Vector3 front = player.GetFront();
+					float bestAngle = DEG2RAD(static_cast<float>(cg_aimbotFov) * 0.5F);
+					Vector3 bestTargetPos;
+					bool hasTarget = false;
+
+					for (size_t i = 0; i < world->GetNumPlayerSlots(); ++i) {
+						auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(i));
+						if (!maybeTarget)
+							continue;
+						Player& target = maybeTarget.value();
+						if (!target.IsAlive() || &target == &player || player.IsTeammate(target))
+							continue;
+
+						Vector3 headPos = target.GetEye();
+						Vector3 diff = headPos - eye;
+						float dist = diff.GetLength();
+						if (dist < 0.1F || dist > 128.0F)
+							continue;
+
+						Vector3 dir = diff * (1.0F / dist);
+						float dot = Vector3::Dot(front, dir);
+						float angle = acosf(Clamp(dot, -1.0F, 1.0F));
+						if (angle > bestAngle)
+							continue;
+
+						// Check line of sight
+						IntVector3 mapHit;
+						if (world->GetMap() && world->GetMap()->RayCast(eye, diff, &mapHit)) {
+							float hitDist = (MakeVector3(mapHit.x + 0.5F, mapHit.y + 0.5F, mapHit.z + 0.5F) - eye).GetLength();
+							if (hitDist < dist - 0.4F)
+								continue;
+						}
+
+						bestAngle = angle;
+						bestTargetPos = headPos;
+						hasTarget = true;
+					}
+
+					if (hasTarget) {
+						Vector3 diff = bestTargetPos - eye;
+						float dist = diff.GetLength();
+						if (dist > 0.01F) {
+							float targetYaw = atan2f(diff.y, diff.x);
+							float targetPitch = -atan2f(diff.z, diff.GetLength2D());
+
+							Vector3 curFront = player.GetFront();
+							float curYaw = atan2f(curFront.y, curFront.x);
+							float curPitch = -atan2f(curFront.z, curFront.GetLength2D());
+
+							float dYaw = targetYaw - curYaw;
+							while (dYaw > M_PI) dYaw -= 2.0F * M_PI;
+							while (dYaw < -M_PI) dYaw += 2.0F * M_PI;
+							float dPitch = targetPitch - curPitch;
+
+							float smooth = static_cast<float>(cg_aimbotSmooth);
+							if (smooth <= 0.01F) {
+								player.Turn(dYaw, dPitch);
+							} else {
+								float factor = Clamp(1.0F / (smooth * 12.0F), 0.05F, 1.0F);
+								player.Turn(dYaw * factor, dPitch * factor);
+							}
+						}
+					}
+				}
 			}
 
 			// set player input
@@ -688,6 +803,12 @@ namespace spades {
 			{
 				PlayerInput sentInput = inp;
 				WeaponInput sentWeaponInput = winp;
+
+				static bool rapidFireToggle = false;
+				if (cg_rapidFire && isToolWeapon && winp.primary) {
+					rapidFireToggle = !rapidFireToggle;
+					sentWeaponInput.primary = rapidFireToggle;
+				}
 
 				activeNet->SendPlayerInput(sentInput);
 				activeNet->SendWeaponInput(sentWeaponInput);

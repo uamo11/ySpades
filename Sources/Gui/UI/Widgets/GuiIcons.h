@@ -49,7 +49,13 @@ namespace spades {
 			Controls,
 			Misc,
 			Detailed,
-			Back
+			Back,
+			// HKS Mod Menu Tabs
+			Building,
+			Flight,
+			Movement,
+			Visuals,
+			Combat
 		};
 
 		inline void DrawGuiIcon(client::IRenderer& r, GuiIconType type, Vector2 center, Vector4 color, float s = 1.0F) {
@@ -215,6 +221,68 @@ namespace spades {
 				r.DrawImage(nullptr, AABB2(cx - 6.0F * s, cy - 3.5F * s, 3.0F * s, 2.5F * s));
 				r.DrawImage(nullptr, AABB2(cx - 1.5F * s, cy + 1.0F * s, 3.0F * s, 2.5F * s));
 				r.DrawImage(nullptr, AABB2(cx + 3.0F * s, cy - 2.0F * s, 3.0F * s, 2.5F * s));
+				break;
+			}
+			case GuiIconType::Building: {
+				// Spade / Shovel
+				r.DrawLine(MakeVector2(cx - 3.5F * s, cy + 4.5F * s), MakeVector2(cx + 2.0F * s, cy - 1.0F * s), 1.8F * s);
+				// Handle grip
+				r.DrawLine(MakeVector2(cx - 4.5F * s, cy + 3.5F * s), MakeVector2(cx - 2.5F * s, cy + 5.5F * s), 1.8F * s);
+				// Blade head
+				r.DrawLine(MakeVector2(cx + 1.0F * s, cy - 2.0F * s), MakeVector2(cx + 5.0F * s, cy + 2.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 5.0F * s, cy + 2.0F * s), MakeVector2(cx + 6.0F * s, cy - 5.0F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 1.0F * s, cy - 2.0F * s), MakeVector2(cx + 6.0F * s, cy - 5.0F * s), 1.5F * s);
+				break;
+			}
+			case GuiIconType::Flight: {
+				// Wings / Jet
+				r.DrawLine(MakeVector2(cx, cy - 5.5F * s), MakeVector2(cx, cy + 5.0F * s), 2.0F * s);
+				// Swept wings
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy + 2.0F * s), MakeVector2(cx, cy - 1.0F * s), 1.8F * s);
+				r.DrawLine(MakeVector2(cx + 6.0F * s, cy + 2.0F * s), MakeVector2(cx, cy - 1.0F * s), 1.8F * s);
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy + 2.0F * s), MakeVector2(cx - 1.5F * s, cy + 3.0F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 6.0F * s, cy + 2.0F * s), MakeVector2(cx + 1.5F * s, cy + 3.0F * s), 1.4F * s);
+				// Tail
+				r.DrawLine(MakeVector2(cx - 2.5F * s, cy + 5.0F * s), MakeVector2(cx + 2.5F * s, cy + 5.0F * s), 1.6F * s);
+				break;
+			}
+			case GuiIconType::Movement: {
+				// Swift speed arrows
+				r.DrawLine(MakeVector2(cx - 4.5F * s, cy - 3.5F * s), MakeVector2(cx + 1.0F * s, cy - 3.5F * s), 1.6F * s);
+				r.DrawLine(MakeVector2(cx - 2.0F * s, cy), MakeVector2(cx + 4.5F * s, cy), 1.8F * s);
+				r.DrawLine(MakeVector2(cx - 4.5F * s, cy + 3.5F * s), MakeVector2(cx + 2.0F * s, cy + 3.5F * s), 1.6F * s);
+				// Arrowheads
+				r.DrawLine(MakeVector2(cx + 2.5F * s, cy - 2.0F * s), MakeVector2(cx + 4.5F * s, cy), 1.6F * s);
+				r.DrawLine(MakeVector2(cx + 2.5F * s, cy + 2.0F * s), MakeVector2(cx + 4.5F * s, cy), 1.6F * s);
+				break;
+			}
+			case GuiIconType::Visuals: {
+				// Eye outline
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy), MakeVector2(cx - 2.0F * s, cy - 3.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 2.0F * s, cy - 3.5F * s), MakeVector2(cx + 2.0F * s, cy - 3.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 2.0F * s, cy - 3.5F * s), MakeVector2(cx + 6.0F * s, cy), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy), MakeVector2(cx - 2.0F * s, cy + 3.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 2.0F * s, cy + 3.5F * s), MakeVector2(cx + 2.0F * s, cy + 3.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx + 2.0F * s, cy + 3.5F * s), MakeVector2(cx + 6.0F * s, cy), 1.5F * s);
+				// Pupil
+				r.DrawImage(nullptr, AABB2(cx - 1.5F * s, cy - 1.5F * s, 3.0F * s, 3.0F * s));
+				break;
+			}
+			case GuiIconType::Combat: {
+				// Crosshair with corner brackets
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy), MakeVector2(cx - 2.5F * s, cy), 1.8F * s);
+				r.DrawLine(MakeVector2(cx + 2.5F * s, cy), MakeVector2(cx + 6.0F * s, cy), 1.8F * s);
+				r.DrawLine(MakeVector2(cx, cy - 6.0F * s), MakeVector2(cx, cy - 2.5F * s), 1.8F * s);
+				r.DrawLine(MakeVector2(cx, cy + 2.5F * s), MakeVector2(cx, cy + 6.0F * s), 1.8F * s);
+				r.DrawLine(MakeVector2(cx - 3.5F * s, cy - 3.5F * s), MakeVector2(cx - 1.5F * s, cy - 3.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx - 3.5F * s, cy - 3.5F * s), MakeVector2(cx - 3.5F * s, cy - 1.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 3.5F * s, cy - 3.5F * s), MakeVector2(cx + 1.5F * s, cy - 3.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 3.5F * s, cy - 3.5F * s), MakeVector2(cx + 3.5F * s, cy - 1.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx - 3.5F * s, cy + 3.5F * s), MakeVector2(cx - 1.5F * s, cy + 3.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx - 3.5F * s, cy + 3.5F * s), MakeVector2(cx - 3.5F * s, cy + 1.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 3.5F * s, cy + 3.5F * s), MakeVector2(cx + 1.5F * s, cy + 3.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 3.5F * s, cy + 3.5F * s), MakeVector2(cx + 3.5F * s, cy + 1.5F * s), 1.4F * s);
+				r.DrawImage(nullptr, AABB2(cx - 0.8F * s, cy - 0.8F * s, 1.6F * s, 1.6F * s));
 				break;
 			}
 			default:

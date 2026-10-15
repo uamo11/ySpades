@@ -68,6 +68,7 @@ DEFINE_SPADES_SETTING(cg_serverAlert, "1");
 DEFINE_SPADES_SETTING(cg_skipDeadPlayersWhenDead, "0");
 DEFINE_SPADES_SETTING(cg_ignorePrivateMessages, "0");
 DEFINE_SPADES_SETTING(cg_ignoreChatMessages, "0");
+DEFINE_SPADES_SETTING(cg_fog, "1");
 
 SPADES_SETTING(cg_playerName);
 SPADES_SETTING(cg_centerMessageSmallFont);

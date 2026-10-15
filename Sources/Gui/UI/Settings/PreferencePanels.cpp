@@ -401,9 +401,7 @@ namespace spades {
 				    while (p && !dynamic_cast<PreferenceView*>(p))
 					    p = p->GetParent();
 				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
-					    pv->Close();
-					    if (pv->onDetailedRequested)
-						    pv->onDetailedRequested(*pv);
+					    pv->SelectTab(5);
 				    }
 			    });
 			l.AddSliderField(_Tr("Preferences", "Render Scale"), "r_scale", 0.2F, 1, 0.01F,
@@ -418,6 +416,9 @@ namespace spades {
 				"dedicated Software renderer instead."));
 
 			l.AddHeading(_Tr("Preferences", "World"));
+			l.AddToggleField(_Tr("Preferences", "Niebla (Fog)"), "cg_fog");
+			l.AddHelp(_Tr("Preferences",
+				"Activa o desactiva la niebla del juego. Desactivarla permite ver con total nitidez a través de todo el mapa."));
 			l.AddToggleField(_Tr("Preferences", "Dynamic Lights"), "r_dlights");
 			l.AddToggleField(_Tr("Preferences", "Tracers Lights"), "cg_tracerLights");
 			l.AddToggleField(_Tr("Preferences", "Depth Prepass"), "r_depthPrepass");
@@ -600,6 +601,60 @@ namespace spades {
 			l.AddControl(_Tr("Preferences", "Seek Forward"), "cg_keyDemoSeekForward");
 			l.AddControl(_Tr("Preferences", "Seek Backward"), "cg_keyDemoSeekBackward");
 			l.AddControl(_Tr("Preferences", "Toggle Demo HUD"), "cg_keyDemoToggleHud");
+
+			l.FinishLayout();
+		}
+
+		// -- DetailedOptionsPanel --
+
+		DetailedOptionsPanel::DetailedOptionsPanel(UIManager* manager,
+		                                           const PreferenceViewOptions& options,
+		                                           client::FontManager* fontManager,
+		                                           HeadingNavIndex* nav)
+		    : UIElement(manager) {
+			(void)options;
+			layouter = Handle<StandardPreferenceLayouter>::New(this, fontManager);
+			StandardPreferenceLayouter& l = *layouter;
+			l.headingNav = nav;
+
+			l.AddHeading(_Tr("Preferences", "Pantalla y Ventana"));
+			l.AddToggleField(_Tr("Preferences", "Pantalla Completa"), "r_fullscreen");
+			l.AddHelp(_Tr("Preferences", "Ejecuta el juego en pantalla completa o en modo ventana."));
+			l.AddToggleField(_Tr("Preferences", "Sincronización Vertical (VSync)"), "r_vsync");
+			l.AddHelp(_Tr("Preferences", "Sincroniza los fotogramas con la tasa de refresco del monitor para evitar cortes."));
+			l.AddSliderField(_Tr("Preferences", "Límite de FPS (Max FPS)"), "cl_fps", 0.0F, 360.0F, 10.0F,
+			                 NumberFormatter(0, " FPS", "Ilimitado"));
+			l.AddHelp(_Tr("Preferences", "Fija un límite máximo de cuadros por segundo. 0 significa sin límite."));
+
+			l.AddHeading(_Tr("Preferences", "Gráficos Avanzados y Sombras"));
+			l.AddToggleField(_Tr("Preferences", "Niebla (Fog)"), "cg_fog");
+			l.AddHelp(_Tr("Preferences", "Permite activar o desactivar completamente la niebla para ver con total nitidez a través de todo el mapa."));
+			l.AddToggleField(_Tr("Preferences", "Niebla Volumétrica"), "r_fogShadow");
+			l.AddHelp(_Tr("Preferences", "Efecto de niebla volumétrica 3D con sombras y dispersión de luz atmosférica."));
+			l.AddToggleField(_Tr("Preferences", "Bloom / Resplandor"), "r_bloom");
+			l.AddHelp(_Tr("Preferences", "Efecto de resplandor para trazadoras, explosiones y fuentes de alta luminosidad."));
+			l.AddToggleField(_Tr("Preferences", "Desenfoque de Cámara"), "r_cameraBlur");
+			l.AddHelp(_Tr("Preferences", "Desenfoque de movimiento cinemático durante giros rápidos de la cámara."));
+			l.AddToggleField(_Tr("Preferences", "Partículas Suaves"), "r_softParticles");
+			l.AddHelp(_Tr("Preferences", "Suaviza la unión geométrica de las partículas de humo y explosiones con el terreno."));
+			l.AddToggleField(_Tr("Preferences", "Sombras de Modelos"), "r_modelShadows");
+			l.AddHelp(_Tr("Preferences", "Genera sombras dinámicas proyectadas desde los modelos de jugadores."));
+			l.AddToggleField(_Tr("Preferences", "Iluminación Global (Radiosity)"), "r_radiosity");
+			l.AddHelp(_Tr("Preferences", "Calcula rebote de iluminación indirecta sobre los bloques del mundo."));
+			l.AddSliderField(_Tr("Preferences", "Calidad de Agua"), "r_water", 0.0F, 2.0F, 1.0F,
+			                 NumberFormatter(0, ""));
+			l.AddHelp(_Tr("Preferences", "0 = Agua simple opaca, 1 = Translúcida, 2 = Reflejos y cáusticas avanzadas."));
+
+			l.AddHeading(_Tr("Preferences", "Rendimiento y Optimización"));
+			l.AddToggleField(_Tr("Preferences", "Depth Prepass"), "r_depthPrepass");
+			l.AddHelp(_Tr("Preferences", "Rellena el búfer de profundidad primero para descartar píxeles ocultos. Aumenta FPS."));
+			l.AddToggleField(_Tr("Preferences", "Occlusion Querying"), "r_occlusionQuery");
+			l.AddHelp(_Tr("Preferences", "Utiliza consultas por hardware para omitir geometrías totalmente ocluidas."));
+			l.AddToggleField(_Tr("Preferences", "Permitir Renderizado CPU"), "r_allowSoftwareRendering");
+			l.AddHelp(_Tr("Preferences", "Permite usar el renderizador por software si la GPU falla o no es compatible."));
+			l.AddSliderField(_Tr("Preferences", "Hilos CPU Software"), "r_swNumThreads", 1.0F, 16.0F, 1.0F,
+			                 NumberFormatter(0, _Tr("Preferences", " Threads")));
+			l.AddHelp(_Tr("Preferences", "Número de hilos de trabajo paralelos dedicados al renderizado por software."));
 
 			l.FinishLayout();
 		}

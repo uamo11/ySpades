@@ -25,6 +25,7 @@
 
 #include <Gui/UI/Components/IModalMenu.h>
 #include <Gui/UI/Framework/UIElement.h>
+#include <Gui/UI/Widgets/GuiIcons.h>
 
 namespace spades {
 	namespace gui {
@@ -67,7 +68,8 @@ namespace spades {
 			int selectedTabIndex = 0;
 
 			void AddTab(gui::ui::UIElement* panel, const std::string& caption,
-			            gui::HeadingNavIndex* nav);
+			            gui::HeadingNavIndex* nav,
+			            gui::GuiIconType icon = gui::GuiIconType::None);
 			void SelectTab(int idx);
 
 		public:

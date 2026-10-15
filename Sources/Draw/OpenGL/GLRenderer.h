@@ -183,7 +183,7 @@ namespace spades {
 			void SetFogDistance(float f) override { fogDistance = f; }
 
 			Vector3 GetFogColor() { return fogColor; }
-			float GetFogDistance() { return fogDistance; }
+			float GetFogDistance();
 			Vector3 GetFogColorForSolidPass();
 
 			void StartScene(const client::SceneDefinition&) override;

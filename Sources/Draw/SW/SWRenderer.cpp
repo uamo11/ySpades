@@ -41,6 +41,7 @@ DEFINE_SPADES_SETTING(r_swStatistics, "0");
 DEFINE_SPADES_SETTING(r_swNumThreads, "4");
 
 SPADES_SETTING(r_dlights);
+SPADES_SETTING(cg_fog);
 
 namespace spades {
 	namespace draw {
@@ -196,6 +197,12 @@ namespace spades {
 
 		void SWRenderer::SetFogColor(spades::Vector3 v) { fogColor = v; }
 
+		float SWRenderer::GetFogDistance() {
+			if (!cg_fog)
+				return 999999.0F;
+			return fogDistance;
+		}
+
 		void SWRenderer::BuildProjectionMatrix() {
 			SPADES_MARK_FUNCTION();
 
@@ -343,6 +350,9 @@ namespace spades {
 		}
 
 		template <SWFeatureLevel level> void SWRenderer::ApplyFog() {
+			if (!cg_fog)
+				return;
+
 			int fw = this->fb->GetWidth();
 			int fh = this->fb->GetHeight();
 
@@ -423,6 +433,9 @@ namespace spades {
 #if ENABLE_SSE2
 
 		template <> void SWRenderer::ApplyFog<SWFeatureLevel::SSE2>() {
+			if (!cg_fog)
+				return;
+
 			int fw = this->fb->GetWidth();
 			int fh = this->fb->GetHeight();
 

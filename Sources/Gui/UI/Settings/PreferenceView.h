@@ -127,6 +127,7 @@ namespace spades {
 			void Render() override;
 			void Close();
 			void Run();
+			void SelectTab(int index);
 		};
 
 		// -- Option panels --
@@ -172,6 +173,14 @@ namespace spades {
 		public:
 			MiscOptionsPanel(ui::UIManager* manager, const PreferenceViewOptions& options,
 			                 client::FontManager* fontManager, HeadingNavIndex* nav = nullptr);
+		};
+
+		class DetailedOptionsPanel : public ui::UIElement {
+			Handle<StandardPreferenceLayouter> layouter;
+
+		public:
+			DetailedOptionsPanel(ui::UIManager* manager, const PreferenceViewOptions& options,
+			                     client::FontManager* fontManager, HeadingNavIndex* nav = nullptr);
 		};
 	} // namespace gui
 } // namespace spades

@@ -565,6 +565,7 @@ namespace spades {
 			bool spectatorPlayerNames;
 			Vector4 GetPlayerColor(Player&);
 			void DrawPlayerBox(Player&, const Vector4&);
+			void DrawPlayerHeadBox(Player&, const Vector4&);
 			void DrawPlayerName(Player&, const Vector4&);
 			void DrawHottrackedPlayerName();
 			void DrawPubOVL();

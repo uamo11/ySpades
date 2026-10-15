@@ -103,6 +103,9 @@ DEFINE_SPADES_SETTING(cg_playerNameY, "0");
 DEFINE_SPADES_SETTING(cg_espBoxes, "0");
 DEFINE_SPADES_SETTING(cg_espNames, "0");
 DEFINE_SPADES_SETTING(cg_espTracers, "0");
+DEFINE_SPADES_SETTING(cg_espHead, "0");
+DEFINE_SPADES_SETTING(cg_espHeadRgb, "0");
+DEFINE_SPADES_SETTING(cg_espEnemiesOnly, "0");
 DEFINE_SPADES_SETTING(cg_playerNamesDead, "1");
 DEFINE_SPADES_SETTING(cg_debugHitTestSize, "128");
 DEFINE_SPADES_SETTING(cg_debugHitTestFadeTime, "10");
@@ -722,6 +725,69 @@ namespace spades {
 			renderer->DrawOutlinedRect(left, top, right, bottom);
 		}
 
+		void Client::DrawPlayerHeadBox(Player& player, const Vector4& teamColor) {
+			SPADES_MARK_FUNCTION();
+
+			auto hb = player.GetHitBox();
+			const auto& headObb = hb.head;
+			std::array<Vector3, 8> corners = {{
+				headObb.m * Vector3(0.0F, 0.0F, 0.0F),
+				headObb.m * Vector3(1.0F, 0.0F, 0.0F),
+				headObb.m * Vector3(1.0F, 1.0F, 0.0F),
+				headObb.m * Vector3(0.0F, 1.0F, 0.0F),
+				headObb.m * Vector3(0.0F, 0.0F, 1.0F),
+				headObb.m * Vector3(1.0F, 0.0F, 1.0F),
+				headObb.m * Vector3(1.0F, 1.0F, 1.0F),
+				headObb.m * Vector3(0.0F, 1.0F, 1.0F)
+			}};
+
+			float left = std::numeric_limits<float>::max();
+			float top = std::numeric_limits<float>::max();
+			float right = -std::numeric_limits<float>::max();
+			float bottom = -std::numeric_limits<float>::max();
+
+			Vector2 scrPos;
+			for (const auto& corner : corners) {
+				if (!Project(corner, scrPos))
+					return;
+				left = std::min(left, scrPos.x);
+				right = std::max(right, scrPos.x);
+				top = std::min(top, scrPos.y);
+				bottom = std::max(bottom, scrPos.y);
+			}
+
+			left = floorf(left);
+			top = floorf(top);
+			right = ceilf(right);
+			bottom = ceilf(bottom);
+
+			Vector4 drawCol = teamColor;
+			if (cg_espHeadRgb) {
+				float t = static_cast<float>(world ? world->GetTime() : 0.0F);
+				float hue = fmodf(t * 1.5F + static_cast<float>(player.GetId()) * 0.18F, 1.0F);
+				float h6 = hue * 6.0F;
+				float f = h6 - floorf(h6);
+				float q = 1.0F - f;
+				int i = static_cast<int>(h6) % 6;
+				switch (i) {
+					case 0: drawCol = MakeVector4(1.0F, f, 0.0F, 1.0F); break;
+					case 1: drawCol = MakeVector4(q, 1.0F, 0.0F, 1.0F); break;
+					case 2: drawCol = MakeVector4(0.0F, 1.0F, f, 1.0F); break;
+					case 3: drawCol = MakeVector4(0.0F, q, 1.0F, 1.0F); break;
+					case 4: drawCol = MakeVector4(f, 0.0F, 1.0F, 1.0F); break;
+					default: drawCol = MakeVector4(1.0F, 0.0F, q, 1.0F); break;
+				}
+			}
+
+			// Outer drop shadow
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.4F).Premultiplied());
+			renderer->DrawOutlinedRect(left - 1, top - 1, right + 1, bottom + 1);
+
+			// Inner head border
+			renderer->SetColorAlphaPremultiplied(drawCol.Premultiplied());
+			renderer->DrawOutlinedRect(left, top, right, bottom);
+		}
+
 		void Client::DrawPubOVL() {
 			SPADES_MARK_FUNCTION();
 
@@ -754,9 +820,17 @@ namespace spades {
 				if (p.GetFront().GetSquaredLength() < 0.01F)
 					continue;
 
+				// Skip teammates if cg_espEnemiesOnly is active
+				if (cg_espEnemiesOnly && world->GetLocalPlayer()) {
+					if (world->GetLocalPlayer()->IsTeammate(p))
+						continue;
+				}
+
 				const auto& color = GetPlayerColor(p);
 				if (staffSpectating || cg_espBoxes)
 					DrawPlayerBox(p, color);
+				if (cg_espHead || cg_espHeadRgb)
+					DrawPlayerHeadBox(p, color);
 				if (((spectatorPlayerNames || cg_espNames) && !HasTeamplayChevronName(p)) || cg_espNames)
 					DrawPlayerName(p, color);
 				if (cg_espTracers) {
@@ -2547,9 +2621,9 @@ namespace spades {
 					if (cg_damageIndicators)
 						DrawDamageIndicators();
 
-					if (cg_espBoxes || cg_espNames || cg_espTracers)
+					if (cg_espBoxes || cg_espNames || cg_espTracers || cg_espHead || cg_espHeadRgb)
 						DrawPubOVL();
-				} else if (spectatorPlayerNames || cg_espBoxes || cg_espNames || cg_espTracers) { // only if we are spectating
+				} else if (spectatorPlayerNames || cg_espBoxes || cg_espNames || cg_espTracers || cg_espHead || cg_espHeadRgb) { // only if we are spectating
 					DrawPubOVL();
 				}
 
