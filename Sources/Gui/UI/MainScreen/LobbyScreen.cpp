@@ -154,6 +154,7 @@ namespace spades {
 				}
 
 				// Hover tooltip pill to the right of button
+				client::IFont* font = GetFont();
 				if (hover && font) {
 					std::string tipText;
 					Vector4 tipColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -172,7 +173,8 @@ namespace spades {
 					}
 
 					if (!tipText.empty()) {
-						float tipW = font->MeasureString(tipText) + 20.0F;
+						Vector2 textSize = font->Measure(tipText);
+						float tipW = textSize.x + 20.0F;
 						float tipH = 28.0F;
 						float tipX = pos.x + sz.x + 12.0F;
 						float tipY = cy - tipH * 0.5F;
@@ -186,11 +188,9 @@ namespace spades {
 						r.DrawImage(nullptr, AABB2(tipX, tipY, 1.0F, tipH));
 						r.DrawImage(nullptr, AABB2(tipX + tipW - 1.0F, tipY, 1.0F, tipH));
 
-						client::FontRenderParam fp;
-						fp.color = tipColor;
-						fp.shadow = true;
-						fp.shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
-						font->DrawString(tipText, MakeVector2(tipX + 10.0F, tipY + (tipH - font->GetPixelHeight()) * 0.5F), fp);
+						Vector4 shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
+						font->DrawShadow(tipText, MakeVector2(tipX + 10.0F, tipY + (tipH - textSize.y) * 0.5F), 1.0F,
+						                tipColor, shadowColor);
 					}
 				}
 			}
