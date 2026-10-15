@@ -598,6 +598,6 @@ namespace spades {
 			this->favorite = favorite;
 		}
 
-		MainScreenServerItem::~MainScreenServerItem() { SPADES_MARK_FUNCTION(); }
+		MainScreenServerItem::~MainScreenServerItem() {}
 	} // namespace gui
 } // namespace spades
