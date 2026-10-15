@@ -82,6 +82,7 @@ namespace spades {
 			ReleaseVersion v;
 			v.components = {ZEROSPADES_VERSION_MAJOR, ZEROSPADES_VERSION_MINOR,
 			                ZEROSPADES_VERSION_PATCH};
+			v.versionString = ZEROSPADES_VERSION_FULL;
 			return v;
 		}
 
@@ -117,6 +118,8 @@ namespace spades {
 		}
 
 		std::string ReleaseVersion::ToString() const {
+			if (!versionString.empty())
+				return versionString;
 			return std::to_string(components[0]) + "." + std::to_string(components[1]) + "." +
 			       std::to_string(components[2]);
 		}

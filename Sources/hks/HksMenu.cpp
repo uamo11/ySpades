@@ -284,6 +284,16 @@ namespace spades {
 				layouter->AddHelp(_Tr("Preferences",
 				    "Activa o desactiva la niebla del juego. Desactivarla permite ver con total nitidez a través de todo el mapa."));
 
+				layouter->AddChoiceField(_Tr("Preferences", "ESP Visibilidad (Visible Only)"), "cg_espVisibleOnly",
+				    {_Tr("Preferences", "TODOS (WALLS)"), _Tr("Preferences", "SOLO VISIBLES"), _Tr("Preferences", "ATENUAR OCULTOS")},
+				    {0, 1, 2});
+				layouter->AddHelp(_Tr("Preferences",
+				    "Filtra el ESP segun visibilidad: muestra todos a traves de paredes, solo los que estan a la vista, o atenua/reduce el brillo de los enemigos ocultos tras muros."));
+
+				layouter->AddToggleField(_Tr("Preferences", "Contador FPS / Ping (Ms)"), "cg_showFpsMs");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Muestra un badge minimalista y optimizado con tus FPS y Ping (Ms) en partida sin consumir rendimiento."));
+
 				layouter->FinishLayout();
 				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Visuals"), nav.GetPointerOrNull(),
 				       gui::GuiIconType::Visuals);

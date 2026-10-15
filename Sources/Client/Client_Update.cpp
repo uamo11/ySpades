@@ -254,8 +254,33 @@ namespace spades {
 				if (localPlayerIsSpectator) {
 					UpdateLocalSpectator(dt);
 				} else if (localPlayerIsAlive) {
+					lastKillerPlayerId = -1;
 					UpdateLocalPlayer(dt);
 				} else { // update dead
+					// Smoothly focus/track killer with camera/aim
+					if (lastKillerPlayerId >= 0 && lastKillerPlayerId < static_cast<int>(world->GetNumPlayerSlots())) {
+						auto maybeKiller = world->GetPlayer(lastKillerPlayerId);
+						if (maybeKiller && maybeKiller->IsAlive()) {
+							Player& killer = maybeKiller.value();
+							Vector3 killerPos = killer.GetEye();
+							Vector3 center = player.GetPosition();
+							Vector3 toKiller = killerPos - center;
+							float dist = toKiller.GetLength();
+							if (dist > 0.05F) {
+								float targetYaw = atan2f(-toKiller.y, -toKiller.x);
+								float targetPitch = asinf(std::clamp(toKiller.z / dist, -0.99F, 0.99F));
+
+								float diffYaw = targetYaw - followAndFreeCameraState.yaw;
+								while (diffYaw > static_cast<float>(M_PI)) diffYaw -= 2.0F * static_cast<float>(M_PI);
+								while (diffYaw < -static_cast<float>(M_PI)) diffYaw += 2.0F * static_cast<float>(M_PI);
+
+								float trackSpeed = std::min(1.0F, 10.0F * dt);
+								followAndFreeCameraState.yaw += diffYaw * trackSpeed;
+								followAndFreeCameraState.pitch += (targetPitch - followAndFreeCameraState.pitch) * trackSpeed;
+							}
+						}
+					}
+
 					int count = (int)roundf(player.GetTimeToRespawn());
 					if (count != lastRespawnCount) {
 						if (count > 0 && count <= 3) {
@@ -688,14 +713,14 @@ namespace spades {
 				if (cg_triggerbot && weapon.GetAmmo() > 0 && !weapon.IsAwaitingReloadCompletion()) {
 					Vector3 eye = player.GetEye();
 					Vector3 dir = player.GetFront();
-					float maxRange = weapon.GetRange();
-					if (maxRange <= 0.0F)
-						maxRange = 128.0F;
+					float maxRange = 128.0F;
 
-					IntVector3 mapHit;
 					float blockDist = maxRange;
-					if (world->GetMap() && world->GetMap()->RayCast(eye, dir * maxRange, &mapHit)) {
-						blockDist = (MakeVector3(mapHit.x + 0.5F, mapHit.y + 0.5F, mapHit.z + 0.5F) - eye).GetLength();
+					if (world->GetMap()) {
+						GameMap::RayCastResult mapHit = world->GetMap()->CastRay2(eye, dir, static_cast<int>(maxRange));
+						if (mapHit.hit) {
+							blockDist = (mapHit.hitPos - eye).GetLength();
+						}
 					}
 
 					for (size_t i = 0; i < world->GetNumPlayerSlots(); ++i) {
@@ -706,7 +731,7 @@ namespace spades {
 						if (!target.IsAlive() || &target == &player || player.IsTeammate(target))
 							continue;
 
-						auto hb = target.GetHitBox();
+						Player::HitBoxes hb = target.GetHitBoxes(false);
 						Vector3 hitPos;
 						if (hb.head.RayCast(eye, dir * blockDist, &hitPos) ||
 						    hb.torso.RayCast(eye, dir * blockDist, &hitPos) ||
@@ -748,10 +773,9 @@ namespace spades {
 							continue;
 
 						// Check line of sight
-						IntVector3 mapHit;
-						if (world->GetMap() && world->GetMap()->RayCast(eye, diff, &mapHit)) {
-							float hitDist = (MakeVector3(mapHit.x + 0.5F, mapHit.y + 0.5F, mapHit.z + 0.5F) - eye).GetLength();
-							if (hitDist < dist - 0.4F)
+						if (world->GetMap()) {
+							GameMap::RayCastResult mapRes = world->GetMap()->CastRay2(eye, diff, static_cast<int>(dist) + 1);
+							if (mapRes.hit && (mapRes.hitPos - eye).GetLength() < dist - 0.4F)
 								continue;
 						}
 
@@ -1319,11 +1343,32 @@ namespace spades {
 			if (victim.IsLocalPlayer()) {
 				lastAliveTime = time;
 
+				// Track killer for killer camera focus & tracer
+				if (killerId != victimId && killerId >= 0 && killerId < static_cast<int>(world->GetNumPlayerSlots())) {
+					lastKillerPlayerId = killerId;
+					lastKillerDeathTime = time;
+				} else {
+					lastKillerPlayerId = -1;
+				}
+
 				// initialize the look-you-are-dead camera
-				if (followCameraState.enabled && !staffSpectating) {
-					Vector3 o = -victim.GetFront();
-					followAndFreeCameraState.yaw = atan2f(o.y, o.x);
-					followAndFreeCameraState.pitch = DEG2RAD(30);
+				if (!staffSpectating) {
+					if (lastKillerPlayerId >= 0) {
+						auto maybeKiller = world->GetPlayer(lastKillerPlayerId);
+						if (maybeKiller) {
+							Vector3 killerPos = maybeKiller->GetEye();
+							Vector3 toKiller = killerPos - victim.GetPosition();
+							float dist = toKiller.GetLength();
+							if (dist > 0.05F) {
+								followAndFreeCameraState.yaw = atan2f(-toKiller.y, -toKiller.x);
+								followAndFreeCameraState.pitch = asinf(std::clamp(toKiller.z / dist, -0.99F, 0.99F));
+							}
+						}
+					} else if (followCameraState.enabled) {
+						Vector3 o = -victim.GetFront();
+						followAndFreeCameraState.yaw = atan2f(o.y, o.x);
+						followAndFreeCameraState.pitch = DEG2RAD(30);
+					}
 
 					// reset follow camera state
 					followCameraState.firstPerson = true;

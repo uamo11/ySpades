@@ -198,6 +198,8 @@ namespace spades {
 			float lastHurtTime;
 			float lastHealTime;
 			float lastAliveTime;
+			int lastKillerPlayerId = -1;
+			float lastKillerDeathTime = 0.0F;
 			int lastRespawnCount;
 			float lastHitTime;
 			bool lastHitWasScoped;
@@ -569,6 +571,8 @@ namespace spades {
 			void DrawPlayerName(Player&, const Vector4&);
 			void DrawHottrackedPlayerName();
 			void DrawPubOVL();
+			void DrawKillerTracer();
+			void DrawFpsMsOverlay();
 			void DrawDeadPlayers();
 
 			void DrawBlockPaletteHUD(float y);

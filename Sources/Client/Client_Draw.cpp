@@ -106,6 +106,8 @@ DEFINE_SPADES_SETTING(cg_espTracers, "0");
 DEFINE_SPADES_SETTING(cg_espHead, "0");
 DEFINE_SPADES_SETTING(cg_espHeadRgb, "0");
 DEFINE_SPADES_SETTING(cg_espEnemiesOnly, "0");
+DEFINE_SPADES_SETTING(cg_espVisibleOnly, "0");
+DEFINE_SPADES_SETTING(cg_showFpsMs, "0");
 DEFINE_SPADES_SETTING(cg_playerNamesDead, "1");
 DEFINE_SPADES_SETTING(cg_debugHitTestSize, "128");
 DEFINE_SPADES_SETTING(cg_debugHitTestFadeTime, "10");
@@ -728,7 +730,7 @@ namespace spades {
 		void Client::DrawPlayerHeadBox(Player& player, const Vector4& teamColor) {
 			SPADES_MARK_FUNCTION();
 
-			auto hb = player.GetHitBox();
+			Player::HitBoxes hb = player.GetHitBoxes(false);
 			const auto& headObb = hb.head;
 			std::array<Vector3, 8> corners = {{
 				headObb.m * Vector3(0.0F, 0.0F, 0.0F),
@@ -826,7 +828,31 @@ namespace spades {
 						continue;
 				}
 
-				const auto& color = GetPlayerColor(p);
+				// Visible-only ESP check
+				bool isVisible = true;
+				if (cg_espVisibleOnly > 0 && map) {
+					const auto& eye = lastSceneDef.viewOrigin;
+					const auto& toPlayer = p.GetEye() - eye;
+					const float dist = toPlayer.GetLength();
+					if (dist > 0.05F) {
+						GameMap::RayCastResult mapResult = map->CastRay2(eye, toPlayer, static_cast<int>(dist) + 1);
+						if (mapResult.hit && (mapResult.hitPos - eye).GetLength() < dist - 0.25F) {
+							isVisible = false;
+						}
+					}
+				}
+
+				if (!isVisible && cg_espVisibleOnly == 1)
+					continue; // Hide completely when occluded behind walls
+
+				auto color = GetPlayerColor(p);
+				if (!isVisible && cg_espVisibleOnly == 2) {
+					// Dimmed occluded mode: show at low brightness/alpha
+					color.x *= 0.35F;
+					color.y *= 0.35F;
+					color.z *= 0.35F;
+					color.w *= 0.35F;
+				}
 				if (staffSpectating || cg_espBoxes)
 					DrawPlayerBox(p, color);
 				if (cg_espHead || cg_espHeadRgb)
@@ -2627,6 +2653,9 @@ namespace spades {
 					DrawPubOVL();
 				}
 
+				// Draw killer tracer and nameplate when dead (core game feature)
+				DrawKillerTracer();
+
 				// Teamplay marks and pings come from the server and are drawn
 				// whether or not the local player is spectating; the team overlay is the
 				// local player's own view of their team and is not.
@@ -2744,6 +2773,9 @@ namespace spades {
 
 				if (cg_stats)
 					DrawStats();
+
+				if (cg_showFpsMs)
+					DrawFpsMsOverlay();
 			}
 
 			// draw limbo view (above everything)
@@ -2907,6 +2939,124 @@ namespace spades {
 			// draw text
 			pos += MakeVector2(margin, margin);
 			font.DrawOutline(str, pos, 1.0F, color, outline);
+		}
+
+		void Client::DrawKillerTracer() {
+			SPADES_MARK_FUNCTION();
+
+			if (!world)
+				return;
+
+			auto maybeLocal = world->GetLocalPlayer();
+			if (!maybeLocal)
+				return;
+
+			Player& local = maybeLocal.value();
+			if (local.IsAlive() || local.IsSpectator() || staffSpectating)
+				return;
+
+			if (lastKillerPlayerId < 0 || lastKillerPlayerId >= static_cast<int>(world->GetNumPlayerSlots()))
+				return;
+
+			auto maybeKiller = world->GetPlayer(lastKillerPlayerId);
+			if (!maybeKiller)
+				return;
+
+			Player& killer = maybeKiller.value();
+			if (!killer.IsAlive())
+				return;
+
+			Vector2 headPos, originPos;
+			bool hasHead = Project(killer.GetEye(), headPos);
+			bool hasOrigin = Project(killer.GetOrigin(), originPos);
+			if (!hasHead && !hasOrigin)
+				return;
+
+			Vector2 targetPos = hasHead ? headPos : originPos;
+
+			// Animated rainbow RGB chroma
+			float t = static_cast<float>(time);
+			float hue = fmodf(t * 1.5F, 1.0F);
+			float h6 = hue * 6.0F;
+			float f = h6 - floorf(h6);
+			float q = 1.0F - f;
+			int hi = static_cast<int>(h6) % 6;
+			Vector4 rgbCol;
+			switch (hi) {
+				case 0: rgbCol = MakeVector4(1.0F, f, 0.0F, 0.95F); break;
+				case 1: rgbCol = MakeVector4(q, 1.0F, 0.0F, 0.95F); break;
+				case 2: rgbCol = MakeVector4(0.0F, 1.0F, f, 0.95F); break;
+				case 3: rgbCol = MakeVector4(0.0F, q, 1.0F, 0.95F); break;
+				case 4: rgbCol = MakeVector4(f, 0.0F, 1.0F, 0.95F); break;
+				default: rgbCol = MakeVector4(1.0F, 0.0F, q, 0.95F); break;
+			}
+
+			Vector2 center = MakeVector2(renderer->ScreenWidth() * 0.5F, renderer->ScreenHeight() * 0.5F);
+
+			// Drop shadow line
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.6F).Premultiplied());
+			renderer->DrawLine(center, targetPos, 3.5F);
+
+			// Dynamic RGB tracer line
+			renderer->SetColorAlphaPremultiplied(rgbCol.Premultiplied());
+			renderer->DrawLine(center, targetPos, 2.0F);
+
+			// Killer name tag label
+			IFont& font = fontManager->GetGuiFont();
+			std::string tagText = killer.GetName();
+			Vector2 tagSize = font.Measure(tagText);
+			Vector2 labelPos = targetPos - MakeVector2(tagSize.x * 0.5F, tagSize.y + 14.0F);
+
+			// Label background
+			AABB2 tagBg(labelPos.x - 4.0F, labelPos.y - 2.0F, tagSize.x + 8.0F, tagSize.y + 4.0F);
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.65F).Premultiplied());
+			renderer->DrawImage(nullptr, tagBg);
+
+			font.DrawShadow(tagText, labelPos, 1.0F, rgbCol, MakeVector4(0.0F, 0.0F, 0.0F, 0.9F));
+		}
+
+		void Client::DrawFpsMsOverlay() {
+			SPADES_MARK_FUNCTION();
+
+			if (!cg_showFpsMs)
+				return;
+
+			static float lastUpdateTime = -1.0F;
+			static char cachedText[48] = "";
+			static Vector2 cachedSize = MakeVector2(0.0F, 0.0F);
+
+			// Refresh every 100ms (10 times/second) with zero allocations per frame
+			if (time - lastUpdateTime >= 0.10F || lastUpdateTime < 0.0F) {
+				lastUpdateTime = time;
+				int fps = static_cast<int>(roundf(fpsCounter.GetFps()));
+				int ping = activeNet ? activeNet->GetPing() : 0;
+				if (fps <= 0)
+					snprintf(cachedText, sizeof(cachedText), "FPS: -- | %d ms", ping);
+				else
+					snprintf(cachedText, sizeof(cachedText), "%d FPS | %d ms", fps, ping);
+
+				IFont& font = fontManager->GetSmallFont();
+				cachedSize = font.Measure(cachedText);
+			}
+
+			IFont& font = fontManager->GetSmallFont();
+			float sw = renderer->ScreenWidth();
+			float pad = 12.0F;
+			Vector2 pos = MakeVector2(sw - cachedSize.x - pad - 8.0F, pad);
+
+			// Sleek dark pill backdrop
+			AABB2 bgRect(pos.x - 6.0F, pos.y - 2.0F, cachedSize.x + 12.0F, cachedSize.y + 4.0F);
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.55F).Premultiplied());
+			renderer->DrawImage(nullptr, bgRect);
+
+			// Subtle outline accent line at bottom of badge
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.2F, 0.8F, 0.4F, 0.50F).Premultiplied());
+			renderer->DrawLine(MakeVector2(bgRect.min.x, bgRect.max.y), MakeVector2(bgRect.max.x, bgRect.max.y), 1.5F);
+
+			// Draw text with shadow
+			Vector4 textCol = MakeVector4(0.95F, 0.95F, 0.95F, 0.95F);
+			Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
+			font.DrawShadow(cachedText, pos, 1.0F, textCol, shadowCol);
 		}
 
 		void Client::DrawNetGraph() {

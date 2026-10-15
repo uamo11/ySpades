@@ -31,6 +31,7 @@ namespace spades {
 		struct ReleaseVersion {
 			// Not named fields: glibc defines `major` and `minor` as macros.
 			std::array<int, 3> components{}; // major, minor, patch
+			std::string versionString;
 
 			/** The version this build was compiled as. */
 			static ReleaseVersion Current();

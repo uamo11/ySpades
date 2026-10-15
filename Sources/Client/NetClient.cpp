@@ -308,6 +308,12 @@ namespace spades {
 			if (peer == NULL)
 				SPRaise("Failed to create ENet peer");
 
+			// Network optimizations for low latency, jitter reduction, and WiFi stability:
+			// Ping interval: 250ms (keeps NAT/WiFi state active and ping accurate)
+			enet_peer_ping_interval(peer, 250);
+			// Timeout: minimum 1000ms, max 4000ms, retry limit 32
+			enet_peer_timeout(peer, 32, 1000, 4000);
+
 			properties.reset(new GameProperties(hostname.GetProtocolVersion()));
 
 			status = NetClientStatusConnecting;
@@ -392,6 +398,7 @@ namespace spades {
 
 			ENetEvent event;
 			while (enet_host_service(host, &event, timeout) > 0) {
+				timeout = 0; // Drain remaining queued packets without waiting
 				if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
 					if (GetWorld())
 						client->SetWorld(NULL);
@@ -552,6 +559,7 @@ namespace spades {
 					}
 				}
 			}
+			enet_host_flush(host);
 		}
 
 		stmp::optional<World&> NetClient::GetWorld() { return client->GetWorld(); }
@@ -1631,6 +1639,7 @@ namespace spades {
 			NetPacketWriter w(PacketTypePositionData);
 			w.WriteVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendOrientation(spades::Vector3 v) {
@@ -1639,6 +1648,7 @@ namespace spades {
 			NetPacketWriter w(PacketTypeOrientationData);
 			w.WriteVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendPlayerInput(PlayerInput inp) {
@@ -1670,6 +1680,7 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendWeaponInput(WeaponInput inp) {
@@ -1693,6 +1704,7 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendHit(int targetPlayerId, HitType type) {
