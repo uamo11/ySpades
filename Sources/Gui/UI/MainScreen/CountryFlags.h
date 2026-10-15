@@ -21,6 +21,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <Core/Math.h>
 #include <Core/RefCountedObject.h>
@@ -31,6 +32,11 @@ namespace spades {
 		class IRenderer;
 	}
 	namespace gui {
+		struct CountryInfo {
+			std::string code;
+			std::string name;
+		};
+
 		/** Draws 16x16 country flag icons from the flag atlas. */
 		class FlagIconRenderer : public RefCountedObject {
 			Handle<client::IImage> atlas;
@@ -44,6 +50,18 @@ namespace spades {
 
 			/** Draws the flag for a two-letter country code centered at `pos`. */
 			void DrawIcon(const std::string& name, Vector2 pos);
+
+			/** Draws the flag for a two-letter country code in `dest`. */
+			void DrawIcon(const std::string& name, AABB2 dest);
+
+			/** Gets the tile coordinates (x: 0..15, y: 0..15) in the flags atlas. */
+			static bool GetFlagCoordinates(const std::string& name, int& x, int& y);
+
+			/** Gets the list of supported countries with their names. */
+			static const std::vector<CountryInfo>& GetSupportedCountries();
+
+			/** Gets the human-readable country name for a code. */
+			static std::string GetCountryName(const std::string& code);
 		};
 	} // namespace gui
 } // namespace spades

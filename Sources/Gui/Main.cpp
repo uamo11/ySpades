@@ -73,7 +73,7 @@ FILE __iob_func[3] = {*stdin, *stdout, *stderr};
 }
 #endif
 
-DEFINE_SPADES_SETTING(cl_showStartupWindow, "1");
+DEFINE_SPADES_SETTING(cl_showStartupWindow, "0");
 
 // Absolute path of the running executable, refreshed every launch. Persisted
 // so external tooling (e.g. the mod workbench) can locate the binary without

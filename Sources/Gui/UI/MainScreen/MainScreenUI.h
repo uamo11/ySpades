@@ -21,6 +21,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <Client/SceneDefinition.h>
 #include <Core/Math.h>
@@ -32,10 +33,12 @@ namespace spades {
 		class IAudioDevice;
 		class FontManager;
 		class GameMap;
+		class IModel;
 	}
 	namespace gui {
 		class MainScreenHelper;
 		class MainScreenMainMenu;
+		class LobbyScreen;
 		namespace ui {
 			class UIManager;
 		}
@@ -49,7 +52,18 @@ namespace spades {
 
 			Handle<ui::UIManager> manager;
 			Handle<MainScreenMainMenu> mainMenu;
+			Handle<LobbyScreen> lobbyScreen;
 			Handle<client::GameMap> titleMap;
+
+			// 3D Lobby player character & waving country flag
+			Handle<client::IModel> playerTorsoModel;
+			Handle<client::IModel> playerHeadModel;
+			Handle<client::IModel> playerLegLeftModel;
+			Handle<client::IModel> playerLegRightModel;
+			Handle<client::IModel> playerArmsModel;
+			Handle<client::IModel> flagpoleModel;
+			std::vector<Handle<client::IModel>> flagSliceModels;
+			std::string loadedFlagCountry;
 
 			float time = -1.0F;
 
@@ -60,6 +74,9 @@ namespace spades {
 
 			/** Rebuilds the menu while preserving state (e.g. a screen resize). */
 			void Reload();
+
+			void InitLobby3D();
+			void RenderLobbyScene(const client::SceneDefinition& sceneDef, float dt);
 
 		protected:
 			~MainScreenUI();
@@ -73,6 +90,11 @@ namespace spades {
 			client::FontManager& GetFontManager() { return *fontManager; }
 			MainScreenHelper& GetHelper() { return *helper; }
 			ui::UIManager& GetUIManager() { return *manager; }
+
+			void ShowLobby();
+			void ShowServerBrowser();
+			void SetCountry(const std::string& code);
+			void RebuildFlagModel();
 
 			void SetupRenderer();
 

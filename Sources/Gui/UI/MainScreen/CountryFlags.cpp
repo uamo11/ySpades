@@ -30,8 +30,9 @@ namespace spades {
 
 		FlagIconRenderer::~FlagIconRenderer() {}
 
-		void FlagIconRenderer::DrawIcon(const std::string& name, Vector2 pos) {
-			int x = -1, y = 1;
+		bool FlagIconRenderer::GetFlagCoordinates(const std::string& name, int& x, int& y) {
+			x = -1;
+			y = 1;
 			int code = 0;
 			for (size_t i = 0; i < name.size(); i++)
 				code += static_cast<int>(static_cast<unsigned char>(name[i])) << (i * 8);
@@ -278,12 +279,105 @@ namespace spades {
 				case 0x415A: x = 14; y = 14; break;
 				case 0x4D5A: x = 15; y = 14; break;
 				case 0x575A: x = 0; y = 15; break;
-				default: x = 17; y = 15;
+				default:
+					x = 17;
+					y = 15;
+					return false;
 			}
+			return true;
+		}
 
+		void FlagIconRenderer::DrawIcon(const std::string& name, Vector2 pos) {
+			int x = -1, y = 1;
+			GetFlagCoordinates(name, x, y);
 			renderer->DrawImage(atlas, AABB2(pos.x - 8.0F, pos.y - 8.0F, 16.0F, 16.0F),
 			                    AABB2(static_cast<float>(x) * 16.0F, static_cast<float>(y) * 16.0F,
 			                          16.0F, 16.0F));
+		}
+
+		void FlagIconRenderer::DrawIcon(const std::string& name, AABB2 dest) {
+			int x = -1, y = 1;
+			GetFlagCoordinates(name, x, y);
+			renderer->DrawImage(atlas, dest,
+			                    AABB2(static_cast<float>(x) * 16.0F, static_cast<float>(y) * 16.0F,
+			                          16.0F, 16.0F));
+		}
+
+		const std::vector<CountryInfo>& FlagIconRenderer::GetSupportedCountries() {
+			static const std::vector<CountryInfo> countries = {
+				{"ES", "España"},
+				{"MX", "México"},
+				{"AR", "Argentina"},
+				{"CO", "Colombia"},
+				{"CL", "Chile"},
+				{"PE", "Perú"},
+				{"VE", "Venezuela"},
+				{"EC", "Ecuador"},
+				{"GT", "Guatemala"},
+				{"CU", "Cuba"},
+				{"BO", "Bolivia"},
+				{"DO", "República Dominicana"},
+				{"HN", "Honduras"},
+				{"PY", "Paraguay"},
+				{"SV", "El Salvador"},
+				{"NI", "Nicaragua"},
+				{"CR", "Costa Rica"},
+				{"PR", "Puerto Rico"},
+				{"PA", "Panamá"},
+				{"UY", "Uruguay"},
+				{"US", "United States"},
+				{"CA", "Canada"},
+				{"BR", "Brasil"},
+				{"GB", "United Kingdom"},
+				{"DE", "Alemania"},
+				{"FR", "Francia"},
+				{"IT", "Italia"},
+				{"PT", "Portugal"},
+				{"RU", "Rusia"},
+				{"UA", "Ucrania"},
+				{"PL", "Polonia"},
+				{"JP", "Japón"},
+				{"KR", "Corea del Sur"},
+				{"CN", "China"},
+				{"AU", "Australia"},
+				{"NZ", "Nueva Zelanda"},
+				{"NL", "Países Bajos"},
+				{"BE", "Bélgica"},
+				{"SE", "Suecia"},
+				{"NO", "Noruega"},
+				{"DK", "Dinamarca"},
+				{"FI", "Finlandia"},
+				{"CH", "Suiza"},
+				{"AT", "Austria"},
+				{"CZ", "República Checa"},
+				{"RO", "Rumania"},
+				{"HU", "Hungría"},
+				{"GR", "Grecia"},
+				{"IE", "Irlanda"},
+				{"TR", "Turquía"},
+				{"IL", "Israel"},
+				{"SA", "Arabia Saudita"},
+				{"AE", "Emiratos Árabes"},
+				{"ZA", "Sudáfrica"},
+				{"EG", "Egipto"},
+				{"IN", "India"},
+				{"PH", "Filipinas"},
+				{"ID", "Indonesia"},
+				{"MY", "Malasia"},
+				{"SG", "Singapur"},
+				{"TH", "Tailandia"},
+				{"VN", "Vietnam"}
+			};
+			return countries;
+		}
+
+		std::string FlagIconRenderer::GetCountryName(const std::string& code) {
+			const auto& list = GetSupportedCountries();
+			for (const auto& c : list) {
+				if (c.code == code)
+					return c.name;
+			}
+			return code;
 		}
 	} // namespace gui
 } // namespace spades

@@ -192,6 +192,8 @@ namespace spades {
 			MainScreenMainMenuState GetState();
 			void SetState(const MainScreenMainMenuState& state);
 
+			void ReturnToLobby();
+
 			void HotKey(const std::string& key) override;
 			void Render() override;
 		};

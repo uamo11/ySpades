@@ -628,8 +628,15 @@ namespace spades {
 			// Footer buttons (always visible, outside panels)
 			{
 				Handle<Button> button = Handle<Button>::New(manager);
-				button->caption = _Tr("MainScreen", "Quit");
+				button->caption = _Tr("MainScreen", "Lobby");
 				button->hotKeyText = _Tr("Client", "[Esc]");
+				button->SetBounds(AABB2(contentsLeft, footerPos, 110.0F, 30.0F));
+				button->activated = [this](UIElement&) { ReturnToLobby(); };
+				AddChild(button.GetPointerOrNull());
+			}
+			{
+				Handle<Button> button = Handle<Button>::New(manager);
+				button->caption = _Tr("MainScreen", "Quit");
 				button->SetBounds(
 				    AABB2(contentsLeft + contentsWidth - 100.0F, footerPos, 100.0F, 30.0F));
 				button->activated = [this](UIElement& s) { OnQuitPressed(s); };
@@ -1155,6 +1162,10 @@ namespace spades {
 			}
 		}
 
+		void MainScreenMainMenu::ReturnToLobby() {
+			ui->ShowLobby();
+		}
+
 		void MainScreenMainMenu::HotKey(const std::string& key) {
 			if (IsEnabled() && key == "Enter") {
 				if (demoPanel->visible) {
@@ -1163,7 +1174,7 @@ namespace spades {
 					Connect();
 				}
 			} else if (IsEnabled() && key == "Escape") {
-				ui->shouldExit = true;
+				ReturnToLobby();
 			} else {
 				UIElement::HotKey(key);
 			}

@@ -21,18 +21,24 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <vector>
 
+#include "CountryFlags.h"
 #include "CreateProfileScreen.h"
+#include "LobbyScreen.h"
 #include "MainMenu.h"
 #include "MainScreenUI.h"
+#include "SelectCountryScreen.h"
 #include <Client/Fonts.h>
 #include <Client/GameMap.h>
 #include <Client/IAudioDevice.h>
 #include <Client/IImage.h>
 #include <Client/IRenderer.h>
+#include <Core/Bitmap.h>
 #include <Core/FileManager.h>
 #include <Core/IStream.h>
 #include <Core/Settings.h>
+#include <Core/VoxelModel.h>
 #include <Gui/MainScreenHelper.h>
 #include <Gui/UI/Components/UpdateNotice.h>
 #include <Gui/UI/Framework/UIManager.h>
@@ -41,6 +47,8 @@
 
 SPADES_SETTING(cg_playerName); // defined in Gui/MainScreen.cpp
 DEFINE_SPADES_SETTING(cg_playerNameIsSet, "0");
+DEFINE_SPADES_SETTING(cg_country, "US");
+DEFINE_SPADES_SETTING(cg_countryIsSet, "0");
 
 namespace spades {
 	namespace gui {
@@ -60,6 +68,7 @@ namespace spades {
 			manager->screenSizeChanged = [this] { Reload(); };
 
 			Init();
+			InitLobby3D();
 
 			// Runs once per process; the main screen is rebuilt on every return from
 			// a game, and keeps the first answer.
@@ -74,9 +83,25 @@ namespace spades {
 			if (nameStr == "")
 				cg_playerNameIsSet = 0;
 
-			if (!static_cast<bool>(cg_playerNameIsSet)) {
+			// First time run: Prompt Country Selection first!
+			if (!static_cast<bool>(cg_countryIsSet)) {
+				Handle<SelectCountryScreen> sc = Handle<SelectCountryScreen>::New(
+				    lobbyScreen.GetPointerOrNull(), fontManager,
+				    [this](const std::string& code) {
+					    SetCountry(code);
+					    // If name is also not set, prompt profile after country selection
+					    if (!static_cast<bool>(cg_playerNameIsSet)) {
+						    Handle<CreateProfileScreen> al = Handle<CreateProfileScreen>::New(
+						        lobbyScreen.GetPointerOrNull(), this->fontManager.GetPointerOrNull());
+						    al->Run();
+					    }
+				    },
+				    false /* cannot cancel on first run */
+				);
+				sc->Run();
+			} else if (!static_cast<bool>(cg_playerNameIsSet)) {
 				Handle<CreateProfileScreen> al =
-				    Handle<CreateProfileScreen>::New(mainMenu.GetPointerOrNull(), fontManager);
+				    Handle<CreateProfileScreen>::New(lobbyScreen.GetPointerOrNull(), fontManager);
 				al->Run();
 			}
 		}
@@ -87,23 +112,268 @@ namespace spades {
 			mainMenu = Handle<MainScreenMainMenu>::New(this);
 			mainMenu->SetBounds(manager->GetRootElement().GetBounds());
 			manager->GetRootElement().AddChild(mainMenu.GetPointerOrNull());
+
+			lobbyScreen = Handle<LobbyScreen>::New(this);
+			manager->GetRootElement().AddChild(lobbyScreen.GetPointerOrNull());
+
+			// Show Lobby by default, hide Server Browser
+			mainMenu->visible = false;
+			lobbyScreen->visible = true;
 		}
 
 		void MainScreenUI::Reload() {
-			// Detach every top-level element, not just the menu: modals attach
-			// themselves next to their owner (`owner->GetParent()->AddChild`), so a
-			// message box, the settings view or the profile prompt is a sibling of the
-			// menu. Leaving one behind would orphan it over a menu it can no longer
-			// re-enable. A dialog open across a resize is dismissed instead.
+			bool wasServerBrowser = (mainMenu && mainMenu->visible);
+			MainScreenMainMenuState state;
+			if (mainMenu)
+				state = mainMenu->GetState();
+
+			// Detach every top-level element
 			ui::UIElement& root = manager->GetRootElement();
 			while (!root.GetChildren().empty())
 				root.RemoveChild(root.GetChildren()[0].GetPointerOrNull());
 
-			// Rebuild through the constructor so the new layout is exactly what a fresh
-			// launch at this extent would have produced, then restore what survives.
-			MainScreenMainMenuState state = mainMenu->GetState();
 			Init();
-			mainMenu->SetState(state);
+			if (wasServerBrowser) {
+				ShowServerBrowser();
+				mainMenu->SetState(state);
+			} else {
+				ShowLobby();
+			}
+		}
+
+		void MainScreenUI::ShowLobby() {
+			if (mainMenu)
+				mainMenu->visible = false;
+			if (lobbyScreen) {
+				lobbyScreen->visible = true;
+				lobbyScreen->UpdateCountryBadge();
+			}
+		}
+
+		void MainScreenUI::ShowServerBrowser() {
+			if (lobbyScreen)
+				lobbyScreen->visible = false;
+			if (mainMenu) {
+				mainMenu->visible = true;
+				mainMenu->LoadServerList();
+			}
+		}
+
+		void MainScreenUI::SetCountry(const std::string& code) {
+			cg_country = code;
+			cg_countryIsSet = 1;
+			Settings::GetInstance()->Flush();
+			RebuildFlagModel();
+			if (lobbyScreen)
+				lobbyScreen->UpdateCountryBadge();
+		}
+
+		void MainScreenUI::InitLobby3D() {
+			playerTorsoModel = renderer->RegisterModel("Models/Player/Torso.kv6");
+			playerHeadModel = renderer->RegisterModel("Models/Player/Head.kv6");
+			playerLegLeftModel = renderer->RegisterModel("Models/Player/Leg.kv6");
+			playerLegRightModel = renderer->RegisterModel("Models/Player/LegRight.kv6");
+			playerArmsModel = renderer->RegisterModel("Models/Player/Arms.kv6");
+
+			// Create Flagpole VoxelModel
+			try {
+				int poleHeight = 48;
+				Handle<VoxelModel> pole = Handle<VoxelModel>::New(2, 2, poleHeight);
+				pole->SetOrigin(MakeVector3(-1.0F, -1.0F, -static_cast<float>(poleHeight) * 0.5F));
+				uint32_t woodColor = 0x2E4A6E; // wood tone in voxel color format
+				for (int z = 0; z < poleHeight; ++z) {
+					pole->SetSolid(0, 0, z, woodColor);
+					pole->SetSolid(1, 0, z, woodColor);
+					pole->SetSolid(0, 1, z, woodColor);
+					pole->SetSolid(1, 1, z, woodColor);
+				}
+				// Gold finial top
+				uint32_t goldColor = 0x25C4E8;
+				for (int z = 0; z < 2; ++z) {
+					pole->SetSolid(0, 0, z, goldColor);
+					pole->SetSolid(1, 0, z, goldColor);
+					pole->SetSolid(0, 1, z, goldColor);
+					pole->SetSolid(1, 1, z, goldColor);
+				}
+
+				flagpoleModel = renderer->CreateModel(*pole);
+			} catch (...) {
+				flagpoleModel.Set(nullptr, false);
+			}
+
+			RebuildFlagModel();
+		}
+
+		void MainScreenUI::RebuildFlagModel() {
+			std::string countryCode = cg_country;
+			if (countryCode.empty())
+				countryCode = "US";
+
+			flagSliceModels.clear();
+			flagSliceModels.resize(16);
+			loadedFlagCountry = countryCode;
+
+			int tileX = 0, tileY = 0;
+			FlagIconRenderer::GetFlagCoordinates(countryCode, tileX, tileY);
+
+			try {
+				Handle<Bitmap> bmp = Bitmap::Load("Gfx/UI/Flags.png");
+				if (!bmp)
+					return;
+
+				int startPixelX = tileX * 16;
+				int startPixelY = tileY * 16;
+
+				for (int col = 0; col < 16; ++col) {
+					int solidCount = 0;
+					for (int row = 0; row < 16; ++row) {
+						uint32_t px = bmp->GetPixel(startPixelX + col, startPixelY + row);
+						if ((px >> 24) > 32)
+							solidCount++;
+					}
+
+					if (solidCount == 0)
+						continue;
+
+					Handle<VoxelModel> slice = Handle<VoxelModel>::New(1, 1, 16);
+					slice->SetOrigin(MakeVector3(0.0F, 0.0F, 0.0F));
+
+					for (int row = 0; row < 16; ++row) {
+						uint32_t px = bmp->GetPixel(startPixelX + col, startPixelY + row);
+						if ((px >> 24) > 32) {
+							uint8_t r = px & 0xFF;
+							uint8_t g = (px >> 8) & 0xFF;
+							uint8_t b = (px >> 16) & 0xFF;
+							uint32_t colVal = r | (g << 8) | (b << 16);
+							slice->SetSolid(0, 0, row, colVal);
+						}
+					}
+
+					flagSliceModels[col] = renderer->CreateModel(*slice);
+				}
+			} catch (...) {
+				// gracefully ignore if texture loading fails
+			}
+		}
+
+		void MainScreenUI::RenderLobbyScene(const client::SceneDefinition& sceneDef, float dt) {
+			if (!playerTorsoModel || !playerHeadModel)
+				return;
+
+			std::string currentCountry = cg_country;
+			if (currentCountry != loadedFlagCountry)
+				RebuildFlagModel();
+
+			Vector3 orig = sceneDef.viewOrigin;
+			Vector3 dir = sceneDef.viewAxis[2];  // camera forward
+			Vector3 side = sceneDef.viewAxis[0]; // camera right
+			Vector3 up = sceneDef.viewAxis[1];   // camera up
+
+			// Position character in view: slightly to the right, in front of camera
+			float dist = 5.8F;
+			float rightOffset = 1.05F;
+			float upOffset = -0.55F;
+
+			Vector3 playerPos = orig + dir * dist + side * rightOffset + up * upOffset;
+
+			// Dynamic light on character
+			{
+				client::DynamicLightParam light;
+				light.type = client::DynamicLightTypePoint;
+				light.origin = playerPos + up * 1.5F - dir * 1.5F - side * 0.5F;
+				light.radius = 8.0F;
+				light.color = MakeVector3(1.0F, 0.96F, 0.9F);
+				renderer->AddLight(light);
+			}
+
+			float breath = sinf(time * 2.2F);
+			float pitch = 0.05F + breath * 0.02F;
+			float armPitch = -0.55F + breath * 0.02F;
+
+			// Turn character slightly 3/4 towards camera
+			Matrix4 lower = Matrix4::Translate(playerPos)
+			    * Matrix4::Rotate(MakeVector3(0, 0, 1), -0.35F);
+
+			Matrix4 scaler = Matrix4::Scale(0.1F) * Matrix4::Scale(-1, -1, 1);
+
+			ModelRenderParam param;
+			param.customColor = MakeVector3(0.18F, 0.45F, 0.85F); // Blue team uniform
+
+			float const legsPosX = 0.25F;
+			float const legsPosY = 0.0F;
+			float const legsPosZ = 0.1F;
+			float const headPosZ = 0.0F;
+			float const torsoPosZ = 1.0F;
+			float const armsPosZ = 0.1F;
+
+			// Legs
+			if (playerLegLeftModel) {
+				param.matrix = lower * Matrix4::Translate(-legsPosX, legsPosY, -legsPosZ)
+				    * Matrix4::Rotate(MakeVector3(0, 1, 0), -0.05F) * scaler;
+				renderer->RenderModel(*playerLegLeftModel, param);
+			}
+			if (playerLegRightModel) {
+				param.matrix = lower * Matrix4::Translate(legsPosX, legsPosY, -legsPosZ)
+				    * Matrix4::Rotate(MakeVector3(0, 1, 0), 0.05F) * scaler;
+				renderer->RenderModel(*playerLegRightModel, param);
+			}
+
+			// Torso with idle breathing
+			Matrix4 torso = lower * Matrix4::Translate(0.0F, 0.0F, -torsoPosZ + breath * 0.015F)
+			    * Matrix4::Rotate(MakeVector3(1, 0, 0), breath * 0.015F);
+
+			param.matrix = torso * scaler;
+			renderer->RenderModel(*playerTorsoModel, param);
+
+			// Head
+			Matrix4 head = torso * Matrix4::Translate(0.0F, 0.0F, -headPosZ)
+			    * Matrix4::Rotate(MakeVector3(1, 0, 0), pitch)
+			    * Matrix4::Rotate(MakeVector3(0, 0, 1), 0.15F);
+			param.matrix = head * scaler;
+			renderer->RenderModel(*playerHeadModel, param);
+
+			// Arms
+			Matrix4 arms = torso * Matrix4::Translate(0.0F, 0.0F, armsPosZ)
+			    * Matrix4::Rotate(MakeVector3(1, 0, 0), armPitch);
+
+			if (playerArmsModel) {
+				param.matrix = arms * scaler;
+				renderer->RenderModel(*playerArmsModel, param);
+			}
+
+			// Flagpole in right hand
+			Matrix4 poleMatrix = arms * Matrix4::Translate(0.38F, -0.65F, -0.1F)
+			    * Matrix4::Rotate(MakeVector3(1, 0, 0), 0.30F)
+			    * Matrix4::Rotate(MakeVector3(0, 1, 0), -0.20F);
+
+			if (flagpoleModel) {
+				ModelRenderParam poleParam;
+				poleParam.matrix = poleMatrix * Matrix4::Scale(0.065F) * Matrix4::Scale(-1, -1, 1);
+				renderer->RenderModel(*flagpoleModel, poleParam);
+			}
+
+			// Flag banner waving
+			Matrix4 flagRoot = poleMatrix * Matrix4::Translate(0.02F, -0.05F, -1.05F)
+			    * Matrix4::Rotate(MakeVector3(0, 0, 1), 0.1F);
+
+			Matrix4 sliceScaler = Matrix4::Scale(0.038F) * Matrix4::Scale(-1, -1, 1);
+
+			for (int col = 0; col < 16 && col < static_cast<int>(flagSliceModels.size()); ++col) {
+				if (!flagSliceModels[col])
+					continue;
+
+				float wavePhase = time * 7.5F - static_cast<float>(col) * 0.45F;
+				float amp = (static_cast<float>(col) / 15.0F) * 0.10F;
+				float waveX = sinf(wavePhase) * amp;
+				float waveZ = cosf(wavePhase) * amp * 0.35F;
+
+				Vector3 sliceOffset(static_cast<float>(col) * 0.038F, waveX, waveZ);
+				Matrix4 sliceMat = flagRoot * Matrix4::Translate(sliceOffset) * sliceScaler;
+
+				ModelRenderParam sliceParam;
+				sliceParam.matrix = sliceMat;
+				renderer->RenderModel(*flagSliceModels[col], sliceParam);
+			}
 		}
 
 		void MainScreenUI::SetupRenderer() {
@@ -186,6 +456,9 @@ namespace spades {
 				sceneDef.globalBlur = std::max(sceneDef.globalBlur, 0.5F);
 
 			renderer->StartScene(sceneDef);
+			if (lobbyScreen && lobbyScreen->visible) {
+				RenderLobbyScene(sceneDef, dt);
+			}
 			renderer->EndScene();
 
 			// fade the map (draw)
