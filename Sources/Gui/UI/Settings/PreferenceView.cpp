@@ -50,6 +50,67 @@ namespace spades {
 				targetList->ScrollToRow(targetRow);
 		}
 
+		// -- PreferenceTabButton --
+
+		void PreferenceTabButton::Render() {
+			client::IRenderer& r = GetManager().GetRenderer();
+			Vector2 pos = GetScreenPosition();
+			Vector2 sz = size;
+
+			Vector4 color = MakeVector4(0.08F, 0.12F, 0.18F, 0.65F);
+			Vector4 iconCol = MakeVector4(0.70F, 0.75F, 0.85F, 0.85F);
+			Vector4 textCol = MakeVector4(0.90F, 0.90F, 0.95F, 1.0F);
+
+			if (IsEnabled()) {
+				if (toggled) {
+					color = MakeVector4(0.18F, 0.28F, 0.44F, 0.95F);
+					iconCol = MakeVector4(0.40F, 0.85F, 1.0F, 1.0F);
+					textCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
+				} else if (pressed && hover) {
+					color = MakeVector4(0.15F, 0.24F, 0.38F, 0.90F);
+					iconCol = MakeVector4(0.60F, 0.90F, 1.0F, 1.0F);
+				} else if (hover) {
+					color = MakeVector4(0.12F, 0.18F, 0.28F, 0.80F);
+					iconCol = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
+				}
+			} else {
+				color.w *= 0.5F;
+				iconCol.w *= 0.4F;
+				textCol.w *= 0.4F;
+			}
+
+			SetColorNP(r, color);
+			r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
+
+			// Left accent bar when toggled (active tab)
+			if (toggled) {
+				SetColorNP(r, MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
+				r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + 4, pos.y + sz.y - 1);
+			} else {
+				SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, color.w));
+				r.DrawOutlinedRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
+			}
+
+			// Draw Icon
+			if (iconType != GuiIconType::None) {
+				DrawGuiIcon(r, iconType, MakeVector2(pos.x + 16.0F, pos.y + sz.y * 0.5F), iconCol, 1.1F);
+			}
+
+			client::IFont* font = GetFont();
+			if (!font)
+				return;
+
+			float textStartX = (iconType != GuiIconType::None) ? 32.0F : 8.0F;
+			Vector2 txtPos = MakeVector2(pos.x + textStartX, pos.y + (sz.y - font->Measure(caption).y) * 0.5F);
+			font->DrawShadow(caption, txtPos, 1.0F, textCol, MakeVector4(0.0F, 0.0F, 0.0F, 0.3F));
+
+			if (!hotKeyText.empty()) {
+				Vector2 hkSize = font->Measure(hotKeyText);
+				Vector2 hkPos = MakeVector2(pos.x + sz.x - hkSize.x - 8.0F, pos.y + (sz.y - hkSize.y) * 0.5F);
+				font->DrawShadow(hotKeyText, hkPos, 1.0F, MakeVector4(textCol.x, textCol.y, textCol.z, 0.5F), MakeVector4(0.0F, 0.0F, 0.0F, 0.2F));
+			}
+		}
+
 		// -- PreferenceView --
 
 		PreferenceView::PreferenceView(UIElement* owner, const PreferenceViewOptions& options,
@@ -109,31 +170,36 @@ namespace spades {
 			AddTab(Handle<GameOptionsPanel>::New(manager, options, fontManager,
 			                                     gameNav.GetPointerOrNull())
 			           .GetPointerOrNull(),
-			       _Tr("Preferences", "Game Options"), gameNav.GetPointerOrNull());
+			       _Tr("Preferences", "Game Options"), gameNav.GetPointerOrNull(),
+			       GuiIconType::GameOptions);
 
 			Handle<InterfaceOptions> interfacePanel = Handle<InterfaceOptions>::New(
 			    manager, options, fontManager, hudNav.GetPointerOrNull());
 			interfacePanel->onEditHUDRequested = [this](UIElement& s) { OnEditHUDRequested(s); };
 			AddTab(interfacePanel.GetPointerOrNull(), _Tr("Preferences", "Interface"),
-			       hudNav.GetPointerOrNull());
+			       hudNav.GetPointerOrNull(), GuiIconType::Interface);
 
 			AddTab(Handle<RendererOptionsPanel>::New(manager, options, fontManager,
 			                                         rendererNav.GetPointerOrNull())
 			           .GetPointerOrNull(),
-			       _Tr("Preferences", "Graphics"), rendererNav.GetPointerOrNull());
+			       _Tr("Preferences", "Graphics"), rendererNav.GetPointerOrNull(),
+			       GuiIconType::Graphics);
 			AddTab(Handle<ControlOptionsPanel>::New(manager, options, fontManager,
 			                                        controlsNav.GetPointerOrNull())
 			           .GetPointerOrNull(),
-			       _Tr("Preferences", "Controls"), controlsNav.GetPointerOrNull());
+			       _Tr("Preferences", "Controls"), controlsNav.GetPointerOrNull(),
+			       GuiIconType::Controls);
 			AddTab(Handle<MiscOptionsPanel>::New(manager, options, fontManager,
 			                                     miscNav.GetPointerOrNull())
 			           .GetPointerOrNull(),
-			       _Tr("Preferences", "Misc"), miscNav.GetPointerOrNull());
+			       _Tr("Preferences", "Misc"), miscNav.GetPointerOrNull(),
+			       GuiIconType::Misc);
 
 			float detailedButtonTop = tabTop + static_cast<float>(tabs.size()) * tabRowHeight + 5.0F;
 
 			{
-				Handle<PreferenceTabButton> button = Handle<PreferenceTabButton>::New(manager);
+				Handle<PreferenceTabButton> button =
+				    Handle<PreferenceTabButton>::New(manager, GuiIconType::Detailed);
 				button->caption = _Tr("Preferences", "Detallado");
 				button->SetBounds(AABB2(tabLeft, detailedButtonTop, tabWidth, tabRowHeight));
 				button->activated = [this](UIElement&) {
@@ -147,7 +213,8 @@ namespace spades {
 			float backButtonTop = detailedButtonTop + tabRowHeight + 4.0F;
 
 			{
-				Handle<PreferenceTabButton> button = Handle<PreferenceTabButton>::New(manager);
+				Handle<PreferenceTabButton> button =
+				    Handle<PreferenceTabButton>::New(manager, GuiIconType::Back);
 				button->caption = _Tr("Preferences", "Back");
 				button->hotKeyText = _Tr("Client", "[Esc]");
 				button->SetBounds(AABB2(tabLeft, backButtonTop, tabWidth, tabRowHeight));
@@ -262,9 +329,9 @@ namespace spades {
 		}
 
 		void PreferenceView::AddTab(UIElement* view, const std::string& caption,
-		                            HeadingNavIndex* nav) {
+		                            HeadingNavIndex* nav, GuiIconType icon) {
 			UIManager* manager = &GetManager();
-			Handle<PreferenceTabButton> button = Handle<PreferenceTabButton>::New(manager);
+			Handle<PreferenceTabButton> button = Handle<PreferenceTabButton>::New(manager, icon);
 			button->toggle = true;
 			button->caption = caption;
 			button->SetBounds(AABB2(tabLeft, tabTop + static_cast<float>(tabs.size()) * tabRowHeight,

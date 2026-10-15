@@ -212,8 +212,9 @@ namespace spades {
 			Vector2 txtSize = font->Measure(text);
 			Vector2 txtPos = pos + (sz - txtSize) * alignment;
 
-			if (alignment.x == 0.0F)
-				txtPos.x += 2.0F;
+			if (alignment.x == 0.0F) {
+				txtPos.x += (iconType != GuiIconType::None) ? 18.0F : 2.0F;
+			}
 
 			if (pressed && hover)
 				SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.3F));
@@ -222,6 +223,13 @@ namespace spades {
 			else
 				SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.0F));
 			r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, sz.y));
+
+			if (iconType != GuiIconType::None) {
+				Vector4 iconCol = hover ? MakeVector4(0.40F, 0.85F, 1.0F, 1.0F)
+				                        : MakeVector4(0.70F, 0.80F, 0.90F, 0.85F);
+				float iconX = (alignment.x == 0.5F) ? (txtPos.x - 10.0F) : (pos.x + 8.0F);
+				DrawGuiIcon(r, iconType, MakeVector2(iconX, pos.y + sz.y * 0.5F), iconCol, 0.9F);
+			}
 
 			font->Draw(text, txtPos, 1.0F, MakeVector4(1.0F, 1.0F, 1.0F, 1.0F));
 		}

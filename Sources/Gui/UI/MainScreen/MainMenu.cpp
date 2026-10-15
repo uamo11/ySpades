@@ -63,6 +63,67 @@ namespace spades {
 			}
 		} // namespace
 
+		// -- MenuIconButton --
+
+		void MenuIconButton::Render() {
+			client::IRenderer& r = GetManager().GetRenderer();
+			Vector2 pos = GetScreenPosition();
+			Vector2 sz = size;
+
+			Vector4 color = MakeVector4(0.08F, 0.12F, 0.18F, 0.70F);
+			Vector4 iconCol = MakeVector4(0.85F, 0.90F, 0.95F, 0.90F);
+
+			if (IsEnabled()) {
+				if (toggled || (pressed && hover)) {
+					color = MakeVector4(0.18F, 0.28F, 0.44F, 0.95F);
+					iconCol = MakeVector4(0.40F, 0.85F, 1.0F, 1.0F);
+				} else if (hover) {
+					color = MakeVector4(0.12F, 0.18F, 0.28F, 0.85F);
+					iconCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
+				}
+			} else {
+				color.w *= 0.5F;
+				iconCol.w *= 0.4F;
+			}
+
+			SetColorNP(r, color);
+			r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
+
+			Vector4 borderCol = (hover || toggled) ? MakeVector4(0.35F, 0.65F, 0.95F, 0.85F)
+			                                       : MakeVector4(0.20F, 0.35F, 0.55F, 0.40F);
+			SetColorNP(r, borderCol);
+			r.DrawOutlinedRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
+
+			if (iconOnly) {
+				if (iconType != GuiIconType::None) {
+					DrawGuiIcon(r, iconType, pos + sz * 0.5F, iconCol, 1.1F);
+				}
+				return;
+			}
+
+			if (iconType != GuiIconType::None) {
+				DrawGuiIcon(r, iconType, MakeVector2(pos.x + 15.0F, pos.y + sz.y * 0.5F), iconCol, 1.1F);
+			}
+
+			client::IFont* font = GetFont();
+			if (!font)
+				return;
+
+			float textStartX = (iconType != GuiIconType::None) ? 28.0F : 8.0F;
+			Vector2 txtPos = MakeVector2(pos.x + textStartX, pos.y + (sz.y - font->Measure(caption).y) * 0.5F);
+			font->DrawShadow(caption, txtPos, 1.0F,
+			                 MakeVector4(1.0F, 1.0F, 1.0F, IsEnabled() ? 1.0F : 0.5F),
+			                 MakeVector4(0.0F, 0.0F, 0.0F, 0.3F));
+
+			if (!hotKeyText.empty()) {
+				Vector2 hkSize = font->Measure(hotKeyText);
+				Vector2 hkPos = MakeVector2(pos.x + sz.x - hkSize.x - 8.0F, pos.y + (sz.y - hkSize.y) * 0.5F);
+				font->DrawShadow(hotKeyText, hkPos, 1.0F,
+				                 MakeVector4(1.0F, 1.0F, 1.0F, IsEnabled() ? 0.6F : 0.3F),
+				                 MakeVector4(0.0F, 0.0F, 0.0F, 0.2F));
+			}
+		}
+
 		// -- RefreshButton --
 
 		void RefreshButton::Render() {
@@ -234,48 +295,82 @@ namespace spades {
 				modsPanel->visible = false;
 
 				// --- Server panel contents ---
+				// Toggle IP Button (an icon that deploys the IP view)
 				{
-					Handle<Button> button = Handle<Button>::New(manager);
-					button->caption = _Tr("MainScreen", "Connect");
-					button->hotKeyText = _Tr("Client", "[Enter]");
-					button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 160.0F, 200.0F, 160.0F, 30.0F));
-					button->activated = [this](UIElement&) { Connect(); };
-					serverPanel->AddChild(button.GetPointerOrNull());
+					Handle<MenuIconButton> button =
+					    Handle<MenuIconButton>::New(manager, GuiIconType::AddServer, true);
+					toggleIpButton = button.GetPointerOrNull();
+					toggleIpButton->toggle = true;
+					toggleIpButton->SetBounds(AABB2(contentsLeft, 200.0F, 34.0F, 30.0F));
+					toggleIpButton->activated = [this](UIElement&) {
+						showDirectConnect = !showDirectConnect;
+						if (toggleIpButton) {
+							toggleIpButton->iconType =
+							    showDirectConnect ? GuiIconType::Minus : GuiIconType::AddServer;
+						}
+						UpdateDirectConnectVisibility();
+						if (showDirectConnect && addressField) {
+							GetManager().SetActiveElement(addressField);
+						}
+					};
+					serverPanel->AddChild(toggleIpButton);
 				}
+
+				// Direct IP address field (hidden until deployed!)
 				{
 					Handle<Field> field = Handle<Field>::New(manager);
 					addressField = field.GetPointerOrNull();
 					addressField->SetBounds(
-					    AABB2(contentsLeft, 200.0F, contentsWidth - 280.0F, 30.0F));
-					addressField->placeholder = _Tr("MainScreen", "Quick Connect");
+					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 315.0F, 30.0F));
+					addressField->placeholder = _Tr("MainScreen", "IP del Servidor (ej. 127.0.0.1:32887)");
 					addressField->SetText(cg_lastQuickConnectHost);
 					addressField->changed = [this](UIElement& s) { OnAddressChanged(s); };
+					addressField->visible = false;
 					serverPanel->AddChild(addressField);
 				}
+
+				// Connect button (hidden until deployed!)
+				{
+					Handle<MenuIconButton> button =
+					    Handle<MenuIconButton>::New(manager, GuiIconType::Connect, false);
+					connectButton = button.GetPointerOrNull();
+					connectButton->caption = _Tr("MainScreen", "Conectar");
+					connectButton->hotKeyText = _Tr("Client", "[Enter]");
+					connectButton->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 270.0F, 200.0F, 115.0F, 30.0F));
+					connectButton->activated = [this](UIElement&) { Connect(); };
+					connectButton->visible = false;
+					serverPanel->AddChild(connectButton);
+				}
+
+				// Refresh button
 				{
 					Handle<RefreshButton> button = Handle<RefreshButton>::New(manager);
 					button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 278.0F, 200.0F, 30.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 145.0F, 200.0F, 30.0F, 30.0F));
 					button->activated = [this](UIElement&) { LoadServerList(); };
 					serverPanel->AddChild(button.GetPointerOrNull());
 				}
+
+				// 0.75 protocol button
 				{
 					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
 					protocol3Button = button.GetPointerOrNull();
 					protocol3Button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 245.0F, 200.0F, 40.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 110.0F, 200.0F, 50.0F, 30.0F));
 					protocol3Button->caption = _Tr("MainScreen", "0.75");
 					protocol3Button->activated = [this](UIElement&) { SetProtocolVersion(3); };
 					protocol3Button->toggle = true;
 					protocol3Button->toggled = static_cast<int>(cg_protocolVersion) == 3;
 					serverPanel->AddChild(protocol3Button);
 				}
+
+				// 0.76 protocol button
 				{
 					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
 					protocol4Button = button.GetPointerOrNull();
 					protocol4Button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 205.0F, 200.0F, 40.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 56.0F, 200.0F, 56.0F, 30.0F));
 					protocol4Button->caption = _Tr("MainScreen", "0.76");
 					protocol4Button->activated = [this](UIElement&) { SetProtocolVersion(4); };
 					protocol4Button->toggle = true;
@@ -286,7 +381,7 @@ namespace spades {
 					Handle<ListView> list = Handle<ListView>::New(manager);
 					serverList = list.GetPointerOrNull();
 					serverList->SetBounds(
-					    AABB2(contentsLeft, listPos, contentsWidth, footerPos - listPos - 14.0F));
+					    AABB2(contentsLeft, listPos, contentsWidth, footerPos - listPos - 44.0F));
 					serverPanel->AddChild(serverList);
 				}
 				{
@@ -297,7 +392,7 @@ namespace spades {
 					serverPanel->AddChild(header.GetPointerOrNull());
 				}
 				{
-					Handle<ServerListHeader> header = Handle<ServerListHeader>::New(manager);
+					Handle<ServerListHeader> header = Handle<ServerListHeader>::New(manager, GuiIconType::Players);
 					header->SetBounds(AABB2(contentsLeft + slotsOffsetX, headerPos,
 					                        mapNameOffsetX - slotsOffsetX, headerHeight));
 					header->text = _Tr("MainScreen", "Slots");
@@ -332,7 +427,8 @@ namespace spades {
 					serverPanel->AddChild(header.GetPointerOrNull());
 				}
 				{
-					Handle<ServerListHeader> header = Handle<ServerListHeader>::New(manager);
+					Handle<ServerListHeader> header =
+					    Handle<ServerListHeader>::New(manager, GuiIconType::Ping);
 					header->SetBounds(AABB2(contentsLeft + pingOffsetX, headerPos,
 					                        contentsWidth - pingOffsetX, headerHeight));
 					header->text = _Tr("MainScreen", "Ping");
@@ -357,11 +453,12 @@ namespace spades {
 					serverPanel->AddChild(errorView);
 				}
 
-				// Server filter footer elements
+				// Server filter footer elements (placed directly above bottom bar)
+				float filterY = footerPos - 36.0F;
 				{
 					Handle<Label> label = Handle<Label>::New(manager);
 					label->text = _Tr("MainScreen", "Filter");
-					label->SetBounds(AABB2(contentsLeft, footerPos, 50.0F, 30.0F));
+					label->SetBounds(AABB2(contentsLeft, filterY, 48.0F, 26.0F));
 					label->alignment = MakeVector2(0.0F, 0.5F);
 					serverPanel->AddChild(label.GetPointerOrNull());
 				}
@@ -369,7 +466,7 @@ namespace spades {
 					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
 					filterProtocol3Button = button.GetPointerOrNull();
 					filterProtocol3Button->SetBounds(
-					    AABB2(contentsLeft + 50.0F, footerPos, 40.0F, 30.0F));
+					    AABB2(contentsLeft + 52.0F, filterY, 40.0F, 26.0F));
 					filterProtocol3Button->caption = _Tr("MainScreen", "0.75");
 					filterProtocol3Button->activated = [this](UIElement&) {
 						filterProtocol4Button->toggled = false;
@@ -382,7 +479,7 @@ namespace spades {
 					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
 					filterProtocol4Button = button.GetPointerOrNull();
 					filterProtocol4Button->SetBounds(
-					    AABB2(contentsLeft + 90.0F, footerPos, 40.0F, 30.0F));
+					    AABB2(contentsLeft + 94.0F, filterY, 40.0F, 26.0F));
 					filterProtocol4Button->caption = _Tr("MainScreen", "0.76");
 					filterProtocol4Button->activated = [this](UIElement&) {
 						filterProtocol3Button->toggled = false;
@@ -396,7 +493,7 @@ namespace spades {
 					Handle<ProtocolButton> button = Handle<ProtocolButton>::New(manager);
 					filterFullButton = button.GetPointerOrNull();
 					filterFullButton->SetBounds(
-					    AABB2(contentsLeft + 135.0F, footerPos, 70.0F, 30.0F));
+					    AABB2(contentsLeft + 138.0F, filterY, 74.0F, 26.0F));
 					filterFullButton->caption = _Tr("MainScreen", "Not Full");
 					filterFullButton->activated = [this](UIElement&) { UpdateServerList(); };
 					filterFullButton->toggle = true;
@@ -406,7 +503,7 @@ namespace spades {
 				{
 					Handle<Field> field = Handle<Field>::New(manager);
 					filterField = field.GetPointerOrNull();
-					filterField->SetBounds(AABB2(contentsLeft + 210.0F, footerPos, 100.0F, 30.0F));
+					filterField->SetBounds(AABB2(contentsLeft + 216.0F, filterY, 140.0F, 26.0F));
 					filterField->placeholder = _Tr("MainScreen", "Filter");
 					filterField->changed = [this](UIElement&) { UpdateServerList(); };
 					serverPanel->AddChild(filterField);
@@ -627,7 +724,8 @@ namespace spades {
 
 			// Footer buttons (always visible, outside panels)
 			{
-				Handle<Button> button = Handle<Button>::New(manager);
+				Handle<MenuIconButton> button =
+				    Handle<MenuIconButton>::New(manager, GuiIconType::Lobby);
 				button->caption = _Tr("MainScreen", "Lobby");
 				button->hotKeyText = _Tr("Client", "[Esc]");
 				button->SetBounds(AABB2(contentsLeft, footerPos, 110.0F, 30.0F));
@@ -635,7 +733,8 @@ namespace spades {
 				AddChild(button.GetPointerOrNull());
 			}
 			{
-				Handle<Button> button = Handle<Button>::New(manager);
+				Handle<MenuIconButton> button =
+				    Handle<MenuIconButton>::New(manager, GuiIconType::Quit);
 				button->caption = _Tr("MainScreen", "Quit");
 				button->SetBounds(
 				    AABB2(contentsLeft + contentsWidth - 100.0F, footerPos, 100.0F, 30.0F));
@@ -643,18 +742,20 @@ namespace spades {
 				AddChild(button.GetPointerOrNull());
 			}
 			{
-				Handle<Button> button = Handle<Button>::New(manager);
+				Handle<MenuIconButton> button =
+				    Handle<MenuIconButton>::New(manager, GuiIconType::Credits);
 				button->caption = _Tr("MainScreen", "Credits");
 				button->SetBounds(
-				    AABB2(contentsLeft + contentsWidth - 202.0F, footerPos, 100.0F, 30.0F));
+				    AABB2(contentsLeft + contentsWidth - 205.0F, footerPos, 100.0F, 30.0F));
 				button->activated = [this](UIElement& s) { OnCreditsPressed(s); };
 				AddChild(button.GetPointerOrNull());
 			}
 			{
-				Handle<Button> button = Handle<Button>::New(manager);
+				Handle<MenuIconButton> button =
+				    Handle<MenuIconButton>::New(manager, GuiIconType::Settings);
 				button->caption = _Tr("MainScreen", "Setup");
 				button->SetBounds(
-				    AABB2(contentsLeft + contentsWidth - 314.0F, footerPos, 110.0F, 30.0F));
+				    AABB2(contentsLeft + contentsWidth - 320.0F, footerPos, 110.0F, 30.0F));
 				button->activated = [this](UIElement& s) { OnSetupPressed(s); };
 				AddChild(button.GetPointerOrNull());
 			}
@@ -1163,6 +1264,15 @@ namespace spades {
 				Handle<AlertScreen> al = Handle<AlertScreen>::New(this, msg, 200.0F, true);
 				al->Run();
 			}
+		}
+
+		void MainScreenMainMenu::UpdateDirectConnectVisibility() {
+			if (addressField)
+				addressField->visible = showDirectConnect;
+			if (connectButton)
+				connectButton->visible = showDirectConnect;
+			if (toggleIpButton)
+				toggleIpButton->toggled = showDirectConnect;
 		}
 
 		void MainScreenMainMenu::ReturnToLobby() {

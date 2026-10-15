@@ -25,6 +25,7 @@
 
 #include <Gui/UI/Settings/PreferenceLayouter.h>
 #include <Gui/UI/Widgets/Button.h>
+#include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/TextViewer.h>
 
 namespace spades {
@@ -46,12 +47,17 @@ namespace spades {
 			Handle<PreferenceViewPersistedState> persistedState; // null = don't remember
 		};
 
-		/** A left-aligned tab button in the preferences sidebar. */
+		/** A left-aligned tab button in the preferences sidebar with an icon. */
 		class PreferenceTabButton : public ui::Button {
 		public:
-			PreferenceTabButton(ui::UIManager* manager) : ui::Button(manager) {
+			GuiIconType iconType = GuiIconType::None;
+
+			PreferenceTabButton(ui::UIManager* manager, GuiIconType icon = GuiIconType::None)
+			    : ui::Button(manager), iconType(icon) {
 				alignment = MakeVector2(0.0F, 0.5F);
 			}
+
+			void Render() override;
 		};
 
 		/** A sidebar sub-heading button that scrolls its tab's list to a row. */
@@ -100,7 +106,8 @@ namespace spades {
 			void RestorePersistedState();
 			void SavePersistedState();
 			void AddTab(ui::UIElement* view, const std::string& caption,
-			            HeadingNavIndex* nav = nullptr);
+			            HeadingNavIndex* nav = nullptr,
+			            GuiIconType icon = GuiIconType::None);
 			void OnTabButtonActivated(ui::UIElement& sender);
 			void UpdateTabs();
 			void SetHelpText(const std::string& text);

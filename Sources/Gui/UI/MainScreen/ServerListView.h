@@ -26,6 +26,7 @@
 
 #include <Gui/UI/MainScreen/CountryFlags.h>
 #include <Gui/UI/Widgets/ButtonBase.h>
+#include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/ListView.h>
 
 namespace spades {
@@ -79,8 +80,10 @@ namespace spades {
 		public:
 			std::string text;
 			Vector2 alignment = MakeVector2(0.0F, 0.5F);
+			GuiIconType iconType = GuiIconType::None;
 
-			ServerListHeader(ui::UIManager* manager) : ui::ButtonBase(manager) {}
+			ServerListHeader(ui::UIManager* manager, GuiIconType icon = GuiIconType::None)
+			    : ui::ButtonBase(manager), iconType(icon) {}
 			void Render() override;
 		};
 

@@ -28,6 +28,7 @@
 #include <Gui/UI/MainScreen/ServerListView.h>
 #include <Gui/UI/Widgets/Button.h>
 #include <Gui/UI/Widgets/Field.h>
+#include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/Label.h>
 #include <Gui/UI/Widgets/TabStrip.h>
 
@@ -36,6 +37,20 @@ namespace spades {
 		class MainScreenUI;
 		class MainScreenHelper;
 		class ModsScreenHelper;
+
+		/** A push button with a procedural GUI icon and optional caption. */
+		class MenuIconButton : public ui::Button {
+		public:
+			GuiIconType iconType = GuiIconType::None;
+			bool iconOnly = false;
+
+			MenuIconButton(ui::UIManager* manager, GuiIconType type = GuiIconType::None, bool iconOnly = false)
+			    : ui::Button(manager), iconType(type), iconOnly(iconOnly) {
+				if (!iconOnly)
+					alignment = MakeVector2(0.0F, 0.5F);
+			}
+			void Render() override;
+		};
 
 		/** A `SimpleButton` decorated with the refresh arrow icon. */
 		class RefreshButton : public ui::SimpleButton {
@@ -90,7 +105,12 @@ namespace spades {
 			MainScreenUI* ui;         // weak
 			MainScreenHelper* helper; // weak
 
-			ui::Field* addressField;
+			ui::Field* addressField = nullptr;
+			MenuIconButton* connectButton = nullptr;
+			MenuIconButton* toggleIpButton = nullptr;
+			bool showDirectConnect = false;
+
+			void UpdateDirectConnectVisibility();
 
 			ui::Button* protocol3Button;
 			ui::Button* protocol4Button;
