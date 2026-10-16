@@ -28,6 +28,7 @@
 #include <Client/IImage.h>
 #include <Client/IRenderer.h>
 #include <Core/Settings.h>
+#include <Core/ShellApi.h>
 #include <Core/Strings.h>
 #include <Gui/MainScreenHelper.h>
 #include <Gui/ModsScreenHelper.h>
@@ -520,22 +521,35 @@ namespace spades {
 					titleLabel->text = _Tr("MainScreen", "MUNDOS Y MAPAS - Un Jugador & Sandbox");
 					titleLabel->textColor = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
 					titleLabel->alignment = MakeVector2(0.0F, 0.5F);
-					titleLabel->SetBounds(AABB2(contentsLeft, 200.0F, contentsWidth - 260.0F, 30.0F));
+					titleLabel->SetBounds(AABB2(contentsLeft, 200.0F, contentsWidth - 380.0F, 30.0F));
 					worldsPanel->AddChild(titleLabel.GetPointerOrNull());
 
-					Handle<Button> createWorldBtn = Handle<Button>::New(manager);
-					createWorldBtn->caption = _Tr("MainScreen", "Crear Mundo");
-					createWorldBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 250.0F, 200.0F, 120.0F, 30.0F));
-					createWorldBtn->activated = [this](UIElement&) {
-						helper->ConnectServer("127.0.0.1:32887", 3, "");
+					Handle<Button> openFolderBtn = Handle<Button>::New(manager);
+					openFolderBtn->caption = _Tr("MainScreen", "Abrir Carpeta");
+					openFolderBtn->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 370.0F, 200.0F, 115.0F, 30.0F));
+					openFolderBtn->activated = [](UIElement&) {
+#ifdef _WIN32
+						ShowDirectoryInShell("Resources\\Maps");
+#else
+						ShowDirectoryInShell("Resources/Maps");
+#endif
 					};
-					worldsPanel->AddChild(createWorldBtn.GetPointerOrNull());
+					worldsPanel->AddChild(openFolderBtn.GetPointerOrNull());
+
+					Handle<Button> playLAbeachBtn = Handle<Button>::New(manager);
+					playLAbeachBtn->caption = _Tr("MainScreen", "Jugar LAbeach");
+					playLAbeachBtn->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 245.0F, 200.0F, 120.0F, 30.0F));
+					playLAbeachBtn->activated = [this](UIElement&) {
+						helper->ConnectServer("127.0.0.1:32887", 3, "LAbeach");
+					};
+					worldsPanel->AddChild(playLAbeachBtn.GetPointerOrNull());
 
 					Handle<Button> playWorldBtn = Handle<Button>::New(manager);
 					playWorldBtn->caption = _Tr("MainScreen", "Jugar Sandbox");
 					playWorldBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 125.0F, 200.0F, 125.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 115.0F, 200.0F, 115.0F, 30.0F));
 					playWorldBtn->activated = [this](UIElement&) {
 						helper->ConnectServer("127.0.0.1:32887", 3, "");
 					};
@@ -549,12 +563,25 @@ namespace spades {
 					infoBg->textColor = MakeVector4(0.85F, 0.90F, 0.95F, 0.90F);
 					infoBg->text = _Tr(
 					    "MainScreen",
-					    " [MUNDOS LOCALES Y SANDBOX]\n\n"
-					    " - Modo Un Jugador / Práctica: Carga el mundo local predeterminado (127.0.0.1)\n"
-					    " - Generador Voxel ySpades: Compatible con mapas de bloques (.vxl, .kv6)\n"
-					    " - Compatibilidad Minecraft Legacy: Importación de estructuras y chunks en desarrollo\n\n"
-					    " Selecciona 'Crear Mundo' o 'Jugar Sandbox' para iniciar tu servidor local.");
-					infoBg->alignment = MakeVector2(0.05F, 0.15F);
+					    " =========================================================================\n"
+					    "  MUNDOS GUARDADOS Y MAPAS VOXEL (.VXL)\n"
+					    " =========================================================================\n\n"
+					    "  [1] LAbeach.vxl  -  Playa Los Angeles (aos.party #1303)\n"
+					    "      - Estado: GUARDADO Y DISPONIBLE\n"
+					    "      - Tamano: 2.1 MB (512x512x64 Voxel Island / Beach)\n"
+					    "      - Descripcion: Paisaje costero con palmeras, arena dorada, mar y muelles.\n"
+					    "      - Accion: Haz clic en 'Jugar LAbeach' para cargar esta arena costera.\n\n"
+					    "  [2] Title.vxl  -  Mundo Introductorio ySpades\n"
+					    "      - Estado: INTEGRADO EN EL JUEGO\n"
+					    "      - Tamano: 1.5 MB (512x512x64 Escenario Principal)\n\n"
+					    "  [3] Sandbox Clasico  -  Servidor Local (127.0.0.1:32887)\n"
+					    "      - Modo practica, construccion libre y pruebas de bloques.\n\n"
+					    " -------------------------------------------------------------------------\n"
+					    "  COMO AGREGAR TUS PROPIOS MAPAS:\n"
+					    "  1. Haz clic en 'Abrir Carpeta' para abrir la carpeta de mapas.\n"
+					    "  2. Arrastra cualquier archivo de mapa .vxl (ej. descargado de aos.party).\n"
+					    "  3. Ya estara listo para cargar en tu servidor local o partida!");
+					infoBg->alignment = MakeVector2(0.04F, 0.08F);
 					infoBg->SetBounds(AABB2(contentsLeft, cardY, contentsWidth, cardH));
 					worldsPanel->AddChild(infoBg.GetPointerOrNull());
 				}
@@ -1331,7 +1358,7 @@ namespace spades {
 
 		void MainScreenMainMenu::OnSkinsPressed(UIElement&) {
 			Handle<SkinSelectScreen> screen =
-			    Handle<SkinSelectScreen>::New(this, &ui->GetFontManager());
+			    Handle<SkinSelectScreen>::New(this, &ui->GetFontManager(), ui);
 			screen->Run();
 		}
 

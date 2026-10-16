@@ -65,6 +65,13 @@ namespace spades {
 			std::vector<Handle<client::IModel>> flagSliceModels;
 			std::string loadedFlagCountry;
 
+			// 3D Lobby cosmetics (Capes & Accessories)
+			Handle<client::IModel> playerCapeModel;
+			Handle<client::IModel> playerAccessoryModel;
+			std::string loadedCapeType;
+			std::string loadedAccessoryType;
+			void RebuildCosmeticModels();
+
 			float time = -1.0F;
 
 			client::SceneDefinition SetupCamera(client::SceneDefinition sceneDef, Vector3 eye,
@@ -95,6 +102,7 @@ namespace spades {
 			void ShowServerBrowser();
 			void SetCountry(const std::string& code);
 			void RebuildFlagModel();
+			void UpdateLobbyCosmetics() { RebuildCosmeticModels(); }
 			void OpenDetailedSettings();
 
 			void SetupRenderer();

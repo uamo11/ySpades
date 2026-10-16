@@ -278,7 +278,7 @@ namespace spades {
 
 		void LobbyScreen::OnSkinsPressed(UIElement&) {
 			Handle<SkinSelectScreen> screen =
-			    Handle<SkinSelectScreen>::New(this, &ui->GetFontManager());
+			    Handle<SkinSelectScreen>::New(this, &ui->GetFontManager(), ui);
 			screen->Run();
 		}
 

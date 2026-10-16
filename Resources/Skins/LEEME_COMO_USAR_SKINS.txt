@@ -1,0 +1,22 @@
+==============================================
+ GUIA DE SKINS Y CAPAS - ySpades
+==============================================
+
+Para usar tu propia skin o capa en ySpades:
+
+1. SKIN PERSONALIZADA:
+   - Guarda tu skin en formato PNG con el nombre:
+     skin.png
+   - Es compatible con skins estándar de Minecraft (64x64 o 64x32).
+   - En el menú de Skins del juego, selecciona 'Skin Personalizada'.
+
+2. CAPA PERSONALIZADA:
+   - Guarda tu diseño de capa en formato PNG con el nombre:
+     cape.png
+   - En el menú de Skins del juego, selecciona 'Capa Personalizada'.
+
+Archivos de ejemplo incluidos:
+- skin_ejemplo.png (Skin Steve táctico militar)
+- cape_ejemplo.png (Capa con logo ySpades)
+
+¡Solo arrastra tus archivos PNG aquí y selecciónalos en el menú!

@@ -19,6 +19,7 @@
  */
 
 #include "SkinSelectScreen.h"
+#include "MainScreenUI.h"
 
 #include <algorithm>
 #include <string>
@@ -46,346 +47,398 @@ DEFINE_SPADES_SETTING(cg_playerAccessory, "none");
 namespace spades {
 	namespace gui {
 		using ui::Button;
-		using ui::RadioButton;
 		using ui::SetColorNP;
 		using ui::UIElement;
 		using ui::UIManager;
 
-		/**
-		 * Sleek interactive cosmetic card option.
-		 * Replaces basic desktop radio buttons with a gaming UI card featuring
-		 * category accent colors, two-line descriptive layout, selection indicators,
-		 * and gold elite status badges.
-		 */
-		class SkinOptionCard : public RadioButton {
+		/** Lightweight native tab button matching the Preferences sidebar style */
+		class CosmeticTabButton : public ui::Button {
 		public:
-			std::string subtitle;
-			std::string tagText;
-			bool isElite = false;
-			Vector4 accentColor = MakeVector4(0.25F, 0.75F, 1.0F, 1.0F);
+			bool isSelected = false;
 
-			SkinOptionCard(UIManager* manager) : RadioButton(manager) {}
+			CosmeticTabButton(UIManager* manager) : ui::Button(manager) {
+				alignment = MakeVector2(0.0F, 0.5F);
+			}
 
 			void Render() override {
 				client::IRenderer& r = GetManager().GetRenderer();
 				Vector2 pos = GetScreenPosition();
 				Vector2 sz = size;
 
-				// 1. Background card fill
-				if (!enable) {
-					SetColorNP(r, MakeVector4(0.06F, 0.07F, 0.10F, 0.40F));
-				} else if (toggled) {
-					if (isElite)
-						SetColorNP(r, MakeVector4(0.24F, 0.18F, 0.05F, 0.95F));
-					else
-						SetColorNP(r, MakeVector4(0.08F, 0.18F, 0.30F, 0.95F));
-				} else if (hover) {
-					if (isElite)
-						SetColorNP(r, MakeVector4(0.18F, 0.14F, 0.07F, 0.90F));
-					else
-						SetColorNP(r, MakeVector4(0.12F, 0.16F, 0.22F, 0.90F));
-				} else {
-					if (isElite)
-						SetColorNP(r, MakeVector4(0.10F, 0.09F, 0.05F, 0.85F));
-					else
-						SetColorNP(r, MakeVector4(0.07F, 0.09F, 0.13F, 0.85F));
-				}
-				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, sz.y));
+				Vector4 bg = MakeVector4(0.08F, 0.12F, 0.18F, 0.65F);
+				Vector4 textCol = MakeVector4(0.85F, 0.90F, 0.95F, 0.90F);
 
-				// 2. Left accent bar
-				if (toggled) {
-					SetColorNP(r, isElite ? MakeVector4(1.0F, 0.84F, 0.20F, 1.0F) : accentColor);
-					r.DrawImage(nullptr, AABB2(pos.x, pos.y, 3.5F, sz.y));
+				if (isSelected) {
+					bg = MakeVector4(0.16F, 0.26F, 0.42F, 0.95F);
+					textCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
 				} else if (hover) {
-					SetColorNP(r, isElite ? MakeVector4(0.85F, 0.70F, 0.20F, 0.60F) : MakeVector4(accentColor.x, accentColor.y, accentColor.z, 0.50F));
-					r.DrawImage(nullptr, AABB2(pos.x, pos.y, 2.0F, sz.y));
+					bg = MakeVector4(0.12F, 0.18F, 0.28F, 0.85F);
+					textCol = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
 				}
 
-				// 3. Border outline
-				if (!enable) {
-					SetColorNP(r, MakeVector4(0.2F, 0.2F, 0.2F, 0.2F));
-				} else if (toggled) {
-					SetColorNP(r, isElite ? MakeVector4(1.0F, 0.85F, 0.25F, 0.95F) : accentColor);
-				} else if (hover) {
-					SetColorNP(r, isElite ? MakeVector4(0.75F, 0.60F, 0.20F, 0.65F) : MakeVector4(0.35F, 0.55F, 0.80F, 0.65F));
-				} else {
-					SetColorNP(r, isElite ? MakeVector4(0.40F, 0.35F, 0.15F, 0.35F) : MakeVector4(0.20F, 0.25F, 0.35F, 0.35F));
-				}
-				r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+				SetColorNP(r, bg);
+				r.DrawFilledRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
 
-				// 4. Selection indicator
-				float indY = pos.y + (sz.y - 12.0F) * 0.5F;
-				float indX = pos.x + 9.0F;
-				if (toggled) {
-					SetColorNP(r, isElite ? MakeVector4(1.0F, 0.84F, 0.20F, 0.95F) : accentColor);
-					r.DrawOutlinedRect(indX, indY, indX + 12.0F, indY + 12.0F);
-					SetColorNP(r, isElite ? MakeVector4(1.0F, 0.95F, 0.50F, 1.0F) : MakeVector4(1.0F, 1.0F, 1.0F, 1.0F));
-					r.DrawImage(nullptr, AABB2(indX + 3.0F, indY + 3.0F, 6.0F, 6.0F));
+				if (isSelected) {
+					SetColorNP(r, MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
+					r.DrawFilledRect(pos.x, pos.y, pos.x + 3.5F, pos.y + sz.y);
 				} else {
-					SetColorNP(r, hover ? MakeVector4(0.50F, 0.60F, 0.75F, 0.60F) : MakeVector4(0.30F, 0.35F, 0.45F, 0.50F));
-					r.DrawOutlinedRect(indX, indY, indX + 12.0F, indY + 12.0F);
+					SetColorNP(r, MakeVector4(0.15F, 0.20F, 0.30F, 0.50F));
+					r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
 				}
 
 				client::IFont* font = GetFont();
-				if (!font)
-					return;
-
-				// 5. Elite badge tag (if present)
-				if (!tagText.empty()) {
-					float tagW = 46.0F;
-					float tagH = 13.0F;
-					float tagX = pos.x + sz.x - tagW - 6.0F;
-					float tagY = pos.y + 5.0F;
-
-					SetColorNP(r, isElite ? MakeVector4(0.85F, 0.65F, 0.10F, 0.35F) : MakeVector4(0.20F, 0.50F, 0.90F, 0.30F));
-					r.DrawImage(nullptr, AABB2(tagX, tagY, tagW, tagH));
-					SetColorNP(r, isElite ? MakeVector4(1.0F, 0.85F, 0.25F, 0.85F) : MakeVector4(0.40F, 0.75F, 1.0F, 0.80F));
-					r.DrawOutlinedRect(tagX, tagY, tagX + tagW, tagY + tagH);
-
-					font->DrawShadow(tagText, MakeVector2(tagX + 3.5F, tagY + 1.5F), 0.55F,
-					                 isElite ? MakeVector4(1.0F, 0.92F, 0.40F, 1.0F) : MakeVector4(0.60F, 0.85F, 1.0F, 1.0F),
-					                 MakeVector4(0.0F, 0.0F, 0.0F, 0.6F));
-				}
-
-				// 6. Title (Line 1)
-				Vector4 titleColor;
-				if (!enable)
-					titleColor = MakeVector4(0.5F, 0.5F, 0.5F, 0.4F);
-				else if (isElite)
-					titleColor = toggled ? MakeVector4(1.0F, 0.92F, 0.40F, 1.0F) : MakeVector4(0.95F, 0.82F, 0.35F, 0.9F);
-				else if (toggled)
-					titleColor = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
-				else if (hover)
-					titleColor = MakeVector4(0.92F, 0.96F, 1.0F, 0.95F);
-				else
-					titleColor = MakeVector4(0.82F, 0.86F, 0.92F, 0.85F);
-
-				font->DrawShadow(caption, MakeVector2(pos.x + 27.0F, pos.y + 6.0F), 0.80F,
-				                 titleColor, MakeVector4(0.0F, 0.0F, 0.0F, 0.5F));
-
-				// 7. Subtitle (Line 2)
-				if (!subtitle.empty()) {
-					Vector4 subColor;
-					if (!enable)
-						subColor = MakeVector4(0.4F, 0.4F, 0.4F, 0.3F);
-					else if (isElite)
-						subColor = MakeVector4(0.80F, 0.70F, 0.40F, 0.75F);
-					else if (toggled)
-						subColor = MakeVector4(0.50F, 0.75F, 0.95F, 0.85F);
-					else
-						subColor = MakeVector4(0.45F, 0.50F, 0.60F, 0.70F);
-
-					font->DrawShadow(subtitle, MakeVector2(pos.x + 27.0F, pos.y + 24.0F), 0.65F,
-					                 subColor, MakeVector4(0.0F, 0.0F, 0.0F, 0.4F));
+				if (font) {
+					Vector4 shadow = MakeVector4(0.0F, 0.0F, 0.0F, 0.6F);
+					font->DrawShadow(caption, MakeVector2(pos.x + 14.0F, pos.y + (sz.y - font->Measure(caption).y) * 0.5F),
+					                1.0F, textCol, shadow);
 				}
 			}
 		};
 
-		SkinSelectScreen::SkinSelectScreen(UIElement* owner, client::FontManager* fontManager)
-		    : UIElement(&owner->GetManager()), owner(owner), fontManager(fontManager) {
+		/** High performance cosmetic option row with radio checkmark and subtitle */
+		class CosmeticOptionRow : public ui::Button {
+		public:
+			std::string valueId;
+			std::string itemTitle;
+			std::string subtitle;
+			bool selected = false;
+			Vector4 colorTag = MakeVector4(0.0F, 0.0F, 0.0F, 0.0F);
+
+			CosmeticOptionRow(UIManager* manager, const std::string& valId,
+			                  const std::string& title, const std::string& sub,
+			                  Vector4 tag = MakeVector4(0.0F, 0.0F, 0.0F, 0.0F))
+			    : ui::Button(manager), valueId(valId), itemTitle(title), subtitle(sub), colorTag(tag) {}
+
+			void Render() override {
+				client::IRenderer& r = GetManager().GetRenderer();
+				Vector2 pos = GetScreenPosition();
+				Vector2 sz = size;
+
+				Vector4 bg = MakeVector4(0.06F, 0.08F, 0.12F, 0.65F);
+				Vector4 border = MakeVector4(0.18F, 0.24F, 0.35F, 0.50F);
+
+				if (selected) {
+					bg = MakeVector4(0.11F, 0.22F, 0.36F, 0.90F);
+					border = MakeVector4(0.40F, 0.80F, 1.0F, 0.95F);
+				} else if (hover) {
+					bg = MakeVector4(0.09F, 0.14F, 0.22F, 0.80F);
+					border = MakeVector4(0.30F, 0.50F, 0.75F, 0.80F);
+				}
+
+				SetColorNP(r, bg);
+				r.DrawFilledRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+				SetColorNP(r, border);
+				r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+				// Selection radio/check box
+				float chkX = pos.x + 14.0F;
+				float chkY = pos.y + (sz.y - 14.0F) * 0.5F;
+				SetColorNP(r, MakeVector4(0.20F, 0.30F, 0.45F, 0.80F));
+				r.DrawOutlinedRect(chkX, chkY, chkX + 14.0F, chkY + 14.0F);
+
+				if (selected) {
+					SetColorNP(r, MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
+					r.DrawFilledRect(chkX + 3.0F, chkY + 3.0F, chkX + 11.0F, chkY + 11.0F);
+				}
+
+				// Color tag badge (preview swatch)
+				if (colorTag.w > 0.0F) {
+					float tagW = 12.0F;
+					float tagH = 12.0F;
+					float tagX = chkX + 22.0F;
+					float tagY = pos.y + 11.0F;
+					SetColorNP(r, colorTag);
+					r.DrawFilledRect(tagX, tagY, tagX + tagW, tagY + tagH);
+					SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.60F));
+					r.DrawOutlinedRect(tagX, tagY, tagX + tagW, tagY + tagH);
+				}
+
+				client::IFont* font = GetFont();
+				if (font) {
+					float textOffsetX = (colorTag.w > 0.0F) ? 56.0F : 38.0F;
+					Vector4 titleCol = selected ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F)
+					                            : MakeVector4(0.90F, 0.92F, 0.96F, 0.90F);
+					Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.70F);
+
+					// Title
+					font->DrawShadow(itemTitle, MakeVector2(pos.x + textOffsetX, pos.y + 7.0F), 0.95F,
+					                titleCol, shadowCol);
+
+					// Subtitle
+					if (!subtitle.empty()) {
+						Vector4 subCol = selected ? MakeVector4(0.65F, 0.85F, 1.0F, 0.85F)
+						                          : MakeVector4(0.55F, 0.65F, 0.75F, 0.75F);
+						font->DrawShadow(subtitle, MakeVector2(pos.x + textOffsetX, pos.y + 24.0F), 0.75F,
+						                subCol, shadowCol);
+					}
+				}
+			}
+		};
+
+		SkinSelectScreen::SkinSelectScreen(ui::UIElement* owner, client::FontManager* fontManager,
+		                                   MainScreenUI* mainScreenUI)
+		    : UIElement(&owner->GetManager()), owner(owner), fontManager(fontManager),
+		      mainScreenUI(mainScreenUI) {
 			UIManager* manager = &GetManager();
 			SetFont(&fontManager->GetGuiFont());
+			SetBounds(manager->GetRootElement().GetBounds());
 
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
-			SetBounds(AABB2(0.0F, 0.0F, sw, sh));
 
-			float dlgW = std::min(600.0F, sw - 32.0F);
-			float dlgH = std::min(398.0F, sh - 40.0F);
+			float dlgW = std::min(740.0F, sw - 32.0F);
+			float dlgH = std::min(460.0F, sh - 32.0F);
 			float dlgX = (sw - dlgW) * 0.5F;
 			float dlgY = (sh - dlgH) * 0.5F;
 
-			std::string currentSkin = static_cast<std::string>(cg_playerSkin);
-			std::string currentCape = static_cast<std::string>(cg_playerCape);
-			std::string currentAcc = static_cast<std::string>(cg_playerAccessory);
+			float sidebarW = 150.0F;
+			float tabH = 34.0F;
+			float tabGap = 3.0F;
 
-			float cardH = 44.0F;
-			float optW = (dlgW - 64.0F) / 3.0F;
-			float gap = 8.0F;
-
-			// --- Section 1: Modelo de Skin ---
-			float rowY = dlgY + 90.0F;
+			// --- 1. Sidebar Tabs ---
 			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioSkinDefault = card.GetPointerOrNull();
-				card->groupName = "skinType";
-				card->caption = _Tr("MainScreen", "Voxel Original");
-				card->subtitle = _Tr("MainScreen", "Clasico OpenSpades");
-				card->accentColor = MakeVector4(0.25F, 0.75F, 1.0F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F, rowY, optW, cardH));
-				if (currentSkin == "default" || currentSkin.empty())
-					card->Check();
-				AddChild(radioSkinDefault);
+				Handle<CosmeticTabButton> btn = Handle<CosmeticTabButton>::New(manager);
+				tabSkins = btn.GetPointerOrNull();
+				tabSkins->caption = _Tr("MainScreen", "Trajes / Skins");
+				tabSkins->SetBounds(AABB2(dlgX + 8.0F, dlgY + 45.0F, sidebarW, tabH));
+				tabSkins->isSelected = true;
+				tabSkins->activated = [this](UIElement&) { SwitchCategory(0); };
+				AddChild(tabSkins);
 			}
 			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioSkinMinecraft = card.GetPointerOrNull();
-				card->groupName = "skinType";
-				card->caption = _Tr("MainScreen", "Minecraft (PNG)");
-				card->subtitle = _Tr("MainScreen", "Skin estandar 64x64");
-				card->accentColor = MakeVector4(0.25F, 0.75F, 1.0F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap), rowY, optW, cardH));
-				if (currentSkin == "minecraft")
-					card->Check();
-				AddChild(radioSkinMinecraft);
+				Handle<CosmeticTabButton> btn = Handle<CosmeticTabButton>::New(manager);
+				tabCapes = btn.GetPointerOrNull();
+				tabCapes->caption = _Tr("MainScreen", "Capas 3D");
+				tabCapes->SetBounds(AABB2(dlgX + 8.0F, dlgY + 45.0F + (tabH + tabGap), sidebarW, tabH));
+				tabCapes->activated = [this](UIElement&) { SwitchCategory(1); };
+				AddChild(tabCapes);
 			}
 			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioSkinCustom = card.GetPointerOrNull();
-				card->groupName = "skinType";
-				card->caption = _Tr("MainScreen", "Custom 3D (KV6)");
-				card->subtitle = _Tr("MainScreen", "Modelo voxeles 3D");
-				card->accentColor = MakeVector4(0.25F, 0.75F, 1.0F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap) * 2.0F, rowY, optW, cardH));
-				if (currentSkin == "custom")
-					card->Check();
-				AddChild(radioSkinCustom);
+				Handle<CosmeticTabButton> btn = Handle<CosmeticTabButton>::New(manager);
+				tabAccessories = btn.GetPointerOrNull();
+				tabAccessories->caption = _Tr("MainScreen", "Accesorios");
+				tabAccessories->SetBounds(AABB2(dlgX + 8.0F, dlgY + 45.0F + 2.0F * (tabH + tabGap), sidebarW, tabH));
+				tabAccessories->activated = [this](UIElement&) { SwitchCategory(2); };
+				AddChild(tabAccessories);
 			}
 
-			// --- Section 2: Capa Física (Cloak) ---
-			rowY = dlgY + 168.0F;
-			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioCapeNone = card.GetPointerOrNull();
-				card->groupName = "capeType";
-				card->caption = _Tr("MainScreen", "Sin Capa");
-				card->subtitle = _Tr("MainScreen", "Espalda libre");
-				card->accentColor = MakeVector4(0.70F, 0.45F, 1.0F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F, rowY, optW, cardH));
-				if (currentCape == "none" || currentCape.empty())
-					card->Check();
-				AddChild(radioCapeNone);
-			}
-			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioCapeClassic = card.GetPointerOrNull();
-				card->groupName = "capeType";
-				card->caption = _Tr("MainScreen", "Capa Tactica");
-				card->subtitle = _Tr("MainScreen", "Fisica de tela");
-				card->accentColor = MakeVector4(0.70F, 0.45F, 1.0F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap), rowY, optW, cardH));
-				if (currentCape == "classic")
-					card->Check();
-				AddChild(radioCapeClassic);
-			}
-			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioCapeGold = card.GetPointerOrNull();
-				card->groupName = "capeType";
-				card->caption = _Tr("MainScreen", "Capa Dorada");
-				card->subtitle = _Tr("MainScreen", "Cosmetico dorado");
-				card->tagText = "* ELITE";
-				card->isElite = true;
-				card->accentColor = MakeVector4(1.0F, 0.82F, 0.22F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap) * 2.0F, rowY, optW, cardH));
-				if (currentCape == "gold")
-					card->Check();
-				AddChild(radioCapeGold);
-			}
+			// --- 2. Sidebar Action Buttons (Bottom) ---
+			float btnH = 30.0F;
+			float btnGap = 4.0F;
+			float bottomY = dlgY + dlgH - 12.0F;
 
-			// --- Section 3: Accesorio de Cabeza ---
-			rowY = dlgY + 246.0F;
-			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioAccNone = card.GetPointerOrNull();
-				card->groupName = "accType";
-				card->caption = _Tr("MainScreen", "Sin Accesorio");
-				card->subtitle = _Tr("MainScreen", "Cabeza estandar");
-				card->accentColor = MakeVector4(0.35F, 0.80F, 0.70F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F, rowY, optW, cardH));
-				if (currentAcc == "none" || currentAcc.empty())
-					card->Check();
-				AddChild(radioAccNone);
-			}
-			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioAccHelmet = card.GetPointerOrNull();
-				card->groupName = "accType";
-				card->caption = _Tr("MainScreen", "Casco Tactico");
-				card->subtitle = _Tr("MainScreen", "Proteccion visual");
-				card->accentColor = MakeVector4(0.35F, 0.80F, 0.70F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap), rowY, optW, cardH));
-				if (currentAcc == "helmet")
-					card->Check();
-				AddChild(radioAccHelmet);
-			}
-			{
-				Handle<SkinOptionCard> card = Handle<SkinOptionCard>::New(manager);
-				radioAccCrown = card.GetPointerOrNull();
-				card->groupName = "accType";
-				card->caption = _Tr("MainScreen", "Corona Real");
-				card->subtitle = _Tr("MainScreen", "Corona de oro");
-				card->tagText = "* ELITE";
-				card->isElite = true;
-				card->accentColor = MakeVector4(1.0F, 0.82F, 0.22F, 1.0F);
-				card->SetBounds(AABB2(dlgX + 24.0F + (optW + gap) * 2.0F, rowY, optW, cardH));
-				if (currentAcc == "crown")
-					card->Check();
-				AddChild(radioAccCrown);
-			}
-
-			// --- Bottom Buttons ---
-			float btnBottomY = dlgY + dlgH - 46.0F;
 			{
 				Handle<Button> btn = Handle<Button>::New(manager);
-				openFolderButton = btn.GetPointerOrNull();
-				openFolderButton->caption = _Tr("MainScreen", "Abrir Carpeta Skins");
-				openFolderButton->SetBounds(AABB2(dlgX + 24.0F, btnBottomY, 175.0F, 32.0F));
-				openFolderButton->activated = [this](UIElement& s) { OnOpenFolder(s); };
-				AddChild(openFolderButton);
+				cancelButton = btn.GetPointerOrNull();
+				cancelButton->caption = _Tr("MainScreen", "Atrás [Esc]");
+				cancelButton->SetBounds(AABB2(dlgX + 8.0F, bottomY - btnH, sidebarW, btnH));
+				cancelButton->activated = [this](UIElement& s) { OnCancel(s); };
+				AddChild(cancelButton);
 			}
 			{
 				Handle<Button> btn = Handle<Button>::New(manager);
 				saveButton = btn.GetPointerOrNull();
 				saveButton->caption = _Tr("MainScreen", "Guardar");
-				saveButton->SetBounds(AABB2(dlgX + dlgW - 200.0F, btnBottomY, 96.0F, 32.0F));
+				saveButton->SetBounds(AABB2(dlgX + 8.0F, bottomY - 2.0F * btnH - btnGap, sidebarW, btnH));
 				saveButton->activated = [this](UIElement& s) { OnSave(s); };
 				AddChild(saveButton);
 			}
 			{
 				Handle<Button> btn = Handle<Button>::New(manager);
-				cancelButton = btn.GetPointerOrNull();
-				cancelButton->caption = _Tr("MainScreen", "Cancelar");
-				cancelButton->SetBounds(AABB2(dlgX + dlgW - 96.0F, btnBottomY, 72.0F, 32.0F));
-				cancelButton->activated = [this](UIElement& s) { OnCancel(s); };
-				AddChild(cancelButton);
+				openFolderButton = btn.GetPointerOrNull();
+				openFolderButton->caption = _Tr("MainScreen", "Abrir Carpeta");
+				openFolderButton->SetBounds(AABB2(dlgX + 8.0F, bottomY - 3.0F * btnH - 2.0F * btnGap, sidebarW, btnH));
+				openFolderButton->activated = [this](UIElement& s) { OnOpenFolder(s); };
+				AddChild(openFolderButton);
 			}
+
+			// --- 3. Content Panels ---
+			float contentX = dlgX + sidebarW + 18.0F;
+			float contentY = dlgY + 45.0F;
+			float contentW = dlgW - sidebarW - 28.0F;
+			float contentH = dlgH - 58.0F;
+
+			float rowH = 44.0F;
+			float rowGap = 5.0F;
+
+			// A. Skins Panel
+			{
+				Handle<UIElement> pnl = Handle<UIElement>::New(manager);
+				skinsPanel = pnl.GetPointerOrNull();
+				skinsPanel->SetBounds(AABB2(contentX, contentY, contentW, contentH));
+				AddChild(skinsPanel);
+
+				std::string curSkin = cg_playerSkin;
+
+				struct SkinDef {
+					std::string id;
+					std::string title;
+					std::string desc;
+					Vector4 swatch;
+				};
+				std::vector<SkinDef> defs = {
+					{"default", "Azul Clásico", "Uniforme oficial predeterminado de ySpades", MakeVector4(0.18F, 0.45F, 0.85F, 1.0F)},
+					{"green", "Verde Militar", "Camuflaje táctico para combate en jungla", MakeVector4(0.20F, 0.60F, 0.25F, 1.0F)},
+					{"red", "Rojo Asalto", "Uniforme ofensivo escarlata de vanguardia", MakeVector4(0.85F, 0.22F, 0.22F, 1.0F)},
+					{"gold", "Traje Dorado VIP", "Traje ceremonial dorado para campeones", MakeVector4(1.0F, 0.84F, 0.15F, 1.0F)},
+					{"black", "Sombra Táctica", "Uniforme negro para operaciones nocturnas", MakeVector4(0.12F, 0.12F, 0.15F, 1.0F)},
+					{"white", "Nieve Ártica", "Camuflaje blanco de operaciones invernales", MakeVector4(0.95F, 0.95F, 0.95F, 1.0F)},
+					{"custom", "Skin PNG Personalizada", "Carga skin.png (formato 64x64 Minecraft) desde la carpeta Skins", MakeVector4(0.40F, 0.85F, 1.0F, 1.0F)}
+				};
+
+				float y = 0.0F;
+				for (const auto& d : defs) {
+					Handle<CosmeticOptionRow> row =
+					    Handle<CosmeticOptionRow>::New(manager, d.id, d.title, d.desc, d.swatch);
+					row->SetBounds(AABB2(0.0F, y, contentW, rowH));
+					if (curSkin == d.id)
+						row->selected = true;
+					else if (curSkin.empty() && d.id == "default")
+						row->selected = true;
+
+					row->activated = [this, r = row.GetPointerOrNull()](UIElement&) {
+						for (auto* sr : skinRows)
+							sr->selected = (sr == r);
+						cg_playerSkin = r->valueId;
+						if (mainScreenUI)
+							mainScreenUI->UpdateLobbyCosmetics();
+					};
+					skinRows.push_back(row.GetPointerOrNull());
+					skinsPanel->AddChild(row.GetPointerOrNull());
+					y += rowH + rowGap;
+				}
+			}
+
+			// B. Capes Panel
+			{
+				Handle<UIElement> pnl = Handle<UIElement>::New(manager);
+				capesPanel = pnl.GetPointerOrNull();
+				capesPanel->SetBounds(AABB2(contentX, contentY, contentW, contentH));
+				capesPanel->visible = false;
+				AddChild(capesPanel);
+
+				std::string curCape = cg_playerCape;
+
+				struct CapeDef {
+					std::string id;
+					std::string title;
+					std::string desc;
+					Vector4 swatch;
+				};
+				std::vector<CapeDef> defs = {
+					{"none", "Sin Capa", "Espalda despejada sin capa", MakeVector4(0.3F, 0.3F, 0.3F, 0.5F)},
+					{"gold", "Capa Dorada VIP", "Capa dorada brillante con física 3D en la espalda", MakeVector4(1.0F, 0.84F, 0.15F, 1.0F)},
+					{"classic", "Capa Clásica Azul", "Capa azul con insignia de combate", MakeVector4(0.18F, 0.45F, 0.85F, 1.0F)},
+					{"black", "Capa Negra Sombra", "Capa oscura de tela pesada", MakeVector4(0.12F, 0.12F, 0.15F, 1.0F)},
+					{"red", "Capa Roja Asalto", "Capa carmesí de honor militar", MakeVector4(0.85F, 0.22F, 0.22F, 1.0F)}
+				};
+
+				float y = 0.0F;
+				for (const auto& d : defs) {
+					Handle<CosmeticOptionRow> row =
+					    Handle<CosmeticOptionRow>::New(manager, d.id, d.title, d.desc, d.swatch);
+					row->SetBounds(AABB2(0.0F, y, contentW, rowH));
+					if (curCape == d.id)
+						row->selected = true;
+					else if (curCape.empty() && d.id == "none")
+						row->selected = true;
+
+					row->activated = [this, r = row.GetPointerOrNull()](UIElement&) {
+						for (auto* cr : capeRows)
+							cr->selected = (cr == r);
+						cg_playerCape = r->valueId;
+						if (mainScreenUI)
+							mainScreenUI->UpdateLobbyCosmetics();
+					};
+					capeRows.push_back(row.GetPointerOrNull());
+					capesPanel->AddChild(row.GetPointerOrNull());
+					y += rowH + rowGap;
+				}
+			}
+
+			// C. Accessories Panel
+			{
+				Handle<UIElement> pnl = Handle<UIElement>::New(manager);
+				accPanel = pnl.GetPointerOrNull();
+				accPanel->SetBounds(AABB2(contentX, contentY, contentW, contentH));
+				accPanel->visible = false;
+				AddChild(accPanel);
+
+				std::string curAcc = cg_playerAccessory;
+
+				struct AccDef {
+					std::string id;
+					std::string title;
+					std::string desc;
+					Vector4 swatch;
+				};
+				std::vector<AccDef> defs = {
+					{"none", "Ninguno", "Sin accesorios en la cabeza", MakeVector4(0.3F, 0.3F, 0.3F, 0.5F)},
+					{"crown", "Corona Real de Oro", "Corona de oro 3D con joyas de rubí para campeones", MakeVector4(1.0F, 0.84F, 0.15F, 1.0F)},
+					{"helmet", "Casco Militar Táctico", "Casco de combate balístico de camuflaje", MakeVector4(0.25F, 0.45F, 0.30F, 1.0F)}
+				};
+
+				float y = 0.0F;
+				for (const auto& d : defs) {
+					Handle<CosmeticOptionRow> row =
+					    Handle<CosmeticOptionRow>::New(manager, d.id, d.title, d.desc, d.swatch);
+					row->SetBounds(AABB2(0.0F, y, contentW, rowH));
+					if (curAcc == d.id)
+						row->selected = true;
+					else if (curAcc.empty() && d.id == "none")
+						row->selected = true;
+
+					row->activated = [this, r = row.GetPointerOrNull()](UIElement&) {
+						for (auto* ar : accRows)
+							ar->selected = (ar == r);
+						cg_playerAccessory = r->valueId;
+						if (mainScreenUI)
+							mainScreenUI->UpdateLobbyCosmetics();
+					};
+					accRows.push_back(row.GetPointerOrNull());
+					accPanel->AddChild(row.GetPointerOrNull());
+					y += rowH + rowGap;
+				}
+			}
+		}
+
+		void SkinSelectScreen::SwitchCategory(int index) {
+			activeCategory = index;
+			if (tabSkins)
+				static_cast<CosmeticTabButton*>(tabSkins)->isSelected = (index == 0);
+			if (tabCapes)
+				static_cast<CosmeticTabButton*>(tabCapes)->isSelected = (index == 1);
+			if (tabAccessories)
+				static_cast<CosmeticTabButton*>(tabAccessories)->isSelected = (index == 2);
+
+			if (skinsPanel)
+				skinsPanel->visible = (index == 0);
+			if (capesPanel)
+				capesPanel->visible = (index == 1);
+			if (accPanel)
+				accPanel->visible = (index == 2);
 		}
 
 		void SkinSelectScreen::OnOpenFolder(UIElement&) {
 #ifdef _WIN32
+			_mkdir("Resources/Skins");
 			_mkdir("Skins");
-			_mkdir("Skins/Capes");
 #else
+			mkdir("Resources/Skins", 0755);
 			mkdir("Skins", 0755);
-			mkdir("Skins/Capes", 0755);
 #endif
-			ShowDirectoryInShell("Skins");
+			if (FileManager::FileExists("Resources/Skins"))
+				ShowDirectoryInShell("Resources/Skins");
+			else
+				ShowDirectoryInShell("Skins");
 		}
 
 		void SkinSelectScreen::OnSave(UIElement&) {
-			if (radioSkinMinecraft && radioSkinMinecraft->toggled)
-				cg_playerSkin = "minecraft";
-			else if (radioSkinCustom && radioSkinCustom->toggled)
-				cg_playerSkin = "custom";
-			else
-				cg_playerSkin = "default";
-
-			if (radioCapeClassic && radioCapeClassic->toggled)
-				cg_playerCape = "classic";
-			else if (radioCapeGold && radioCapeGold->toggled)
-				cg_playerCape = "gold";
-			else
-				cg_playerCape = "none";
-
-			if (radioAccHelmet && radioAccHelmet->toggled)
-				cg_playerAccessory = "helmet";
-			else if (radioAccCrown && radioAccCrown->toggled)
-				cg_playerAccessory = "crown";
-			else
-				cg_playerAccessory = "none";
-
 			Settings::GetInstance()->Flush();
+			if (mainScreenUI)
+				mainScreenUI->UpdateLobbyCosmetics();
 			Close();
 		}
 
@@ -420,80 +473,40 @@ namespace spades {
 			float sw = GetManager().screenWidth;
 			float sh = GetManager().screenHeight;
 
-			// Dimmed background
-			SetColorNP(r, MakeVector4(0.02F, 0.03F, 0.05F, 0.82F));
+			// Dimmed background overlay
+			SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, 0.75F));
 			r.DrawImage(nullptr, AABB2(0.0F, 0.0F, sw, sh));
 
-			float dlgW = std::min(600.0F, sw - 32.0F);
-			float dlgH = std::min(398.0F, sh - 40.0F);
+			float dlgW = std::min(740.0F, sw - 32.0F);
+			float dlgH = std::min(460.0F, sh - 32.0F);
 			float dlgX = (sw - dlgW) * 0.5F;
 			float dlgY = (sh - dlgH) * 0.5F;
 
 			// Main dialog body
-			SetColorNP(r, MakeVector4(0.05F, 0.07F, 0.11F, 0.96F));
-			r.DrawImage(nullptr, AABB2(dlgX, dlgY, dlgW, dlgH));
+			SetColorNP(r, MakeVector4(0.04F, 0.06F, 0.09F, 0.96F));
+			r.DrawFilledRect(dlgX, dlgY, dlgX + dlgW, dlgY + dlgH);
 
 			// Dialog border
-			SetColorNP(r, MakeVector4(0.20F, 0.25F, 0.38F, 0.80F));
+			SetColorNP(r, MakeVector4(0.20F, 0.35F, 0.55F, 0.70F));
 			r.DrawOutlinedRect(dlgX, dlgY, dlgX + dlgW, dlgY + dlgH);
 
 			// Glowing top header strip
-			SetColorNP(r, MakeVector4(0.70F, 0.40F, 1.0F, 0.95F));
-			r.DrawImage(nullptr, AABB2(dlgX, dlgY, dlgW, 3.0F));
+			SetColorNP(r, MakeVector4(0.25F, 0.65F, 1.0F, 0.90F));
+			r.DrawFilledRect(dlgX, dlgY, dlgX + dlgW, dlgY + 3.0F);
+
+			// Vertical separator between sidebar and content
+			float sidebarW = 150.0F;
+			SetColorNP(r, MakeVector4(0.15F, 0.22F, 0.32F, 0.60F));
+			r.DrawFilledRect(dlgX + sidebarW + 10.0F, dlgY + 40.0F, dlgX + sidebarW + 11.5F, dlgY + dlgH - 12.0F);
 
 			if (fontManager) {
 				client::IFont& font = fontManager->GetGuiFont();
 				Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.7F);
 
 				// Dialog title
-				font.DrawShadow(_Tr("MainScreen", "GESTOR DE SKINS Y COSMETICOS"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 16.0F), 1.05F,
-				                MakeVector4(0.96F, 0.95F, 1.0F, 1.0F), shadowCol);
-
-				font.DrawShadow(_Tr("MainScreen", "Personalizacion 3D, Capas y Accesorios para la Version Y / 1.0"),
-				                MakeVector2(dlgX + 24.0F, dlgY + 38.0F), 0.72F,
-				                MakeVector4(0.55F, 0.65F, 0.82F, 0.90F), shadowCol);
-
-				// Top horizontal divider
-				SetColorNP(r, MakeVector4(0.25F, 0.30F, 0.45F, 0.40F));
-				r.DrawImage(nullptr, AABB2(dlgX + 24.0F, dlgY + 56.0F, dlgW - 48.0F, 1.0F));
-
-				// Section 1 Header with Cyan badge
-				SetColorNP(r, MakeVector4(0.25F, 0.75F, 1.0F, 0.90F));
-				r.DrawImage(nullptr, AABB2(dlgX + 24.0F, dlgY + 70.0F, 4.0F, 12.0F));
-				font.DrawShadow(_Tr("MainScreen", "1. MODELO DE SKIN (3D Voxel / MC Extrusion)"),
-				                MakeVector2(dlgX + 34.0F, dlgY + 68.0F), 0.78F,
-				                MakeVector4(0.85F, 0.92F, 1.0F, 1.0F), shadowCol);
-
-				// Section 2 Header with Purple badge
-				SetColorNP(r, MakeVector4(0.70F, 0.45F, 1.0F, 0.90F));
-				r.DrawImage(nullptr, AABB2(dlgX + 24.0F, dlgY + 148.0F, 4.0F, 12.0F));
-				font.DrawShadow(_Tr("MainScreen", "2. CAPA FISICA (Trailing Cloak Physics)"),
-				                MakeVector2(dlgX + 34.0F, dlgY + 146.0F), 0.78F,
-				                MakeVector4(0.85F, 0.92F, 1.0F, 1.0F), shadowCol);
-
-				// Section 3 Header with Amber badge
-				SetColorNP(r, MakeVector4(0.35F, 0.80F, 0.70F, 0.90F));
-				r.DrawImage(nullptr, AABB2(dlgX + 24.0F, dlgY + 226.0F, 4.0F, 12.0F));
-				font.DrawShadow(_Tr("MainScreen", "3. ACCESORIO DE CABEZA (3D Props)"),
-				                MakeVector2(dlgX + 34.0F, dlgY + 224.0F), 0.78F,
-				                MakeVector4(0.85F, 0.92F, 1.0F, 1.0F), shadowCol);
-
-				// Info footer box
-				float infoY = dlgY + 302.0F;
-				float infoW = dlgW - 48.0F;
-				SetColorNP(r, MakeVector4(0.08F, 0.11F, 0.17F, 0.75F));
-				r.DrawImage(nullptr, AABB2(dlgX + 24.0F, infoY, infoW, 30.0F));
-				SetColorNP(r, MakeVector4(0.20F, 0.28F, 0.42F, 0.50F));
-				r.DrawOutlinedRect(dlgX + 24.0F, infoY, dlgX + 24.0F + infoW, infoY + 30.0F);
-
-				// Info icon indicator
-				SetColorNP(r, MakeVector4(0.30F, 0.70F, 1.0F, 0.90F));
-				r.DrawImage(nullptr, AABB2(dlgX + 32.0F, infoY + 10.0F, 4.0F, 10.0F));
-
-				font.DrawShadow(_Tr("MainScreen", "Skins en 'Skins/skin.png' | Capas en 'Skins/Capes/' | Totalmente sincronizado en Version Y"),
-				                MakeVector2(dlgX + 44.0F, infoY + 8.0F), 0.65F,
-				                MakeVector4(0.60F, 0.70F, 0.85F, 0.85F), shadowCol);
+				font.DrawShadow(_Tr("MainScreen", "PERSONALIZACION DE SKINS Y COSMETICOS"),
+				                MakeVector2(dlgX + 16.0F, dlgY + 14.0F), 1.05F,
+				                MakeVector4(0.95F, 0.98F, 1.0F, 1.0F), shadowCol);
 			}
 
 			UIElement::Render();

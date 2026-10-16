@@ -25,6 +25,7 @@
 
 #include <Gui/UI/Framework/UIElement.h>
 #include <Gui/UI/Widgets/Button.h>
+#include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/Label.h>
 
 namespace spades {
@@ -32,40 +33,48 @@ namespace spades {
 		class FontManager;
 	}
 	namespace gui {
+		class MainScreenUI;
+		class CosmeticOptionRow;
+
 		/**
-		 * Modal dialog for selecting player skins, cloaks/capes, and 3D cosmetics.
-		 * Supports standard models, Minecraft PNG imports, and custom voxel models.
+		 * High-performance cosmetic & skin selection view.
+		 * Styled identically to the Preferences / Ajustes menu with a sleek sidebar,
+		 * categories (Skins, Capes, Accessories), and real-time lobby 3D updates.
 		 */
 		class SkinSelectScreen : public ui::UIElement {
 			ui::UIElement* owner;             // weak
 			client::FontManager* fontManager; // weak
+			MainScreenUI* mainScreenUI;       // weak
 
-			// Skin selection radios
-			ui::RadioButton* radioSkinDefault = nullptr;
-			ui::RadioButton* radioSkinMinecraft = nullptr;
-			ui::RadioButton* radioSkinCustom = nullptr;
+			int activeCategory = 0; // 0 = Skins, 1 = Capes, 2 = Accessories
 
-			// Cape selection radios
-			ui::RadioButton* radioCapeNone = nullptr;
-			ui::RadioButton* radioCapeClassic = nullptr;
-			ui::RadioButton* radioCapeGold = nullptr;
+			// Sidebar tabs
+			ui::Button* tabSkins = nullptr;
+			ui::Button* tabCapes = nullptr;
+			ui::Button* tabAccessories = nullptr;
 
-			// Accessory selection radios
-			ui::RadioButton* radioAccNone = nullptr;
-			ui::RadioButton* radioAccHelmet = nullptr;
-			ui::RadioButton* radioAccCrown = nullptr;
-
-			// Action buttons
+			// Sidebar actions
 			ui::Button* openFolderButton = nullptr;
 			ui::Button* saveButton = nullptr;
 			ui::Button* cancelButton = nullptr;
 
+			// Category containers
+			ui::UIElement* skinsPanel = nullptr;
+			ui::UIElement* capesPanel = nullptr;
+			ui::UIElement* accPanel = nullptr;
+
+			std::vector<CosmeticOptionRow*> skinRows;
+			std::vector<CosmeticOptionRow*> capeRows;
+			std::vector<CosmeticOptionRow*> accRows;
+
+			void SwitchCategory(int index);
 			void OnOpenFolder(ui::UIElement& sender);
 			void OnSave(ui::UIElement& sender);
 			void OnCancel(ui::UIElement& sender);
 
 		public:
-			SkinSelectScreen(ui::UIElement* owner, client::FontManager* fontManager);
+			SkinSelectScreen(ui::UIElement* owner, client::FontManager* fontManager,
+			                 MainScreenUI* mainScreenUI = nullptr);
 
 			void Run();
 			void Close();

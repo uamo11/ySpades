@@ -49,6 +49,9 @@ SPADES_SETTING(cg_playerName); // defined in Gui/MainScreen.cpp
 DEFINE_SPADES_SETTING(cg_playerNameIsSet, "0");
 DEFINE_SPADES_SETTING(cg_country, "US");
 DEFINE_SPADES_SETTING(cg_countryIsSet, "0");
+SPADES_SETTING(cg_playerSkin);
+SPADES_SETTING(cg_playerCape);
+SPADES_SETTING(cg_playerAccessory);
 
 namespace spades {
 	namespace gui {
@@ -209,6 +212,7 @@ namespace spades {
 			}
 
 			RebuildFlagModel();
+			RebuildCosmeticModels();
 		}
 
 		void MainScreenUI::RebuildFlagModel() {
@@ -279,6 +283,102 @@ namespace spades {
 			}
 		}
 
+		void MainScreenUI::RebuildCosmeticModels() {
+			// 1. Cape Model
+			std::string capeType = cg_playerCape;
+			loadedCapeType = capeType;
+			if (capeType == "none" || capeType.empty()) {
+				playerCapeModel.Set(nullptr, false);
+			} else {
+				try {
+					int const cw = 10;
+					int const ch = 16;
+					int const cd = 1;
+					Handle<VoxelModel> vm = Handle<VoxelModel>::New(cw, cd, ch);
+					vm->SetOrigin(MakeVector3(-static_cast<float>(cw) * 0.5F, 0.0F, 0.0F));
+
+					// Little-endian RGB: 0xBBGGRR
+					uint32_t mainCol = 0x884422; // classic blue
+					uint32_t borderCol = 0xEEEEEE;
+					if (capeType == "gold") {
+						mainCol = 0x1AE0FF;   // bright gold
+						borderCol = 0x05B0E0; // deep golden trim
+					} else if (capeType == "black") {
+						mainCol = 0x1A1A1A;
+						borderCol = 0x3A3A3A;
+					} else if (capeType == "red") {
+						mainCol = 0x2222DD;
+						borderCol = 0xEEEEEE;
+					}
+
+					for (int x = 0; x < cw; ++x) {
+						for (int z = 0; z < ch; ++z) {
+							bool isBorder = (x == 0 || x == cw - 1 || z == 0 || z == ch - 1);
+							uint32_t c = isBorder ? borderCol : mainCol;
+							vm->SetSolid(x, 0, z, c);
+						}
+					}
+					playerCapeModel = renderer->CreateModel(*vm);
+				} catch (...) {
+					playerCapeModel.Set(nullptr, false);
+				}
+			}
+
+			// 2. Accessory Model (Crown or Tactical Helmet)
+			std::string accType = cg_playerAccessory;
+			loadedAccessoryType = accType;
+			if (accType == "none" || accType.empty()) {
+				playerAccessoryModel.Set(nullptr, false);
+			} else if (accType == "crown") {
+				try {
+					int const sz = 10;
+					int const h = 4;
+					Handle<VoxelModel> vm = Handle<VoxelModel>::New(sz, sz, h);
+					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, 0.0F));
+					uint32_t gold = 0x1AE0FF; // gold
+					uint32_t ruby = 0x2222EE; // red gem
+					for (int x = 0; x < sz; ++x) {
+						for (int y = 0; y < sz; ++y) {
+							bool edge = (x == 0 || x == sz - 1 || y == 0 || y == sz - 1);
+							if (edge) {
+								vm->SetSolid(x, y, 0, gold);
+								if (x == 0 || x == sz - 1 || x == sz / 2) {
+									if (y == 0 || y == sz - 1 || y == sz / 2) {
+										vm->SetSolid(x, y, 1, gold);
+										vm->SetSolid(x, y, 2, (x == sz / 2 || y == sz / 2) ? ruby : gold);
+									}
+								}
+							}
+						}
+					}
+					playerAccessoryModel = renderer->CreateModel(*vm);
+				} catch (...) {
+					playerAccessoryModel.Set(nullptr, false);
+				}
+			} else if (accType == "helmet") {
+				try {
+					int const sz = 10;
+					int const h = 5;
+					Handle<VoxelModel> vm = Handle<VoxelModel>::New(sz, sz, h);
+					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, 0.0F));
+					uint32_t camo = 0x254A30; // dark green military
+					for (int x = 0; x < sz; ++x) {
+						for (int y = 0; y < sz; ++y) {
+							for (int z = 0; z < h; ++z) {
+								bool top = (z == 0);
+								bool side = (x == 0 || x == sz - 1 || y == 0 || y == sz - 1);
+								if (top || side)
+									vm->SetSolid(x, y, z, camo);
+							}
+						}
+					}
+					playerAccessoryModel = renderer->CreateModel(*vm);
+				} catch (...) {
+					playerAccessoryModel.Set(nullptr, false);
+				}
+			}
+		}
+
 		void MainScreenUI::RenderLobbyScene(const client::SceneDefinition& sceneDef, float dt) {
 			if (!playerTorsoModel || !playerHeadModel)
 				return;
@@ -319,8 +419,27 @@ namespace spades {
 
 			Matrix4 scaler = Matrix4::Scale(0.1F) * Matrix4::Scale(-1, -1, 1);
 
+			std::string currentCape = cg_playerCape;
+			if (currentCape != loadedCapeType)
+				RebuildCosmeticModels();
+			std::string currentAcc = cg_playerAccessory;
+			if (currentAcc != loadedAccessoryType)
+				RebuildCosmeticModels();
+
 			ModelRenderParam param;
-			param.customColor = MakeVector3(0.18F, 0.45F, 0.85F); // Blue team uniform
+			std::string skin = cg_playerSkin;
+			Vector3 skinCol(0.18F, 0.45F, 0.85F); // Blue team uniform (default)
+			if (skin == "green" || skin == "camo")
+				skinCol = MakeVector3(0.18F, 0.58F, 0.22F);
+			else if (skin == "red")
+				skinCol = MakeVector3(0.85F, 0.20F, 0.20F);
+			else if (skin == "gold")
+				skinCol = MakeVector3(1.0F, 0.84F, 0.15F);
+			else if (skin == "black")
+				skinCol = MakeVector3(0.12F, 0.12F, 0.15F);
+			else if (skin == "white")
+				skinCol = MakeVector3(0.95F, 0.95F, 0.95F);
+			param.customColor = skinCol;
 
 			float const legsPosX = 0.25F;
 			float const legsPosY = 0.0F;
@@ -348,12 +467,31 @@ namespace spades {
 			param.matrix = torso * scaler;
 			renderer->RenderModel(*playerTorsoModel, param);
 
+			// Cape on back of Torso
+			if (playerCapeModel) {
+				float capeSwing = 0.25F + breath * 0.04F + sinf(time * 3.5F) * 0.08F;
+				Matrix4 capeMat = torso * Matrix4::Translate(0.0F, 0.36F, -0.25F)
+				    * Matrix4::Rotate(MakeVector3(1, 0, 0), capeSwing)
+				    * Matrix4::Scale(0.095F) * Matrix4::Scale(-1, -1, 1);
+				ModelRenderParam capeParam;
+				capeParam.matrix = capeMat;
+				renderer->RenderModel(*playerCapeModel, capeParam);
+			}
+
 			// Head
 			Matrix4 head = torso * Matrix4::Translate(0.0F, 0.0F, -headPosZ)
 			    * Matrix4::Rotate(MakeVector3(1, 0, 0), pitch)
 			    * Matrix4::Rotate(MakeVector3(0, 0, 1), 0.15F);
 			param.matrix = head * scaler;
 			renderer->RenderModel(*playerHeadModel, param);
+
+			// Accessory (Crown / Helmet) on Head
+			if (playerAccessoryModel) {
+				ModelRenderParam accParam;
+				accParam.matrix = head * Matrix4::Translate(0.0F, 0.0F, -0.65F)
+				    * Matrix4::Scale(0.11F) * Matrix4::Scale(-1, -1, 1);
+				renderer->RenderModel(*playerAccessoryModel, accParam);
+			}
 
 			// Arms
 			Matrix4 arms = torso * Matrix4::Translate(0.0F, 0.0F, armsPosZ)
