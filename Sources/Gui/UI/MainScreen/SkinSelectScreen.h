@@ -35,6 +35,7 @@ namespace spades {
 	namespace gui {
 		class MainScreenUI;
 		class CosmeticOptionRow;
+		class CosmeticTabButton;
 
 		/**
 		 * High-performance cosmetic & skin selection view.
@@ -49,9 +50,9 @@ namespace spades {
 			int activeCategory = 0; // 0 = Skins, 1 = Capes, 2 = Accessories
 
 			// Sidebar tabs
-			ui::Button* tabSkins = nullptr;
-			ui::Button* tabCapes = nullptr;
-			ui::Button* tabAccessories = nullptr;
+			CosmeticTabButton* tabSkins = nullptr;
+			CosmeticTabButton* tabCapes = nullptr;
+			CosmeticTabButton* tabAccessories = nullptr;
 
 			// Sidebar actions
 			ui::Button* openFolderButton = nullptr;

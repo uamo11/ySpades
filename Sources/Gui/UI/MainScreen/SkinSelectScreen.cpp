@@ -302,8 +302,8 @@ namespace spades {
 						for (auto* sr : skinRows)
 							sr->selected = (sr == r);
 						cg_playerSkin = r->valueId;
-						if (mainScreenUI)
-							mainScreenUI->UpdateLobbyCosmetics();
+						if (this->mainScreenUI)
+							this->mainScreenUI->UpdateLobbyCosmetics();
 					};
 					skinRows.push_back(row.GetPointerOrNull());
 					skinsPanel->AddChild(row.GetPointerOrNull());
@@ -349,8 +349,8 @@ namespace spades {
 						for (auto* cr : capeRows)
 							cr->selected = (cr == r);
 						cg_playerCape = r->valueId;
-						if (mainScreenUI)
-							mainScreenUI->UpdateLobbyCosmetics();
+						if (this->mainScreenUI)
+							this->mainScreenUI->UpdateLobbyCosmetics();
 					};
 					capeRows.push_back(row.GetPointerOrNull());
 					capesPanel->AddChild(row.GetPointerOrNull());
@@ -394,8 +394,8 @@ namespace spades {
 						for (auto* ar : accRows)
 							ar->selected = (ar == r);
 						cg_playerAccessory = r->valueId;
-						if (mainScreenUI)
-							mainScreenUI->UpdateLobbyCosmetics();
+						if (this->mainScreenUI)
+							this->mainScreenUI->UpdateLobbyCosmetics();
 					};
 					accRows.push_back(row.GetPointerOrNull());
 					accPanel->AddChild(row.GetPointerOrNull());
@@ -407,11 +407,11 @@ namespace spades {
 		void SkinSelectScreen::SwitchCategory(int index) {
 			activeCategory = index;
 			if (tabSkins)
-				static_cast<CosmeticTabButton*>(tabSkins)->isSelected = (index == 0);
+				tabSkins->isSelected = (index == 0);
 			if (tabCapes)
-				static_cast<CosmeticTabButton*>(tabCapes)->isSelected = (index == 1);
+				tabCapes->isSelected = (index == 1);
 			if (tabAccessories)
-				static_cast<CosmeticTabButton*>(tabAccessories)->isSelected = (index == 2);
+				tabAccessories->isSelected = (index == 2);
 
 			if (skinsPanel)
 				skinsPanel->visible = (index == 0);
