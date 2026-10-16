@@ -55,7 +55,13 @@ namespace spades {
 			Flight,
 			Movement,
 			Visuals,
-			Combat
+			Combat,
+			// In-Game UI Icons
+			Clock,
+			Server,
+			Extension,
+			Chat,
+			Disconnect
 		};
 
 		inline void DrawGuiIcon(client::IRenderer& r, GuiIconType type, Vector2 center, Vector4 color, float s = 1.0F) {
@@ -301,6 +307,97 @@ namespace spades {
 				r.DrawLine(MakeVector2(cx + 3.5F * s, cy + 3.5F * s), MakeVector2(cx + 1.5F * s, cy + 3.5F * s), 1.4F * s);
 				r.DrawLine(MakeVector2(cx + 3.5F * s, cy + 3.5F * s), MakeVector2(cx + 3.5F * s, cy + 1.5F * s), 1.4F * s);
 				r.DrawImage(nullptr, AABB2(cx - 0.8F * s, cy - 0.8F * s, 1.6F * s, 1.6F * s));
+				break;
+			}
+			case GuiIconType::Clock: {
+				// Circular clock face with 12 segments
+				float rad = 5.0F * s;
+				for (int i = 0; i < 12; ++i) {
+					float a1 = static_cast<float>(i) * (kTwoPi / 12.0F);
+					float a2 = static_cast<float>(i + 1) * (kTwoPi / 12.0F);
+					r.DrawLine(MakeVector2(cx + rad * cosf(a1), cy + rad * sinf(a1)),
+					           MakeVector2(cx + rad * cosf(a2), cy + rad * sinf(a2)), 1.5F * s);
+				}
+				// Hour hand (pointing ~2 o'clock)
+				r.DrawLine(MakeVector2(cx, cy), MakeVector2(cx + 2.2F * s, cy - 1.4F * s), 1.8F * s);
+				// Minute hand (pointing ~12 o'clock)
+				r.DrawLine(MakeVector2(cx, cy), MakeVector2(cx, cy - 3.6F * s), 1.4F * s);
+				// Center pivot dot
+				r.DrawImage(nullptr, AABB2(cx - 0.9F * s, cy - 0.9F * s, 1.8F * s, 1.8F * s));
+				break;
+			}
+			case GuiIconType::Server: {
+				// 3 stacked blade units with LEDs
+				for (int i = 0; i < 3; ++i) {
+					float topY = cy + (-5.0F + static_cast<float>(i) * 3.8F) * s;
+					float h = 2.8F * s;
+					float w = 11.0F * s;
+					float leftX = cx - w * 0.5F;
+					r.DrawLine(MakeVector2(leftX, topY), MakeVector2(leftX + w, topY), 1.2F * s);
+					r.DrawLine(MakeVector2(leftX, topY + h), MakeVector2(leftX + w, topY + h), 1.2F * s);
+					r.DrawLine(MakeVector2(leftX, topY), MakeVector2(leftX, topY + h), 1.2F * s);
+					r.DrawLine(MakeVector2(leftX + w, topY), MakeVector2(leftX + w, topY + h), 1.2F * s);
+					// Bay slot
+					r.DrawLine(MakeVector2(leftX + 2.0F * s, topY + h * 0.5F),
+					           MakeVector2(leftX + 6.0F * s, topY + h * 0.5F), 1.0F * s);
+					// LED dot
+					r.DrawImage(nullptr, AABB2(leftX + w - 2.2F * s, topY + 0.6F * s, 1.3F * s, 1.3F * s));
+				}
+				break;
+			}
+			case GuiIconType::Extension: {
+				// Modular connector / puzzle piece
+				float sz = 8.0F * s;
+				float x0 = cx - sz * 0.5F;
+				float y0 = cy - sz * 0.5F;
+				r.DrawLine(MakeVector2(x0, y0), MakeVector2(x0 + sz, y0), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 + sz, y0), MakeVector2(x0 + sz, y0 + sz), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 + sz, y0 + sz), MakeVector2(x0, y0 + sz), 1.4F * s);
+				r.DrawLine(MakeVector2(x0, y0 + sz), MakeVector2(x0, y0), 1.4F * s);
+				// Connector tab (top)
+				r.DrawLine(MakeVector2(cx - 1.8F * s, y0 - 2.0F * s),
+				           MakeVector2(cx + 1.8F * s, y0 - 2.0F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx - 1.8F * s, y0 - 2.0F * s),
+				           MakeVector2(cx - 1.8F * s, y0), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 1.8F * s, y0 - 2.0F * s),
+				           MakeVector2(cx + 1.8F * s, y0), 1.4F * s);
+				// Connector tab (right)
+				r.DrawLine(MakeVector2(x0 + sz + 2.0F * s, cy - 1.8F * s),
+				           MakeVector2(x0 + sz + 2.0F * s, cy + 1.8F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 + sz, cy - 1.8F * s),
+				           MakeVector2(x0 + sz + 2.0F * s, cy - 1.8F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 + sz, cy + 1.8F * s),
+				           MakeVector2(x0 + sz + 2.0F * s, cy + 1.8F * s), 1.4F * s);
+				break;
+			}
+			case GuiIconType::Chat: {
+				// Speech bubble
+				float w = 11.0F * s;
+				float h = 7.5F * s;
+				float x0 = cx - w * 0.5F;
+				float y0 = cy - h * 0.5F - 1.0F * s;
+				r.DrawLine(MakeVector2(x0, y0), MakeVector2(x0 + w, y0), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 + w, y0), MakeVector2(x0 + w, y0 + h), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 + 3.0F * s, y0 + h), MakeVector2(x0 + w, y0 + h), 1.4F * s);
+				r.DrawLine(MakeVector2(x0, y0), MakeVector2(x0, y0 + h - 1.5F * s), 1.4F * s);
+				// Pointer tail
+				r.DrawLine(MakeVector2(x0, y0 + h - 1.5F * s), MakeVector2(x0 - 2.0F * s, y0 + h + 2.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(x0 - 2.0F * s, y0 + h + 2.5F * s), MakeVector2(x0 + 3.0F * s, y0 + h), 1.4F * s);
+				// Inner chat dots
+				r.DrawImage(nullptr, AABB2(cx - 3.0F * s, y0 + h * 0.5F - 0.7F * s, 1.4F * s, 1.4F * s));
+				r.DrawImage(nullptr, AABB2(cx - 0.7F * s, y0 + h * 0.5F - 0.7F * s, 1.4F * s, 1.4F * s));
+				r.DrawImage(nullptr, AABB2(cx + 1.6F * s, y0 + h * 0.5F - 0.7F * s, 1.4F * s, 1.4F * s));
+				break;
+			}
+			case GuiIconType::Disconnect: {
+				// Door frame
+				r.DrawLine(MakeVector2(cx - 5.0F * s, cy - 5.5F * s), MakeVector2(cx - 5.0F * s, cy + 5.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 5.0F * s, cy - 5.5F * s), MakeVector2(cx + 1.0F * s, cy - 5.5F * s), 1.5F * s);
+				r.DrawLine(MakeVector2(cx - 5.0F * s, cy + 5.5F * s), MakeVector2(cx + 1.0F * s, cy + 5.5F * s), 1.5F * s);
+				// Exit arrow pointing right
+				r.DrawLine(MakeVector2(cx - 1.5F * s, cy), MakeVector2(cx + 5.5F * s, cy), 1.8F * s);
+				r.DrawLine(MakeVector2(cx + 5.5F * s, cy), MakeVector2(cx + 2.5F * s, cy - 3.0F * s), 1.6F * s);
+				r.DrawLine(MakeVector2(cx + 5.5F * s, cy), MakeVector2(cx + 2.5F * s, cy + 3.0F * s), 1.6F * s);
 				break;
 			}
 			default:

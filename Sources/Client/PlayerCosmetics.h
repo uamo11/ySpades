@@ -21,7 +21,7 @@
 #pragma once
 
 #include <string>
-#include <Core/Handle.h>
+#include <Core/RefCountedObject.h>
 #include <Core/Math.h>
 
 namespace spades {
