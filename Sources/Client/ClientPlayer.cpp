@@ -1277,9 +1277,9 @@ namespace spades {
 
 						Matrix4 capeMat = torso
 							* (inp.crouch ? Matrix4::Translate(0.0F, 0.45F, -0.15F) * Matrix4::Rotate(MakeVector3(1, 0, 0), -0.3F)
-							              : Matrix4::Translate(0.0F, 0.38F, -0.18F))
+							              : Matrix4::Translate(0.0F, 0.36F, -0.25F))
 							* Matrix4::Rotate(MakeVector3(1, 0, 0), capeAngle)
-							* Matrix4::Scale(0.12F);
+							* Matrix4::Scale(0.095F) * Matrix4::Scale(-1, -1, 1);
 
 						ModelRenderParam capeParam = param;
 						capeParam.matrix = capeMat;
@@ -1310,8 +1310,8 @@ namespace spades {
 					Handle<IModel> accModel = PlayerCosmetics::GetAccessoryModel(renderer, cg_playerAccessory);
 					if (accModel) {
 						Matrix4 accMat = head
-							* Matrix4::Translate(0.0F, 0.0F, 0.72F)
-							* Matrix4::Scale(0.11F);
+							* Matrix4::Translate(0.0F, 0.0F, -0.65F)
+							* Matrix4::Scale(0.11F) * Matrix4::Scale(-1, -1, 1);
 
 						ModelRenderParam accParam = param;
 						accParam.matrix = accMat;
