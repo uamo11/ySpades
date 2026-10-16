@@ -85,9 +85,9 @@ namespace spades {
 					if (font && !caption.empty()) {
 						Vector4 textCol = hover ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F)
 						                        : MakeVector4(0.88F, 0.92F, 0.96F, 0.90F);
-						Vector2 textPos = MakeVector2(pos.x + 36.0F, pos.y + (sz.y - font->GetAscent()) * 0.5F - 1.0F);
-						font->Draw(caption, textPos + MakeVector2(1.0F, 1.0F), 1.0F, MakeVector4(0.0F, 0.0F, 0.0F, 0.6F));
-						font->Draw(caption, textPos, 1.0F, textCol);
+						Vector2 textSize = font->Measure(caption);
+						Vector2 textPos = MakeVector2(pos.x + 38.0F, pos.y + (sz.y - textSize.y) * 0.5F);
+						font->DrawShadow(caption, textPos, 1.0F, textCol, MakeVector4(0.0F, 0.0F, 0.0F, 0.6F));
 					}
 				}
 			};
