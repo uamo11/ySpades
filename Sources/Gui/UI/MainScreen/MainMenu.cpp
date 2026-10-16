@@ -542,9 +542,9 @@ namespace spades {
 					viewLobbyBtn->SetBounds(
 					    AABB2(contentsLeft + contentsWidth - 350.0F, 200.0F, 115.0F, 30.0F));
 					viewLobbyBtn->activated = [this](UIElement&) {
-						if (ui) {
-							ui->LoadBackgroundMap("Maps/LAbeach.vxl");
-							ui->ShowLobby();
+						if (this->ui) {
+							this->ui->LoadBackgroundMap("Maps/LAbeach.vxl");
+							this->ui->ShowLobby();
 						}
 					};
 					worldsPanel->AddChild(viewLobbyBtn.GetPointerOrNull());

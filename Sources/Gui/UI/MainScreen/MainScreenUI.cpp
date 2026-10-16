@@ -515,9 +515,9 @@ namespace spades {
 						client::PlayerCosmetics::ReloadCustomSkin();
 						UpdateLobbyCosmetics();
 
-						if (audioDevice) {
+						if (manager) {
 							try {
-								audioDevice->PlaySound("Audio/Pick.wav");
+								manager->PlaySound("Sounds/Feedback/Limbo/Select.opus");
 							} catch (...) {}
 						}
 
