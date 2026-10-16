@@ -46,6 +46,7 @@ namespace spades {
 			GameOptions,
 			Interface,
 			Graphics,
+			Ventana,
 			Controls,
 			Misc,
 			Detailed,
@@ -217,6 +218,17 @@ namespace spades {
 				r.DrawLine(MakeVector2(cx - 6.0F * s, cy + 3.0F * s), MakeVector2(cx - 6.0F * s, cy - 5.0F * s), 1.4F * s);
 				r.DrawLine(MakeVector2(cx, cy + 3.0F * s), MakeVector2(cx, cy + 5.5F * s), 1.6F * s);
 				r.DrawLine(MakeVector2(cx - 3.5F * s, cy + 5.5F * s), MakeVector2(cx + 3.5F * s, cy + 5.5F * s), 1.6F * s);
+				break;
+			}
+			case GuiIconType::Ventana: {
+				// Window outline with titlebar and plus
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy - 5.0F * s), MakeVector2(cx + 6.0F * s, cy - 5.0F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 6.0F * s, cy - 5.0F * s), MakeVector2(cx + 6.0F * s, cy + 5.0F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx + 6.0F * s, cy + 5.0F * s), MakeVector2(cx - 6.0F * s, cy + 5.0F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy + 5.0F * s), MakeVector2(cx - 6.0F * s, cy - 5.0F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx - 6.0F * s, cy - 2.0F * s), MakeVector2(cx + 6.0F * s, cy - 2.0F * s), 1.2F * s);
+				r.DrawLine(MakeVector2(cx - 2.0F * s, cy + 1.5F * s), MakeVector2(cx + 2.0F * s, cy + 1.5F * s), 1.4F * s);
+				r.DrawLine(MakeVector2(cx, cy - 0.5F * s), MakeVector2(cx, cy + 3.5F * s), 1.4F * s);
 				break;
 			}
 			case GuiIconType::Controls: {

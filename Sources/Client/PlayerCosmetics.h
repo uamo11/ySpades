@@ -47,6 +47,10 @@ namespace spades {
 
 			/** Clears cached cosmetic models (e.g. on renderer reset) */
 			static void ClearCache();
+
+			/** Loads and samples custom skin color from custom.png */
+			static void ReloadCustomSkin();
+			static Vector3 GetCustomSkinColor();
 		};
 	} // namespace client
 } // namespace spades

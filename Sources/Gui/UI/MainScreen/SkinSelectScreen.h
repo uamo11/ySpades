@@ -79,6 +79,7 @@ namespace spades {
 
 			void Run();
 			void Close();
+			void SelectCustomSkin();
 
 			void HotKey(const std::string& key) override;
 			void Render() override;

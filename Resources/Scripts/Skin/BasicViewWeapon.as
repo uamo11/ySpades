@@ -599,6 +599,8 @@ namespace spades {
 					param.outlineThickness = Max(1.0F, cg_targetOutlineThickness.FloatValue);
 
 					DrawTarget(renderer, scrCenter, param);
+				} else if (targetType >= 3) {
+					DrawCrosshairPreset(renderer, scrCenter, targetType, color);
 				}
 			}
 		}

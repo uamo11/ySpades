@@ -49,5 +49,8 @@ namespace spades {
 
 		/** Draws a custom crosshair centered at `pos`, identical to the gameplay one. */
 		void DrawTarget(client::IRenderer& r, Vector2 pos, const TargetParam& param);
+
+		/** Draws preset HD-plus crosshairs (Classic HD-Plus, Dot HD, Pro Cross, Tactical Circle, Chevron). */
+		void DrawCrosshairPreset(client::IRenderer& r, Vector2 pos, int preset, const Vector4& color);
 	} // namespace gui
 } // namespace spades

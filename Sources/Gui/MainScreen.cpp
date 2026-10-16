@@ -143,6 +143,17 @@ namespace spades {
 			return ui->AcceptsTextInput();
 		}
 
+		void MainScreen::DropFileEvent(const std::string& filePath) {
+			SPADES_MARK_FUNCTION();
+			if (subview) {
+				subview->DropFileEvent(filePath);
+				return;
+			}
+			if (ui) {
+				ui->DropFileEvent(filePath);
+			}
+		}
+
 		AABB2 MainScreen::GetTextInputRect() {
 			SPADES_MARK_FUNCTION();
 			if (subview)

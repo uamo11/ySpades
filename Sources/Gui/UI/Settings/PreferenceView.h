@@ -159,6 +159,14 @@ namespace spades {
 			                     client::FontManager* fontManager, HeadingNavIndex* nav = nullptr);
 		};
 
+		class VentanaOptionsPanel : public ui::UIElement {
+			Handle<StandardPreferenceLayouter> layouter;
+
+		public:
+			VentanaOptionsPanel(ui::UIManager* manager, const PreferenceViewOptions& options,
+			                    client::FontManager* fontManager, HeadingNavIndex* nav = nullptr);
+		};
+
 		class ControlOptionsPanel : public ui::UIElement {
 			Handle<StandardPreferenceLayouter> layouter;
 

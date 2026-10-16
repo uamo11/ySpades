@@ -527,7 +527,7 @@ namespace spades {
 					Handle<Button> openFolderBtn = Handle<Button>::New(manager);
 					openFolderBtn->caption = _Tr("MainScreen", "Abrir Carpeta");
 					openFolderBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 370.0F, 200.0F, 115.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 465.0F, 200.0F, 110.0F, 30.0F));
 					openFolderBtn->activated = [](UIElement&) {
 #ifdef _WIN32
 						ShowDirectoryInShell("Resources\\Maps");
@@ -537,10 +537,22 @@ namespace spades {
 					};
 					worldsPanel->AddChild(openFolderBtn.GetPointerOrNull());
 
+					Handle<Button> viewLobbyBtn = Handle<Button>::New(manager);
+					viewLobbyBtn->caption = _Tr("MainScreen", "Fondo: LAbeach");
+					viewLobbyBtn->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 350.0F, 200.0F, 115.0F, 30.0F));
+					viewLobbyBtn->activated = [this](UIElement&) {
+						if (ui) {
+							ui->LoadBackgroundMap("Maps/LAbeach.vxl");
+							ui->ShowLobby();
+						}
+					};
+					worldsPanel->AddChild(viewLobbyBtn.GetPointerOrNull());
+
 					Handle<Button> playLAbeachBtn = Handle<Button>::New(manager);
 					playLAbeachBtn->caption = _Tr("MainScreen", "Jugar LAbeach");
 					playLAbeachBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 245.0F, 200.0F, 120.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 230.0F, 200.0F, 110.0F, 30.0F));
 					playLAbeachBtn->activated = [this](UIElement&) {
 						helper->ConnectServer("127.0.0.1:32887", 3, "LAbeach");
 					};

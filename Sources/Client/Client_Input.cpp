@@ -21,8 +21,17 @@
 
 #include "Client.h"
 
+#include <algorithm>
 #include <cstdio>
+#include <fstream>
 
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
+
+#include "PlayerCosmetics.h"
 #include <Core/Settings.h>
 #include <Core/Strings.h>
 
@@ -312,6 +321,50 @@ namespace spades {
 			} else if (y < -0.5F) {
 				KeyEvent("WheelUp", true);
 				KeyEvent("WheelUp", false);
+			}
+		}
+
+		void Client::DropFileEvent(const std::string& filePath) {
+			SPADES_MARK_FUNCTION();
+			std::string lowerPath = filePath;
+			std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+			if (lowerPath.size() >= 4 && lowerPath.substr(lowerPath.size() - 4) == ".png") {
+#ifdef _WIN32
+				_mkdir("Skins");
+				_mkdir("Resources\\Skins");
+#else
+				mkdir("Skins", 0755);
+				mkdir("Resources/Skins", 0755);
+#endif
+				std::ifstream src(filePath, std::ios::binary);
+				if (src.is_open()) {
+					std::vector<char> buffer((std::istreambuf_iterator<char>(src)),
+					                         std::istreambuf_iterator<char>());
+					src.close();
+					if (!buffer.empty()) {
+						std::ofstream dst1("Skins/custom.png", std::ios::binary);
+						if (dst1.is_open()) {
+							dst1.write(buffer.data(), buffer.size());
+							dst1.close();
+						}
+						std::ofstream dst2("Resources/Skins/custom.png", std::ios::binary);
+						if (dst2.is_open()) {
+							dst2.write(buffer.data(), buffer.size());
+							dst2.close();
+						}
+
+						cg_playerSkin = "custom";
+						Settings::GetInstance()->Flush();
+						PlayerCosmetics::ReloadCustomSkin();
+
+						AddNotice("Skin personalizada cargada y equipada: custom.png");
+						if (audioDevice) {
+							try {
+								audioDevice->PlaySound("Audio/Pick.wav");
+							} catch (...) {}
+						}
+					}
+				}
 			}
 		}
 

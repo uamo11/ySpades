@@ -20,9 +20,12 @@
 
 #include "PlayerCosmetics.h"
 
+#include <algorithm>
 #include <map>
 #include <Client/IModel.h>
 #include <Client/IRenderer.h>
+#include <Core/Bitmap.h>
+#include <Core/FileManager.h>
 #include <Core/VoxelModel.h>
 
 namespace spades {
@@ -30,7 +33,41 @@ namespace spades {
 		namespace {
 			static std::map<std::string, Handle<IModel>> g_capeCache;
 			static std::map<std::string, Handle<IModel>> g_accCache;
+			static Vector3 g_customSkinColor(0.20F, 0.50F, 0.85F);
+			static bool g_customSkinLoaded = false;
 		} // namespace
+
+		Vector3 PlayerCosmetics::GetCustomSkinColor() {
+			if (!g_customSkinLoaded)
+				ReloadCustomSkin();
+			return g_customSkinColor;
+		}
+
+		void PlayerCosmetics::ReloadCustomSkin() {
+			g_customSkinLoaded = true;
+			try {
+				std::string path = "Skins/custom.png";
+				if (!FileManager::FileExists(path))
+					path = "Resources/Skins/custom.png";
+				if (FileManager::FileExists(path)) {
+					Handle<Bitmap> bmp = Bitmap::Load(path);
+					if (bmp && bmp->GetWidth() >= 16 && bmp->GetHeight() >= 16) {
+						// Sample front torso shirt center around (24, 24)
+						int sampleX = std::min(24, bmp->GetWidth() - 1);
+						int sampleY = std::min(24, bmp->GetHeight() - 1);
+						uint32_t px = bmp->GetPixel(sampleX, sampleY);
+						if ((px >> 24) > 32) {
+							float r = static_cast<float>(px & 0xFF) / 255.0F;
+							float g = static_cast<float>((px >> 8) & 0xFF) / 255.0F;
+							float b = static_cast<float>((px >> 16) & 0xFF) / 255.0F;
+							g_customSkinColor = MakeVector3(r, g, b);
+							return;
+						}
+					}
+				}
+			} catch (...) {}
+			g_customSkinColor = MakeVector3(0.25F, 0.65F, 0.95F);
+		}
 
 		Vector3 PlayerCosmetics::GetSkinColor(const std::string& skinId, const Vector3& defaultColor) {
 			if (skinId == "gold")
@@ -43,6 +80,8 @@ namespace spades {
 				return MakeVector3(0.15F, 0.15F, 0.18F); // Tactical Shadow
 			else if (skinId == "white")
 				return MakeVector3(0.92F, 0.94F, 0.96F); // Arctic Snow
+			else if (skinId == "custom")
+				return GetCustomSkinColor();
 			return defaultColor;
 		}
 
@@ -104,54 +143,214 @@ namespace spades {
 
 			try {
 				if (accId == "crown") {
-					int const sz = 10;
-					int const h = 4;
+					// Authentic Imperial Royal Crown
+					// Sculpted with ermine fur base, gold circlet with rubies, emeralds, sapphires,
+					// crimson velvet bonnet, golden arches, and apical orb with royal cross.
+					int const sz = 12;
+					int const h = 10;
 					Handle<VoxelModel> vm = Handle<VoxelModel>::New(sz, sz, h);
-					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, 0.0F));
-					uint32_t gold = 0x1AE0FF; // Gold
-					uint32_t ruby = 0x2222EE; // Red Ruby Gem
+					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, -9.0F));
 
+					// Little-endian RGB: 0xBBGGRR
+					const uint32_t goldBright  = 0x1AE0FF; // Pure gold
+					const uint32_t goldDeep    = 0x0DA0D0; // Shaded gold
+					const uint32_t ermineWhite = 0xF5F5F5; // Ermine fur white
+					const uint32_t ermineSpot  = 0x151515; // Ermine black tail dot
+					const uint32_t ruby        = 0x1818EE; // Royal ruby (crimson red)
+					const uint32_t sapphire    = 0xEE5018; // Royal sapphire (rich blue)
+					const uint32_t emerald     = 0x20D820; // Royal emerald (vibrant green)
+					const uint32_t diamond     = 0xFFFFFF; // Diamond / pearl
+					const uint32_t amethyst    = 0x902090; // Royal amethyst
+					const uint32_t velvetRed   = 0x241484; // Crimson velvet bonnet
+
+					// Layer z = 9: Base ermine fur trim
 					for (int x = 0; x < sz; ++x) {
 						for (int y = 0; y < sz; ++y) {
-							bool edge = (x == 0 || x == sz - 1 || y == 0 || y == sz - 1);
-							if (edge) {
-								vm->SetSolid(x, y, 0, gold);
-								if (x == 0 || x == sz - 1 || x == sz / 2) {
-									if (y == 0 || y == sz - 1 || y == sz / 2) {
-										vm->SetSolid(x, y, 1, gold);
-										vm->SetSolid(x, y, 2, (x == sz / 2 || y == sz / 2) ? ruby : gold);
-									}
-								}
+							if (x == 0 || x == sz - 1 || y == 0 || y == sz - 1) {
+								bool isSpot = ((x % 3 == 0 && y % 3 == 0) || x == 5 || x == 6 || y == 5 || y == 6);
+								vm->SetSolid(x, y, 9, isSpot ? ermineSpot : ermineWhite);
 							}
 						}
 					}
+
+					// Layer z = 8: Golden circlet band with royal jewels
+					for (int x = 0; x < sz; ++x) {
+						for (int y = 0; y < sz; ++y) {
+							if (x == 0 || x == sz - 1 || y == 0 || y == sz - 1) {
+								uint32_t c = goldBright;
+								if ((x == 0 && y == 0) || (x == sz - 1 && y == 0) ||
+								    (x == 0 && y == sz - 1) || (x == sz - 1 && y == sz - 1)) {
+									c = diamond;
+								} else if ((x == 5 || x == 6) && y == 0) {
+									c = ruby;
+								} else if ((x == 5 || x == 6) && y == sz - 1) {
+									c = sapphire;
+								} else if ((y == 5 || y == 6) && x == 0) {
+									c = emerald;
+								} else if ((y == 5 || y == 6) && x == sz - 1) {
+									c = ruby;
+								} else if ((x == 2 || x == 9) && (y == 0 || y == sz - 1)) {
+									c = amethyst;
+								}
+								vm->SetSolid(x, y, 8, c);
+							}
+						}
+					}
+
+					// Layer z = 7: Upper golden rim & interior velvet lining
+					for (int x = 0; x < sz; ++x) {
+						for (int y = 0; y < sz; ++y) {
+							if (x == 0 || x == sz - 1 || y == 0 || y == sz - 1) {
+								vm->SetSolid(x, y, 7, goldDeep);
+							} else if (x >= 2 && x <= sz - 3 && y >= 2 && y <= sz - 3) {
+								vm->SetSolid(x, y, 7, velvetRed);
+							}
+						}
+					}
+
+					// Layer z = 6: Fleur-de-lis peaks & velvet bonnet dome
+					for (int x = 0; x < sz; ++x) {
+						for (int y = 0; y < sz; ++y) {
+							bool isCornerPeak = (x <= 1 && y <= 1) || (x >= sz - 2 && y <= 1) ||
+							                    (x <= 1 && y >= sz - 2) || (x >= sz - 2 && y >= sz - 2);
+							bool isMidPeak = ((x == 5 || x == 6) && (y == 0 || y == sz - 1)) ||
+							                 ((y == 5 || y == 6) && (x == 0 || x == sz - 1));
+							if (isCornerPeak || isMidPeak) {
+								vm->SetSolid(x, y, 6, goldBright);
+							} else if (x >= 2 && x <= sz - 3 && y >= 2 && y <= sz - 3) {
+								vm->SetSolid(x, y, 6, velvetRed);
+							}
+						}
+					}
+
+					// Layer z = 5: Fleuron jewels, rising arches, velvet dome
+					// Peaks finials
+					vm->SetSolid(5, 0, 5, ruby);
+					vm->SetSolid(6, 0, 5, ruby);
+					vm->SetSolid(5, sz - 1, 5, sapphire);
+					vm->SetSolid(6, sz - 1, 5, sapphire);
+					vm->SetSolid(0, 5, 5, emerald);
+					vm->SetSolid(0, 6, 5, emerald);
+					vm->SetSolid(sz - 1, 5, 5, ruby);
+					vm->SetSolid(sz - 1, 6, 5, ruby);
+					// Arches curving inward
+					vm->SetSolid(5, 1, 5, goldBright);
+					vm->SetSolid(6, 1, 5, goldBright);
+					vm->SetSolid(5, sz - 2, 5, goldBright);
+					vm->SetSolid(6, sz - 2, 5, goldBright);
+					vm->SetSolid(1, 5, 5, goldBright);
+					vm->SetSolid(1, 6, 5, goldBright);
+					vm->SetSolid(sz - 2, 5, 5, goldBright);
+					vm->SetSolid(sz - 2, 6, 5, goldBright);
+					// Velvet bonnet dome
+					for (int x = 3; x <= sz - 4; ++x) {
+						for (int y = 3; y <= sz - 4; ++y) {
+							vm->SetSolid(x, y, 5, velvetRed);
+						}
+					}
+
+					// Layer z = 4: Arches converging with pearls & bonnet apex
+					vm->SetSolid(5, 2, 4, diamond);
+					vm->SetSolid(6, 2, 4, goldBright);
+					vm->SetSolid(5, sz - 3, 4, goldBright);
+					vm->SetSolid(6, sz - 3, 4, diamond);
+					vm->SetSolid(2, 5, 4, goldBright);
+					vm->SetSolid(2, 6, 4, diamond);
+					vm->SetSolid(sz - 3, 5, 4, diamond);
+					vm->SetSolid(sz - 3, 6, 4, goldBright);
+
+					vm->SetSolid(5, 3, 4, goldBright);
+					vm->SetSolid(6, 3, 4, goldBright);
+					vm->SetSolid(5, sz - 4, 4, goldBright);
+					vm->SetSolid(6, sz - 4, 4, goldBright);
+					vm->SetSolid(3, 5, 4, goldBright);
+					vm->SetSolid(3, 6, 4, goldBright);
+					vm->SetSolid(sz - 4, 5, 4, goldBright);
+					vm->SetSolid(sz - 4, 6, 4, goldBright);
+
+					// Velvet apex
+					for (int x = 4; x <= sz - 5; ++x) {
+						for (int y = 4; y <= sz - 5; ++y) {
+							vm->SetSolid(x, y, 4, velvetRed);
+						}
+					}
+
+					// Layer z = 3: Arches intersecting at summit
+					for (int x = 4; x <= 7; ++x) {
+						for (int y = 4; y <= 7; ++y) {
+							bool isPearl = (x == 5 && y == 4) || (x == 6 && y == 7) ||
+							               (x == 4 && y == 5) || (x == 7 && y == 6);
+							vm->SetSolid(x, y, 3, isPearl ? diamond : goldBright);
+						}
+					}
+
+					// Layer z = 2: Golden Monde (Orb / Globe)
+					vm->SetSolid(5, 5, 2, goldBright);
+					vm->SetSolid(6, 5, 2, emerald);
+					vm->SetSolid(5, 6, 2, emerald);
+					vm->SetSolid(6, 6, 2, goldBright);
+
+					// Layer z = 1: Royal Cross Pattée horizontal crossbar
+					for (int x = 4; x <= 7; ++x) {
+						for (int y = 5; y <= 6; ++y) {
+							bool isCenter = (x == 5 || x == 6);
+							vm->SetSolid(x, y, 1, isCenter ? diamond : goldBright);
+						}
+					}
+
+					// Layer z = 0: Royal Cross Pattée vertical apex
+					vm->SetSolid(5, 5, 0, goldBright);
+					vm->SetSolid(6, 5, 0, diamond);
+					vm->SetSolid(5, 6, 0, diamond);
+					vm->SetSolid(6, 6, 0, goldBright);
 
 					Handle<IModel> model = renderer.CreateModel(*vm);
 					g_accCache[accId] = model;
 					return model;
 				} else if (accId == "helmet") {
-					int const sz = 10;
-					int const h = 5;
+					// Tactical Military Combat Helmet
+					int const sz = 12;
+					int const h = 8;
 					Handle<VoxelModel> vm = Handle<VoxelModel>::New(sz, sz, h);
-					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, 0.0F));
-					uint32_t camoDark = 0x1E2B1E; // Dark Olive
-					uint32_t camoBand = 0x121A12; // Straps / Trim
+					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, -7.0F));
 
+					uint32_t camoDark  = 0x1E3520; // Deep olive
+					uint32_t camoMid   = 0x284828; // Foliage green
+					uint32_t camoBrown = 0x1E2B38; // Earth brown
+					uint32_t camoTrim  = 0x121A12; // Black Kevlar rim
+
+					// Layer z = 7: Rim & straps
 					for (int x = 0; x < sz; ++x) {
 						for (int y = 0; y < sz; ++y) {
-							for (int z = 0; z < h; ++z) {
-								bool isTop = (z == h - 1);
-								bool isRim = (z == 0 && (x == 0 || x == sz - 1 || y == 0 || y == sz - 1));
-								bool isSide = (z > 0 && (x == 0 || x == sz - 1 || y == 0 || y == sz - 1));
+							if (x == 0 || x == sz - 1 || y == 0 || y == sz - 1) {
+								vm->SetSolid(x, y, 7, camoTrim);
+							}
+						}
+					}
 
-								if (isTop) {
-									vm->SetSolid(x, y, z, camoDark);
-								} else if (isRim) {
-									vm->SetSolid(x, y, z, camoBand);
-								} else if (isSide) {
-									vm->SetSolid(x, y, z, camoDark);
+					// Layers z = 3 to 6: Outer curved dome
+					for (int z = 3; z <= 6; ++z) {
+						int inset = (z <= 4) ? 2 : 1;
+						for (int x = inset; x < sz - inset; ++x) {
+							for (int y = inset; y < sz - inset; ++y) {
+								bool isEdge = (x == inset || x == sz - 1 - inset ||
+								               y == inset || y == sz - 1 - inset);
+								if (isEdge || z <= 4) {
+									uint32_t col = camoDark;
+									if ((x + y + z) % 3 == 0)
+										col = camoMid;
+									else if ((x * 2 + y) % 5 == 0)
+										col = camoBrown;
+									vm->SetSolid(x, y, z, col);
 								}
 							}
+						}
+					}
+
+					// Layer z = 2: Top plate
+					for (int x = 4; x <= sz - 5; ++x) {
+						for (int y = 4; y <= sz - 5; ++y) {
+							vm->SetSolid(x, y, 2, camoDark);
 						}
 					}
 

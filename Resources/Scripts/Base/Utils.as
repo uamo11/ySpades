@@ -144,6 +144,114 @@ namespace spades {
 		}
 	}
 
+	void DrawCrosshairPreset(Renderer@ r, Vector2 pos, int preset, Vector4 color) {
+		Vector4 black = Vector4(0.0F, 0.0F, 0.0F, color.w * 0.9F);
+		int cx = int(pos.x);
+		int cy = int(pos.y);
+
+		if (preset == 3) {
+			// Clásico HD-Plus (Ace of Spades crosshair in crisp HD vector)
+			int gap = 3;
+			int len = 7;
+			int half = 1;
+
+			r.ColorNP = black;
+			r.DrawFilledRect(cx - gap - len - 1, cy - half - 1, cx - gap + 1, cy + half + 1);
+			r.DrawFilledRect(cx + gap - 1, cy - half - 1, cx + gap + len + 1, cy + half + 1);
+			r.DrawFilledRect(cx - half - 1, cy - gap - len - 1, cx + half + 1, cy - gap + 1);
+			r.DrawFilledRect(cx - half - 1, cy + gap - 1, cx + half + 1, cy + gap + len + 1);
+
+			r.ColorNP = color;
+			r.DrawFilledRect(cx - gap - len, cy - half, cx - gap, cy + half);
+			r.DrawFilledRect(cx + gap, cy - half, cx + gap + len, cy + half);
+			r.DrawFilledRect(cx - half, cy - gap - len, cx + half, cy - gap);
+			r.DrawFilledRect(cx - half, cy + gap, cx + half, cy + gap + len);
+		} else if (preset == 4) {
+			// Punto HD (Precision Dot)
+			r.ColorNP = black;
+			r.DrawFilledRect(cx - 2, cy - 2, cx + 3, cy + 3);
+			r.ColorNP = color;
+			r.DrawFilledRect(cx - 1, cy - 1, cx + 2, cy + 2);
+		} else if (preset == 5) {
+			// Cruz Pro (Competitive Esports Cross)
+			int gap = 2;
+			int len = 5;
+
+			r.ColorNP = black;
+			r.DrawFilledRect(cx - gap - len - 1, cy - 1, cx - gap + 1, cy + 2);
+			r.DrawFilledRect(cx + gap - 1, cy - 1, cx + gap + len + 1, cy + 2);
+			r.DrawFilledRect(cx - 1, cy - gap - len - 1, cx + 2, cy - gap + 1);
+			r.DrawFilledRect(cx - 1, cy + gap - 1, cx + 2, cy + gap + len + 1);
+
+			r.ColorNP = color;
+			r.DrawFilledRect(cx - gap - len, cy, cx - gap, cy + 1);
+			r.DrawFilledRect(cx + gap, cy, cx + gap + len, cy + 1);
+			r.DrawFilledRect(cx, cy - gap - len, cx + 1, cy - gap);
+			r.DrawFilledRect(cx, cy + gap, cx + 1, cy + gap + len);
+		} else if (preset == 6) {
+			// Cruz + Punto HD (Pro Cross with Center Dot)
+			int gap = 4;
+			int len = 5;
+
+			r.ColorNP = black;
+			r.DrawFilledRect(cx - gap - len - 1, cy - 1, cx - gap + 1, cy + 2);
+			r.DrawFilledRect(cx + gap - 1, cy - 1, cx + gap + len + 1, cy + 2);
+			r.DrawFilledRect(cx - 1, cy - gap - len - 1, cx + 2, cy - gap + 1);
+			r.DrawFilledRect(cx - 1, cy + gap - 1, cx + 2, cy + gap + len + 1);
+			r.DrawFilledRect(cx - 2, cy - 2, cx + 3, cy + 3);
+
+			r.ColorNP = color;
+			r.DrawFilledRect(cx - gap - len, cy, cx - gap, cy + 1);
+			r.DrawFilledRect(cx + gap, cy, cx + gap + len, cy + 1);
+			r.DrawFilledRect(cx, cy - gap - len, cx + 1, cy - gap);
+			r.DrawFilledRect(cx, cy + gap, cx + 1, cy + gap + len);
+			r.DrawFilledRect(cx - 1, cy - 1, cx + 2, cy + 2);
+		} else if (preset == 7) {
+			// Círculo Táctico (Tactical CQB Ring with Center Dot & 4 Ticks)
+			int r0 = 6;
+			r.ColorNP = black;
+			r.DrawFilledRect(cx - r0 - 1, cy - 1, cx - r0 + 2, cy + 2);
+			r.DrawFilledRect(cx + r0 - 1, cy - 1, cx + r0 + 2, cy + 2);
+			r.DrawFilledRect(cx - 1, cy - r0 - 1, cx + 2, cy - r0 + 2);
+			r.DrawFilledRect(cx - 1, cy + r0 - 1, cx + 2, cy + r0 + 2);
+
+			r.DrawFilledRect(cx - r0 - 5, cy, cx - r0 - 1, cy + 1);
+			r.DrawFilledRect(cx + r0 + 1, cy, cx + r0 + 5, cy + 1);
+			r.DrawFilledRect(cx, cy - r0 - 5, cx + 1, cy - r0 - 1);
+			r.DrawFilledRect(cx, cy + r0 + 1, cx + 1, cy + r0 + 5);
+
+			r.DrawFilledRect(cx - 2, cy - 2, cx + 3, cy + 3);
+			r.ColorNP = color;
+			r.DrawFilledRect(cx - 1, cy - 1, cx + 2, cy + 2);
+
+			r.DrawFilledRect(cx - r0, cy, cx - r0 + 1, cy + 1);
+			r.DrawFilledRect(cx + r0, cy, cx + r0 + 1, cy + 1);
+			r.DrawFilledRect(cx, cy - r0, cx + 1, cy - r0 + 1);
+			r.DrawFilledRect(cx, cy + r0, cx + 1, cy + r0 + 1);
+			r.DrawFilledRect(cx - r0 + 2, cy - r0 + 2, cx - r0 + 3, cy - r0 + 3);
+			r.DrawFilledRect(cx + r0 - 2, cy - r0 + 2, cx + r0 - 1, cy - r0 + 3);
+			r.DrawFilledRect(cx - r0 + 2, cy + r0 - 2, cx - r0 + 3, cy + r0 - 1);
+			r.DrawFilledRect(cx + r0 - 2, cy + r0 - 2, cx + r0 - 1, cy + r0 - 1);
+		} else if (preset == 8) {
+			// Chevron / Flecha (Military Arrow ^)
+			r.ColorNP = black;
+			for (int i = 0; i <= 5; ++i) {
+				r.DrawFilledRect(cx - i - 1, cy + i - 1, cx - i + 2, cy + i + 2);
+				r.DrawFilledRect(cx + i - 1, cy + i - 1, cx + i + 2, cy + i + 2);
+			}
+			r.DrawFilledRect(cx - 8, cy + 5, cx - 4, cy + 7);
+			r.DrawFilledRect(cx + 5, cy + 5, cx + 9, cy + 7);
+
+			r.ColorNP = color;
+			for (int i = 0; i <= 5; ++i) {
+				r.DrawFilledRect(cx - i, cy + i, cx - i + 1, cy + i + 1);
+				r.DrawFilledRect(cx + i, cy + i, cx + i + 1, cy + i + 1);
+			}
+			r.DrawFilledRect(cx - 7, cy + 5, cx - 4, cy + 6);
+			r.DrawFilledRect(cx + 5, cy + 5, cx + 8, cy + 6);
+		}
+	}
+
 	/** Returns the byte index for a certain character index. */
 	int GetByteIndexForString(string s, int charIndex, int start = 0) {
 		int len = s.length;

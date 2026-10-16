@@ -180,6 +180,12 @@ namespace spades {
 						m_active = false;
 					}
 					break;
+				case SDL_DROPFILE:
+					if (event.drop.file) {
+						view.DropFileEvent(event.drop.file);
+						SDL_free(event.drop.file);
+					}
+					break;
 				default: break;
 			}
 		}

@@ -39,6 +39,7 @@ namespace spades {
 		class MainScreenHelper;
 		class MainScreenMainMenu;
 		class LobbyScreen;
+		class SkinSelectScreen;
 		namespace ui {
 			class UIManager;
 		}
@@ -71,6 +72,7 @@ namespace spades {
 			std::string loadedCapeType;
 			std::string loadedAccessoryType;
 			void RebuildCosmeticModels();
+			SkinSelectScreen* activeSkinScreen = nullptr;
 
 			float time = -1.0F;
 
@@ -103,6 +105,9 @@ namespace spades {
 			void SetCountry(const std::string& code);
 			void RebuildFlagModel();
 			void UpdateLobbyCosmetics() { RebuildCosmeticModels(); }
+			void SetActiveSkinScreen(SkinSelectScreen* screen) { activeSkinScreen = screen; }
+			void DropFileEvent(const std::string& filePath);
+			void LoadBackgroundMap(const std::string& mapPath);
 			void OpenDetailedSettings();
 
 			void SetupRenderer();

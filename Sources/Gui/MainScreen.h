@@ -71,6 +71,7 @@ namespace spades {
 			AABB2 GetTextInputRect() override;
 			void WheelEvent(float x, float y) override;
 			bool NeedsAbsoluteMouseCoordinate() override;
+			void DropFileEvent(const std::string &filePath) override;
 
 			void RunFrame(float dt) override;
 			void RunFrameLate(float dt) override;

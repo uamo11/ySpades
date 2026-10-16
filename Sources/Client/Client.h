@@ -731,6 +731,7 @@ namespace spades {
 			void Closing() override;
 			void MouseEvent(float x, float y) override;
 			void WheelEvent(float x, float y) override;
+			void DropFileEvent(const std::string& filePath) override;
 			void KeyEvent(const std::string&, bool down) override;
 			void TextInputEvent(const std::string&) override;
 			void TextEditingEvent(const std::string&, int start, int len) override;

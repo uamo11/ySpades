@@ -240,6 +240,8 @@ namespace spades {
 				param.outlineThickness = Clamp(static_cast<float>(cg_targetOutlineThickness), 1.0F, 4.0F);
 
 				DrawTarget(r, center, param);
+			} else if (targetType >= 3) {
+				DrawCrosshairPreset(r, center, targetType, color);
 			} else {
 				client::IFont* font = GetFont();
 				if (!font)

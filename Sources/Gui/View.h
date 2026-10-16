@@ -44,6 +44,7 @@ namespace spades {
 			virtual AABB2 GetTextInputRect() { return AABB2(); }
 			virtual bool NeedsAbsoluteMouseCoordinate() { return false; }
 			virtual void WheelEvent(float x, float y) {}
+			virtual void DropFileEvent(const std::string& filePath) {}
 
 			/** Called for every frame. */
 			virtual void RunFrame(float dt) {}

@@ -20,8 +20,15 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <memory>
 #include <vector>
+
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
 
 #include "CountryFlags.h"
 #include "CreateProfileScreen.h"
@@ -29,7 +36,9 @@
 #include "MainMenu.h"
 #include "MainScreenUI.h"
 #include "SelectCountryScreen.h"
+#include "SkinSelectScreen.h"
 #include <Client/Fonts.h>
+#include <Client/PlayerCosmetics.h>
 #include <Client/GameMap.h>
 #include <Client/IAudioDevice.h>
 #include <Client/IImage.h>
@@ -284,99 +293,13 @@ namespace spades {
 		}
 
 		void MainScreenUI::RebuildCosmeticModels() {
-			// 1. Cape Model
 			std::string capeType = cg_playerCape;
 			loadedCapeType = capeType;
-			if (capeType == "none" || capeType.empty()) {
-				playerCapeModel.Set(nullptr, false);
-			} else {
-				try {
-					int const cw = 10;
-					int const ch = 16;
-					int const cd = 1;
-					Handle<VoxelModel> vm = Handle<VoxelModel>::New(cw, cd, ch);
-					vm->SetOrigin(MakeVector3(-static_cast<float>(cw) * 0.5F, 0.0F, 0.0F));
+			playerCapeModel = client::PlayerCosmetics::GetCapeModel(*renderer, capeType);
 
-					// Little-endian RGB: 0xBBGGRR
-					uint32_t mainCol = 0x884422; // classic blue
-					uint32_t borderCol = 0xEEEEEE;
-					if (capeType == "gold") {
-						mainCol = 0x1AE0FF;   // bright gold
-						borderCol = 0x05B0E0; // deep golden trim
-					} else if (capeType == "black") {
-						mainCol = 0x1A1A1A;
-						borderCol = 0x3A3A3A;
-					} else if (capeType == "red") {
-						mainCol = 0x2222DD;
-						borderCol = 0xEEEEEE;
-					}
-
-					for (int x = 0; x < cw; ++x) {
-						for (int z = 0; z < ch; ++z) {
-							bool isBorder = (x == 0 || x == cw - 1 || z == 0 || z == ch - 1);
-							uint32_t c = isBorder ? borderCol : mainCol;
-							vm->SetSolid(x, 0, z, c);
-						}
-					}
-					playerCapeModel = renderer->CreateModel(*vm);
-				} catch (...) {
-					playerCapeModel.Set(nullptr, false);
-				}
-			}
-
-			// 2. Accessory Model (Crown or Tactical Helmet)
 			std::string accType = cg_playerAccessory;
 			loadedAccessoryType = accType;
-			if (accType == "none" || accType.empty()) {
-				playerAccessoryModel.Set(nullptr, false);
-			} else if (accType == "crown") {
-				try {
-					int const sz = 10;
-					int const h = 4;
-					Handle<VoxelModel> vm = Handle<VoxelModel>::New(sz, sz, h);
-					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, 0.0F));
-					uint32_t gold = 0x1AE0FF; // gold
-					uint32_t ruby = 0x2222EE; // red gem
-					for (int x = 0; x < sz; ++x) {
-						for (int y = 0; y < sz; ++y) {
-							bool edge = (x == 0 || x == sz - 1 || y == 0 || y == sz - 1);
-							if (edge) {
-								vm->SetSolid(x, y, 0, gold);
-								if (x == 0 || x == sz - 1 || x == sz / 2) {
-									if (y == 0 || y == sz - 1 || y == sz / 2) {
-										vm->SetSolid(x, y, 1, gold);
-										vm->SetSolid(x, y, 2, (x == sz / 2 || y == sz / 2) ? ruby : gold);
-									}
-								}
-							}
-						}
-					}
-					playerAccessoryModel = renderer->CreateModel(*vm);
-				} catch (...) {
-					playerAccessoryModel.Set(nullptr, false);
-				}
-			} else if (accType == "helmet") {
-				try {
-					int const sz = 10;
-					int const h = 5;
-					Handle<VoxelModel> vm = Handle<VoxelModel>::New(sz, sz, h);
-					vm->SetOrigin(MakeVector3(-static_cast<float>(sz) * 0.5F, -static_cast<float>(sz) * 0.5F, 0.0F));
-					uint32_t camo = 0x254A30; // dark green military
-					for (int x = 0; x < sz; ++x) {
-						for (int y = 0; y < sz; ++y) {
-							for (int z = 0; z < h; ++z) {
-								bool top = (z == 0);
-								bool side = (x == 0 || x == sz - 1 || y == 0 || y == sz - 1);
-								if (top || side)
-									vm->SetSolid(x, y, z, camo);
-							}
-						}
-					}
-					playerAccessoryModel = renderer->CreateModel(*vm);
-				} catch (...) {
-					playerAccessoryModel.Set(nullptr, false);
-				}
-			}
+			playerAccessoryModel = client::PlayerCosmetics::GetAccessoryModel(*renderer, accType);
 		}
 
 		void MainScreenUI::RenderLobbyScene(const client::SceneDefinition& sceneDef, float dt) {
@@ -429,16 +352,7 @@ namespace spades {
 			ModelRenderParam param;
 			std::string skin = cg_playerSkin;
 			Vector3 skinCol(0.18F, 0.45F, 0.85F); // Blue team uniform (default)
-			if (skin == "green" || skin == "camo")
-				skinCol = MakeVector3(0.18F, 0.58F, 0.22F);
-			else if (skin == "red")
-				skinCol = MakeVector3(0.85F, 0.20F, 0.20F);
-			else if (skin == "gold")
-				skinCol = MakeVector3(1.0F, 0.84F, 0.15F);
-			else if (skin == "black")
-				skinCol = MakeVector3(0.12F, 0.12F, 0.15F);
-			else if (skin == "white")
-				skinCol = MakeVector3(0.95F, 0.95F, 0.95F);
+			skinCol = client::PlayerCosmetics::GetSkinColor(skin, skinCol);
 			param.customColor = skinCol;
 
 			float const legsPosX = 0.25F;
@@ -552,6 +466,67 @@ namespace spades {
 
 			if (manager)
 				manager->KeyPanic();
+		}
+
+		void MainScreenUI::LoadBackgroundMap(const std::string& mapPath) {
+			try {
+				std::unique_ptr<IStream> stream{FileManager::OpenForReading(mapPath.c_str())};
+				if (stream) {
+					titleMap.Set(client::GameMap::Load(stream.get()), false);
+					renderer->SetGameMap(*titleMap);
+					renderer->SetFogColor(MakeVector3(0.1F, 0.1F, 0.1F));
+					renderer->SetFogDistance(140.0F);
+					time = -1.0F;
+				}
+			} catch (...) {}
+		}
+
+		void MainScreenUI::DropFileEvent(const std::string& filePath) {
+			std::string lowerPath = filePath;
+			std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+			if (lowerPath.size() >= 4 && lowerPath.substr(lowerPath.size() - 4) == ".png") {
+#ifdef _WIN32
+				_mkdir("Skins");
+				_mkdir("Resources\\Skins");
+#else
+				mkdir("Skins", 0755);
+				mkdir("Resources/Skins", 0755);
+#endif
+				std::ifstream src(filePath, std::ios::binary);
+				if (src.is_open()) {
+					std::vector<char> buffer((std::istreambuf_iterator<char>(src)),
+					                         std::istreambuf_iterator<char>());
+					src.close();
+					if (!buffer.empty()) {
+						std::ofstream dst1("Skins/custom.png", std::ios::binary);
+						if (dst1.is_open()) {
+							dst1.write(buffer.data(), buffer.size());
+							dst1.close();
+						}
+						std::ofstream dst2("Resources/Skins/custom.png", std::ios::binary);
+						if (dst2.is_open()) {
+							dst2.write(buffer.data(), buffer.size());
+							dst2.close();
+						}
+
+						cg_playerSkin = "custom";
+						Settings::GetInstance()->Flush();
+
+						client::PlayerCosmetics::ReloadCustomSkin();
+						UpdateLobbyCosmetics();
+
+						if (audioDevice) {
+							try {
+								audioDevice->PlaySound("Audio/Pick.wav");
+							} catch (...) {}
+						}
+
+						if (activeSkinScreen) {
+							activeSkinScreen->SelectCustomSkin();
+						}
+					}
+				}
+			}
 		}
 
 		void MainScreenUI::MouseEvent(float x, float y) { manager->MouseEvent(x, y); }

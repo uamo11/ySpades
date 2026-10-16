@@ -164,6 +164,7 @@ namespace spades {
 			Handle<HeadingNavIndex> gameNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> hudNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> rendererNav = Handle<HeadingNavIndex>::New();
+			Handle<HeadingNavIndex> ventanaNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> controlsNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> miscNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> detailedNav = Handle<HeadingNavIndex>::New();
@@ -185,6 +186,11 @@ namespace spades {
 			           .GetPointerOrNull(),
 			       _Tr("Preferences", "Graphics"), rendererNav.GetPointerOrNull(),
 			       GuiIconType::Graphics);
+			AddTab(Handle<VentanaOptionsPanel>::New(manager, options, fontManager,
+			                                        ventanaNav.GetPointerOrNull())
+			           .GetPointerOrNull(),
+			       _Tr("Preferences", "Ventana++"), ventanaNav.GetPointerOrNull(),
+			       GuiIconType::Ventana);
 			AddTab(Handle<ControlOptionsPanel>::New(manager, options, fontManager,
 			                                        controlsNav.GetPointerOrNull())
 			           .GetPointerOrNull(),

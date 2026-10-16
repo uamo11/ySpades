@@ -188,12 +188,12 @@ namespace spades {
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
 
-			float dlgW = std::min(740.0F, sw - 32.0F);
-			float dlgH = std::min(460.0F, sh - 32.0F);
-			float dlgX = (sw - dlgW) * 0.5F;
+			float dlgW = std::min(480.0F, sw * 0.48F);
+			float dlgH = std::min(550.0F, sh - 32.0F);
+			float dlgX = 24.0F;
 			float dlgY = (sh - dlgH) * 0.5F;
 
-			float sidebarW = 150.0F;
+			float sidebarW = 135.0F;
 			float tabH = 34.0F;
 			float tabGap = 3.0F;
 
@@ -255,13 +255,13 @@ namespace spades {
 			}
 
 			// --- 3. Content Panels ---
-			float contentX = dlgX + sidebarW + 18.0F;
+			float contentX = dlgX + sidebarW + 12.0F;
 			float contentY = dlgY + 45.0F;
-			float contentW = dlgW - sidebarW - 28.0F;
+			float contentW = dlgW - sidebarW - 20.0F;
 			float contentH = dlgH - 58.0F;
 
-			float rowH = 44.0F;
-			float rowGap = 5.0F;
+			float rowH = 40.0F;
+			float rowGap = 4.0F;
 
 			// A. Skins Panel
 			{
@@ -449,12 +449,26 @@ namespace spades {
 		void SkinSelectScreen::Run() {
 			owner->enable = false;
 			owner->GetParent()->AddChild(this);
+			if (mainScreenUI)
+				mainScreenUI->SetActiveSkinScreen(this);
 		}
 
 		void SkinSelectScreen::Close() {
+			if (mainScreenUI)
+				mainScreenUI->SetActiveSkinScreen(nullptr);
 			owner->enable = true;
 			if (GetParent())
 				GetParent()->RemoveChild(this);
+		}
+
+		void SkinSelectScreen::SelectCustomSkin() {
+			SwitchCategory(0);
+			for (auto* sr : skinRows) {
+				if (sr && sr->valueId == "custom")
+					sr->selected = true;
+				else if (sr)
+					sr->selected = false;
+			}
 		}
 
 		void SkinSelectScreen::HotKey(const std::string& key) {
@@ -473,14 +487,15 @@ namespace spades {
 			float sw = GetManager().screenWidth;
 			float sh = GetManager().screenHeight;
 
-			// Dimmed background overlay
-			SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, 0.75F));
-			r.DrawImage(nullptr, AABB2(0.0F, 0.0F, sw, sh));
-
-			float dlgW = std::min(740.0F, sw - 32.0F);
-			float dlgH = std::min(460.0F, sh - 32.0F);
-			float dlgX = (sw - dlgW) * 0.5F;
+			float dlgW = std::min(480.0F, sw * 0.48F);
+			float dlgH = std::min(550.0F, sh - 32.0F);
+			float dlgX = 24.0F;
 			float dlgY = (sh - dlgH) * 0.5F;
+
+			// Dimmed background overlay ONLY behind the left panel
+			// The right side where the 3D player stands remains clear, bright, and interactive!
+			SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, 0.40F));
+			r.DrawFilledRect(0.0F, 0.0F, dlgX + dlgW + 24.0F, sh);
 
 			// Main dialog body
 			SetColorNP(r, MakeVector4(0.04F, 0.06F, 0.09F, 0.96F));
@@ -495,16 +510,16 @@ namespace spades {
 			r.DrawFilledRect(dlgX, dlgY, dlgX + dlgW, dlgY + 3.0F);
 
 			// Vertical separator between sidebar and content
-			float sidebarW = 150.0F;
+			float sidebarW = 135.0F;
 			SetColorNP(r, MakeVector4(0.15F, 0.22F, 0.32F, 0.60F));
-			r.DrawFilledRect(dlgX + sidebarW + 10.0F, dlgY + 40.0F, dlgX + sidebarW + 11.5F, dlgY + dlgH - 12.0F);
+			r.DrawFilledRect(dlgX + sidebarW + 6.0F, dlgY + 40.0F, dlgX + sidebarW + 7.5F, dlgY + dlgH - 12.0F);
 
 			if (fontManager) {
 				client::IFont& font = fontManager->GetGuiFont();
 				Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.7F);
 
 				// Dialog title
-				font.DrawShadow(_Tr("MainScreen", "PERSONALIZACION DE SKINS Y COSMETICOS"),
+				font.DrawShadow(_Tr("MainScreen", "PERSONALIZACION DE SKINS"),
 				                MakeVector2(dlgX + 16.0F, dlgY + 14.0F), 1.05F,
 				                MakeVector4(0.95F, 0.98F, 1.0F, 1.0F), shadowCol);
 			}
