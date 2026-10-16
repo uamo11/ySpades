@@ -71,6 +71,11 @@ SPADES_SETTING(cg_orientationSmoothing);
 
 SPADES_SETTING(cg_pngScope);
 
+#include "PlayerCosmetics.h"
+SPADES_SETTING(cg_playerSkin);
+SPADES_SETTING(cg_playerCape);
+SPADES_SETTING(cg_playerAccessory);
+
 namespace spades {
 	namespace client {
 
@@ -1063,13 +1068,18 @@ namespace spades {
 
 						const bool isLeftArm = leftHanded ? (i != 0) : (i == 0);
 
+						ModelRenderParam armParam = param;
+						if (p.IsLocalPlayer() && (std::string)cg_playerSkin != "default") {
+							armParam.customColor = PlayerCosmetics::GetSkinColor(cg_playerSkin, armParam.customColor);
+						}
+
 						// draw arm
-						param.matrix = getArmMatrix(hand, elbow, isLeftArm);
-						renderer.RenderModel(*armModel, param);
+						armParam.matrix = getArmMatrix(hand, elbow, isLeftArm);
+						renderer.RenderModel(*armModel, armParam);
 
 						// draw upper arm
-						param.matrix = getArmMatrix(elbow, shoulder, isLeftArm);
-						renderer.RenderModel(*upperModel, param);
+						armParam.matrix = getArmMatrix(elbow, shoulder, isLeftArm);
+						renderer.RenderModel(*upperModel, armParam);
 					};
 
 					if (leftHandSqr > 0.01F)
@@ -1100,6 +1110,9 @@ namespace spades {
 			Handle<IModel> model;
 			ModelRenderParam param;
 			param.customColor = ConvertColorRGB(p.GetColor());
+			if (p.IsLocalPlayer() && (std::string)cg_playerSkin != "default") {
+				param.customColor = PlayerCosmetics::GetSkinColor(cg_playerSkin, param.customColor);
+			}
 
 			if (!p.IsAlive()) {
 				if (!cg_ragdoll) {
@@ -1252,6 +1265,27 @@ namespace spades {
 
 				param.matrix = torso * scaler;
 				renderer.RenderModel(*model, param);
+
+				// 3D Cape rendering
+				if (p.IsLocalPlayer() && (std::string)cg_playerCape != "none") {
+					Handle<IModel> capeModel = PlayerCosmetics::GetCapeModel(renderer, cg_playerCape);
+					if (capeModel) {
+						Vector3 vel = p.GetVelocity();
+						float forwardSpeed = Vector3::Dot(vel, p.GetFront2D());
+						float wave = sinf(client.time * 7.0F) * 0.10F;
+						float capeAngle = 0.22F + Clamp(forwardSpeed * 0.08F, -0.2F, 0.95F) + wave;
+
+						Matrix4 capeMat = torso
+							* (inp.crouch ? Matrix4::Translate(0.0F, 0.45F, -0.15F) * Matrix4::Rotate(MakeVector3(1, 0, 0), -0.3F)
+							              : Matrix4::Translate(0.0F, 0.38F, -0.18F))
+							* Matrix4::Rotate(MakeVector3(1, 0, 0), capeAngle)
+							* Matrix4::Scale(0.12F);
+
+						ModelRenderParam capeParam = param;
+						capeParam.matrix = capeMat;
+						renderer.RenderModel(*capeModel, capeParam);
+					}
+				}
 			}
 
 			// Arms
@@ -1270,6 +1304,20 @@ namespace spades {
 
 				param.matrix = head * scaler;
 				renderer.RenderModel(*model, param);
+
+				// 3D Head Accessory (Crown or Helmet)
+				if (p.IsLocalPlayer() && (std::string)cg_playerAccessory != "none") {
+					Handle<IModel> accModel = PlayerCosmetics::GetAccessoryModel(renderer, cg_playerAccessory);
+					if (accModel) {
+						Matrix4 accMat = head
+							* Matrix4::Translate(0.0F, 0.0F, 0.72F)
+							* Matrix4::Scale(0.11F);
+
+						ModelRenderParam accParam = param;
+						accParam.matrix = accMat;
+						renderer.RenderModel(*accModel, accParam);
+					}
+				}
 			}
 
 			// Tool

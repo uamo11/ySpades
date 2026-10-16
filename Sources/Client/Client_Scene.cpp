@@ -93,7 +93,7 @@ namespace spades {
 
 			if (!localPlayerIsSpectating && p.IsAlive()) {
 				// There exists an alive (non-spectator) local player
-				if (cg_thirdperson && (isStaff || world->GetNumPlayers() <= 1))
+				if (cg_thirdperson)
 					return ClientCameraMode::ThirdPersonLocal;
 				return ClientCameraMode::FirstPersonLocal;
 			} else {

@@ -58,6 +58,9 @@ DEFINE_SPADES_SETTING(cg_invertMouseY, "0");
 DEFINE_SPADES_SETTING(cg_holdAimDownSight, "0");
 DEFINE_SPADES_SETTING(cg_holdMapZoom, "0");
 
+SPADES_SETTING(cg_thirdperson);
+DEFINE_SPADES_SETTING(cg_keyToggleThirdPerson, "F5");
+
 DEFINE_SPADES_SETTING(cg_keyAttack, "LeftMouseButton");
 DEFINE_SPADES_SETTING(cg_keyAltAttack, "RightMouseButton");
 DEFINE_SPADES_SETTING(cg_keyToolSpade, "1");
@@ -1030,6 +1033,12 @@ namespace spades {
 					}
 				} else if (CheckKey(cg_keyScoreboard, name)) {
 					scoreboardVisible = down;
+				} else if (CheckKey(cg_keyToggleThirdPerson, name) && down) {
+					cg_thirdperson = (int)cg_thirdperson ? 0 : 1;
+					ShowAlert(_Tr("Client", (int)cg_thirdperson ? "Camara: Tercera Persona" : "Camara: Primera Persona"), AlertType::Notice);
+					Handle<IAudioChunk> c =
+					  audioDevice->RegisterSound("Sounds/Misc/SwitchMapZoom.opus");
+					audioDevice->PlayLocal(c.GetPointerOrNull(), AudioParam());
 				} else if (CheckKey(cg_keyNetgraph, name) && down) {
 					netgraphVisible = !netgraphVisible;
 					Handle<IAudioChunk> c =

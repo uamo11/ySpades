@@ -27,6 +27,7 @@
 #include "World.h"
 #include <Core/Debug.h>
 #include <Core/Settings.h>
+#include "PlayerCosmetics.h"
 
 using namespace std;
 
@@ -34,6 +35,7 @@ DEFINE_SPADES_SETTING(cg_corpseLineCollision, "0");
 DEFINE_SPADES_SETTING(cg_corpseDisableGravity, "0");
 
 SPADES_SETTING(cg_classicPlayerModels);
+SPADES_SETTING(cg_playerSkin);
 
 namespace spades {
 	namespace client {
@@ -45,6 +47,9 @@ namespace spades {
 			color = ConvertColorRGB(p.GetColor());
 			weaponName = p.GetWeapon().GetName();
 			isLocalPlayer = p.IsLocalPlayer();
+			if (isLocalPlayer && (std::string)cg_playerSkin != "default") {
+				color = PlayerCosmetics::GetSkinColor(cg_playerSkin, color);
+			}
 
 			Vector3 o = p.GetFront();
 
