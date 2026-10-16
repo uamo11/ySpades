@@ -68,6 +68,7 @@ DEFINE_SPADES_SETTING(cg_holdAimDownSight, "0");
 DEFINE_SPADES_SETTING(cg_holdMapZoom, "0");
 
 SPADES_SETTING(cg_thirdperson);
+SPADES_SETTING(cg_playerSkin);
 DEFINE_SPADES_SETTING(cg_keyToggleThirdPerson, "F5");
 
 DEFINE_SPADES_SETTING(cg_keyAttack, "LeftMouseButton");
@@ -357,10 +358,11 @@ namespace spades {
 						Settings::GetInstance()->Flush();
 						PlayerCosmetics::ReloadCustomSkin();
 
-						AddNotice("Skin personalizada cargada y equipada: custom.png");
+						ShowAlert("Skin personalizada cargada y equipada: custom.png", AlertType::Notice);
 						if (audioDevice) {
 							try {
-								audioDevice->PlaySound("Audio/Pick.wav");
+								Handle<IAudioChunk> c = audioDevice->RegisterSound("Sounds/Feedback/Limbo/Select.opus");
+								audioDevice->PlayLocal(c.GetPointerOrNull(), AudioParam());
 							} catch (...) {}
 						}
 					}

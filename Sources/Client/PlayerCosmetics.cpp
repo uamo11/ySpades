@@ -47,9 +47,9 @@ namespace spades {
 			g_customSkinLoaded = true;
 			try {
 				std::string path = "Skins/custom.png";
-				if (!FileManager::FileExists(path))
+				if (!FileManager::FileExists(path.c_str()))
 					path = "Resources/Skins/custom.png";
-				if (FileManager::FileExists(path)) {
+				if (FileManager::FileExists(path.c_str())) {
 					Handle<Bitmap> bmp = Bitmap::Load(path);
 					if (bmp && bmp->GetWidth() >= 16 && bmp->GetHeight() >= 16) {
 						// Sample front torso shirt center around (24, 24)
