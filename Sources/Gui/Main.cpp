@@ -148,7 +148,7 @@ namespace {
 			} else {
 				buf[0] = 0; // empty it, the file will now end up in the working directory :(
 			}
-			sprintf(fullBuf, "%sZeroSpadesCrash%d.dmp", buf, GetTickCount()); // some sort of randomization.
+			sprintf(fullBuf, "%sySpadesCrash%d.dmp", buf, GetTickCount()); // some sort of randomization.
 			HANDLE hFile = CreateFile(fullBuf, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
 									  FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hFile != INVALID_HANDLE_VALUE) {
@@ -1041,7 +1041,7 @@ int main(int argc, char** argv) {
 
 		std::string msg = ex.what();
 		msg = _Tr("Main",
-		          "A serious error caused ZeroSpades to stop working:\n\n{0}\n\nSee "
+		          "A serious error caused ySpades to stop working:\n\n{0}\n\nSee "
 		          "SystemMessages.log for more details.",
 		          msg);
 
@@ -1049,7 +1049,7 @@ int main(int argc, char** argv) {
 
 		SDL_InitSubSystem(SDL_INIT_VIDEO);
 		if (SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-			_Tr("Main", "ZeroSpades Fatal Error").c_str(), msg.c_str(), nullptr)) {
+			_Tr("Main", "ySpades Fatal Error").c_str(), msg.c_str(), nullptr)) {
 			// showing dialog failed.
 			// TODO: do appropriate action
 		}

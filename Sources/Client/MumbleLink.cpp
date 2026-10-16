@@ -112,8 +112,8 @@ namespace spades {
 			return;
 
 		if (mumbleLinkedMemory->uiVersion != 2) {
-			wcsncpy(mumbleLinkedMemory->name, L"ZeroSpades", 256);
-			wcsncpy(mumbleLinkedMemory->description, L"ZeroSpades Link plugin.", 2048);
+			wcsncpy(mumbleLinkedMemory->name, L"ySpades", 256);
+			wcsncpy(mumbleLinkedMemory->description, L"ySpades Link plugin.", 2048);
 			mumbleLinkedMemory->uiVersion = 2;
 		}
 		mumbleLinkedMemory->uiTick++;

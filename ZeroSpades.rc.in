@@ -18,12 +18,12 @@ BEGIN
 	BEGIN
 		BLOCK "040904E4"
 		BEGIN
-			VALUE "CompanyName",		"yvt.jp"
-			VALUE "FileDescription",	"A Win32 program."
+			VALUE "CompanyName",		"yvt.jp / ySpades"
+			VALUE "FileDescription",	"ySpades Client"
 			VALUE "FileVersion",		"@ZEROSPADES_VERSION_MAJOR@.@ZEROSPADES_VERSION_MINOR@.@ZEROSPADES_VERSION_PATCH@.0"
-			VALUE "ProductName",		"ZeroSpades${ZEROSPADES_EXTRATITLE}"
+			VALUE "ProductName",		"ySpades${ZEROSPADES_EXTRATITLE}"
 			VALUE "ProductVersion",		"@ZEROSPADES_VERSION_MAJOR@.@ZEROSPADES_VERSION_MINOR@.@ZEROSPADES_VERSION_PATCH@"
-			VALUE "LegalCopyright",		"yvt.jp"
+			VALUE "LegalCopyright",		"yvt.jp / ySpades"
 		END
 	END
 

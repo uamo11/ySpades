@@ -36,17 +36,17 @@ namespace spades {
 			// Only published, non-prerelease releases are returned here, so a
 			// draft or a release candidate never triggers the notice.
 			constexpr const char* kLatestReleaseUrl =
-			  "https://api.github.com/repos/zerospades/zerospades/releases/latest";
+			  "https://api.github.com/repos/uamo11/ySpades/releases/latest";
 
 			// Every link the check hands to the browser must start with this; the
 			// response is untrusted, and the link ends up in a shell open call.
 			constexpr const char* kReleasesPageUrl =
-			  "https://github.com/zerospades/zerospades/releases/";
+			  "https://github.com/uamo11/ySpades/releases/";
 
 			// A release's page is this followed by its tag. Used only when the
 			// response carries no acceptable page link of its own.
 			constexpr const char* kReleaseTagPageUrl =
-			  "https://github.com/zerospades/zerospades/releases/tag/";
+			  "https://github.com/uamo11/ySpades/releases/tag/";
 
 			/**
 			 * True if `url` is one of the project's release pages, with a path made

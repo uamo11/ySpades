@@ -90,7 +90,7 @@ namespace spades {
 			releaseUrl = result.releaseUrl;
 			caption =
 			  _Tr("MainScreen",
-			      "ZeroSpades {0} is available (you have {1}). Click to open the release page.",
+			      "ySpades {0} is available (you have {1}). Click to open the release page.",
 			      result.latestVersion.ToString(), ReleaseVersion::Current().ToString());
 		}
 
@@ -178,9 +178,9 @@ namespace spades {
 			UpdateChecker::Result result = UpdateChecker::Get().GetResult();
 			std::string text =
 			  _Tr("MainScreen",
-			      "A new version of ZeroSpades is available!\n\n"
+			      "A new version of ySpades is available!\n\n"
 			      "Installed version: {0}\nLatest version: {1}\n\n"
-			      "Open the release page to download it? ZeroSpades will close so the "
+			      "Open the release page to download it? ySpades will close so the "
 			      "update can be installed.",
 			      ReleaseVersion::Current().ToString(), result.latestVersion.ToString());
 

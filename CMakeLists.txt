@@ -347,7 +347,7 @@ if(APPLE)
 endif(APPLE)
 
 #see http://www.cmake.org/cmake/help/v2.8.11/cpack.html
-set(CPACK_PACKAGE_NAME "ZeroSpades")
+set(CPACK_PACKAGE_NAME "ySpades")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open-source clone of Ace of Spades")
 set(CPACK_PACKAGE_DESCRIPTION "Open-source clone of Ace of Spades - free FPS sandbox game")
 set(CPACK_PACKAGE_VENDOR "yvt, assorted")
@@ -355,9 +355,9 @@ set(CPACK_PACKAGE_CONTACT "yvt <i@yvt.jp>")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "zerospades-${ZEROSPADES_VERSION_FULL}")
-set(CPACK_PACKAGE_FILE_NAME "zerospades-${ZEROSPADES_VERSION_FULL}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "ZeroSpades ${ZEROSPADES_VERSION_FULL}")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "yspades-${ZEROSPADES_VERSION_FULL}")
+set(CPACK_PACKAGE_FILE_NAME "yspades-${ZEROSPADES_VERSION_FULL}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "ySpades ${ZEROSPADES_VERSION_FULL}")
 set(CPACK_PACKAGE_VERSION_MAJOR ${ZEROSPADES_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${ZEROSPADES_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${ZEROSPADES_VERSION_PATCH})
@@ -366,10 +366,10 @@ set(CPACK_TOPLEVEL_TAG "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 
 if(WIN32 AND NOT UNIX)
 
-	set(CPACK_NSIS_DISPLAY_NAME "ZeroSpades ${ZEROSPADES_VERSION_FULL}")
+	set(CPACK_NSIS_DISPLAY_NAME "ySpades ${ZEROSPADES_VERSION_FULL}")
 	# There is a bug in NSIS that does not handle full unix paths properly. Make
 	# sure there is at least one set of four (4) backlasshes.
-	set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\zerospades.exe")
+	set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\yspades.exe")
 	# TODO: set(CPACK_PACKAGE_ICON	"")
 	set(CPACK_NSIS_HELP_LINK "https://sites.google.com/a/yvt.jp/openspades/")
 	set(CPACK_NSIS_URL_INFO_ABOUT "http://buildandshoot.com/viewforum.php?f=57")
@@ -401,6 +401,6 @@ elseif(UNIX AND NOT APPLE)
 
 endif(WIN32 AND NOT UNIX)
 
-set(CPACK_PACKAGE_EXECUTABLES "zerospades" "Launch ZeroSpades")
+set(CPACK_PACKAGE_EXECUTABLES "yspades" "Launch ySpades")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)		#everyone hates a dir inside a zip named exactly like the zip
 include(CPack)

@@ -65,7 +65,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: zerospades-windows-x86
+          name: yspades-windows-x86
           path: |
             ${{ runner.workspace }}\zerospades.mk\bin\Release
             !${{ runner.workspace }}\**\*.lib
@@ -135,7 +135,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: zerospades-windows-x64
+          name: yspades-windows-x64
           path: |
             ${{ runner.workspace }}\zerospades.mk\bin\Release
             !${{ runner.workspace }}\**\*.lib
