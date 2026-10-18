@@ -303,6 +303,9 @@ namespace spades {
 			    persistedState->selectedTabIndex < static_cast<int>(tabs.size()))
 				selectedTabIndex = persistedState->selectedTabIndex;
 
+			if (selectedTabIndex == 3 || selectedTabIndex == 6)
+				selectedTabIndex = 0;
+
 			size_t limit = tabs.size();
 			if (persistedState->tabScrollRows.size() < limit)
 				limit = persistedState->tabScrollRows.size();
@@ -348,7 +351,7 @@ namespace spades {
 		void PreferenceView::OnTabButtonActivated(UIElement& sender) {
 			for (size_t i = 0; i < tabs.size(); i++) {
 				if (static_cast<UIElement*>(tabs[i]->tabButton) == &sender) {
-					if (i == 6) {
+					if (i == 3 || i == 6) {
 						Close();
 						if (onDetailedRequested)
 							onDetailedRequested(*this);
@@ -361,7 +364,7 @@ namespace spades {
 		}
 
 		void PreferenceView::SelectTab(int index) {
-			if (index == 6) {
+			if (index == 3 || index == 6) {
 				Close();
 				if (onDetailedRequested)
 					onDetailedRequested(*this);

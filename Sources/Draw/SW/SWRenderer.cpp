@@ -116,6 +116,9 @@ namespace spades {
 		void SWRenderer::Init() {
 			SPADES_MARK_FUNCTION();
 
+			if (inited)
+				return;
+
 			SPLog("---- SWRenderer late initialization started ---");
 			modelManager = std::make_shared<SWModelManager>();
 

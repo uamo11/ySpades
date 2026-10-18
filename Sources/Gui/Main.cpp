@@ -1018,7 +1018,7 @@ int main(int argc, char** argv) {
 			splashWindow.reset();
 
 			SPLog("Starting setup configuration screen");
-			spades::gui::StartupScreen::Run();
+			spades::gui::StartupScreen::Run(false);
 		} else if (!g_autoconnect) {
 			splashWindow.reset();
 

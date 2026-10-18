@@ -25,6 +25,7 @@
 #include <Core/Strings.h>
 #include <Gui/StartupScreenHelper.h>
 #include <Gui/UI/Framework/UIManager.h>
+#include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/TabStrip.h>
 
 namespace spades {
@@ -37,6 +38,69 @@ namespace spades {
 		using ui::UIElement;
 		using ui::UIManager;
 
+		class SetupActionButton : public ui::Button {
+		public:
+			GuiIconType iconType = GuiIconType::None;
+			Vector4 iconColor = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
+
+			SetupActionButton(ui::UIManager* manager, GuiIconType icon, const Vector4& iconCol)
+			    : ui::Button(manager), iconType(icon), iconColor(iconCol) {
+				alignment = MakeVector2(0.0F, 0.5F);
+			}
+
+			void Render() override {
+				client::IRenderer& r = GetManager().GetRenderer();
+				Vector2 pos = GetScreenPosition();
+				Vector2 sz = size;
+
+				Vector4 bgCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.65F);
+				Vector4 borderCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.90F);
+				Vector4 textCol = MakeVector4(0.95F, 0.95F, 0.95F, 1.0F);
+
+				if (down || toggled) {
+					bgCol = MakeVector4(0.12F, 0.45F, 0.75F, 0.75F);
+					borderCol = MakeVector4(0.35F, 0.80F, 1.0F, 1.0F);
+				} else if (hovered) {
+					bgCol = MakeVector4(0.08F, 0.22F, 0.38F, 0.70F);
+					borderCol = MakeVector4(0.40F, 0.85F, 1.0F, 0.90F);
+				}
+
+				ui::SetColorNP(r, bgCol);
+				r.DrawFilledRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+				ui::SetColorNP(r, borderCol);
+				r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+				if (hovered || toggled) {
+					ui::SetColorNP(r, MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
+					r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + 3, pos.y + sz.y - 1);
+				}
+
+				if (iconType != GuiIconType::None) {
+					DrawGuiIcon(r, iconType, MakeVector2(pos.x + 18.0F, pos.y + sz.y * 0.5F),
+					            (hovered ? MakeVector4(1, 1, 1, 1) : iconColor), 1.15F);
+				}
+
+				client::IFont* font = GetFont();
+				if (!font)
+					return;
+
+				float textStartX = (iconType != GuiIconType::None) ? 36.0F : 12.0F;
+				Vector2 txtPos = MakeVector2(pos.x + textStartX,
+				                             pos.y + (sz.y - font->Measure(caption).y) * 0.5F);
+				font->DrawShadow(caption, txtPos, 1.0F, textCol, MakeVector4(0.0F, 0.0F, 0.0F, 0.4F));
+
+				if (!hotKeyText.empty()) {
+					Vector2 hkSize = font->Measure(hotKeyText);
+					Vector2 hkPos = MakeVector2(pos.x + sz.x - hkSize.x - 10.0F,
+					                            pos.y + (sz.y - hkSize.y) * 0.5F);
+					font->DrawShadow(hotKeyText, hkPos, 1.0F,
+					                 MakeVector4(textCol.x, textCol.y, textCol.z, 0.5F),
+					                 MakeVector4(0.0F, 0.0F, 0.0F, 0.3F));
+				}
+			}
+		};
+
 		StartupScreenMainMenu::StartupScreenMainMenu(StartupScreenUI* ui)
 		    : UIElement(&ui->GetUIManager()),
 		      ui(ui),
@@ -48,20 +112,26 @@ namespace spades {
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
 
+			// Atrás button [Esc] on left
 			{
-				Handle<Button> button = Handle<Button>::New(manager);
-				button->caption = _Tr("StartupScreen", "Aplicar");
-				button->hotKeyText = _Tr("Client", "[Enter]");
-				button->SetBounds(AABB2(sw - 170.0F, 20.0F, 150.0F, 30.0F));
-				button->activated = [this](UIElement&) { Start(); };
+				Handle<SetupActionButton> button =
+				    Handle<SetupActionButton>::New(manager, GuiIconType::Back,
+				                                   MakeVector4(0.92F, 0.50F, 0.50F, 1.0F));
+				button->caption = _Tr("StartupScreen", "Atrás");
+				button->hotKeyText = _Tr("Client", "[Esc]");
+				button->SetBounds(AABB2(sw - 330.0F, 16.0F, 145.0F, 34.0F));
+				button->activated = [this](UIElement&) { this->ui->shouldExit = true; };
 				AddChild(button.GetPointerOrNull());
 			}
+			// Aplicar button [Enter] on right
 			{
-				Handle<Button> button = Handle<Button>::New(manager);
-				button->caption = _Tr("StartupScreen", "Cerrar");
-				button->hotKeyText = _Tr("Client", "[Esc]");
-				button->SetBounds(AABB2(sw - 330.0F, 20.0F, 140.0F, 30.0F));
-				button->activated = [this](UIElement&) { this->ui->shouldExit = true; };
+				Handle<SetupActionButton> button =
+				    Handle<SetupActionButton>::New(manager, GuiIconType::Check,
+				                                   MakeVector4(0.35F, 0.90F, 0.55F, 1.0F));
+				button->caption = _Tr("StartupScreen", "Aplicar");
+				button->hotKeyText = _Tr("Client", "[Enter]");
+				button->SetBounds(AABB2(sw - 170.0F, 16.0F, 150.0F, 34.0F));
+				button->activated = [this](UIElement&) { Start(); };
 				AddChild(button.GetPointerOrNull());
 			}
 			float capSize = GetFont()->Measure(_Tr("StartupScreen", "Saltar esta pantalla la proxima vez")).x;

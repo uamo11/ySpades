@@ -74,7 +74,7 @@ namespace spades {
 
 			bool WantsToBeClosed() override;
 
-			static void Run();
+			static void Run(bool launchGameOnStart = true);
 		};
 	} // namespace gui
 } // namespace spades

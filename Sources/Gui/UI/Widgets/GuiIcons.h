@@ -51,6 +51,8 @@ namespace spades {
 			Misc,
 			Detailed,
 			Back,
+			Check,
+			Apply = Check,
 			// HKS Mod Menu Tabs
 			Building,
 			Flight,
@@ -72,6 +74,12 @@ namespace spades {
 			float cy = center.y;
 
 			switch (type) {
+			case GuiIconType::Check: {
+				// Elegant crisp checkmark (success / apply)
+				r.DrawLine(MakeVector2(cx - 5.0F * s, cy), MakeVector2(cx - 1.2F * s, cy + 4.5F * s), 2.0F * s);
+				r.DrawLine(MakeVector2(cx - 1.2F * s, cy + 4.5F * s), MakeVector2(cx + 6.0F * s, cy - 4.5F * s), 2.2F * s);
+				break;
+			}
 			case GuiIconType::Lobby:
 			case GuiIconType::Back: {
 				// Arrow pointing left

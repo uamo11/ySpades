@@ -487,55 +487,11 @@ namespace spades {
 			StandardPreferenceLayouter& l = *layouter;
 			l.headingNav = nav;
 
-			l.AddHeading(_Tr("Preferences", "Resolución de Pantalla"));
-			l.AddChoiceField(_Tr("Preferences", "Resolución Predefinida"), "r_videoPreset",
-			                 {"1920x1080 (FHD 16:9)", "1600x900 (HD+ 16:9)", "1366x768 (Laptop 16:9)",
-			                  "1280x720 (HD 16:9)", "1024x768 (XGA 4:3)", "800x600 (SVGA 4:3)"},
-			                 {0, 1, 2, 3, 4, 5});
+			l.AddHeading(_Tr("Preferences", "Ventana++ & Configuración Clásica"));
 			l.AddHelp(_Tr("Preferences",
-				"Selecciona una resolución estándar. Haz clic en 'Guardar y Aplicar' para guardarla en la configuración."));
+				"Abre la pantalla de configuración clásica con selector desplegable de resoluciones nativas, relación de aspecto, frecuencia de actualización, modo pantalla completa, MSAA y renderizador."));
 
-			l.AddButtonField(_Tr("Preferences", "Aplicar Resolución"), _Tr("Preferences", "Guardar y Aplicar"),
-			    [](UIElement&) {
-				    int preset = r_videoPreset;
-				    switch (preset) {
-					    case 0: r_videoWidth = 1920; r_videoHeight = 1080; break;
-					    case 1: r_videoWidth = 1600; r_videoHeight = 900; break;
-					    case 2: r_videoWidth = 1366; r_videoHeight = 768; break;
-					    case 3: r_videoWidth = 1280; r_videoHeight = 720; break;
-					    case 4: r_videoWidth = 1024; r_videoHeight = 768; break;
-					    case 5: r_videoWidth = 800; r_videoHeight = 600; break;
-				    }
-				    Settings::GetInstance()->Flush();
-			    });
-
-			l.AddToggleField(_Tr("Preferences", "Pantalla Completa (Fullscreen)"), "r_fullscreen");
-			l.AddHelp(_Tr("Preferences", "Ejecuta el juego en pantalla completa exclusiva. Pulsa Alt+Enter en cualquier momento para alternar."));
-
-			l.AddHeading(_Tr("Preferences", "Rendimiento & Cuadros por Segundo"));
-			l.AddChoiceField(_Tr("Preferences", "Límite de FPS (Max Frames)"), "cl_fps",
-			                 {"Ilimitado (0)", "60 FPS", "75 FPS", "120 FPS", "144 FPS", "240 FPS"},
-			                 {0, 60, 75, 120, 144, 240});
-			l.AddHelp(_Tr("Preferences", "Limita los fotogramas máximos por segundo para ahorrar energía y evitar fluctuaciones."));
-
-			l.AddChoiceField(_Tr("Preferences", "Sincronización Vertical (V-Sync)"), "r_vsync",
-			                 {"Desactivado (0)", "Activado (1)", "Adaptativo (-1)"},
-			                 {0, 1, -1});
-			l.AddHelp(_Tr("Preferences", "Sincroniza los fotogramas con la tasa de refresco del monitor para eliminar el tearing."));
-
-			l.AddHeading(_Tr("Preferences", "Antialiasing & Motor Gráfico"));
-			l.AddChoiceField(_Tr("Preferences", "Suavizado de Bordes (MSAA)"), "r_multisamples",
-			                 {"Desactivado (0x)", "2x MSAA", "4x MSAA", "8x MSAA"},
-			                 {0, 2, 4, 8});
-			l.AddHelp(_Tr("Preferences", "Suaviza el aliasing y dientes de sierra en los bordes de los bloques y modelos 3D."));
-
-			l.AddChoiceField(_Tr("Preferences", "Motor Gráfico (Renderer)"), "r_renderer",
-			                 {"OpenGL (GPU Acelerado)", "Software (Modo Seguro CPU)"},
-			                 {"gl", "sw"});
-			l.AddHelp(_Tr("Preferences", "OpenGL es el motor rápido acelerado por tarjeta gráfica. Software es el modo seguro por CPU."));
-
-			l.AddHeading(_Tr("Preferences", "Ajustes Avanzados de Inicio"));
-			l.AddButtonField(_Tr("Preferences", "Panel Clásico Completo"), _Tr("Preferences", "Abrir Panel..."),
+			l.AddButtonField(_Tr("Preferences", "Configuración Clásica"), _Tr("Preferences", "Abrir Ventana++"),
 			    [this](UIElement&) {
 				    UIElement* p = this;
 				    while (p && !dynamic_cast<PreferenceView*>(p))
@@ -546,7 +502,14 @@ namespace spades {
 						    pv->onDetailedRequested(*pv);
 				    }
 			    });
-			l.AddHelp(_Tr("Preferences", "Abre la pantalla de configuración original de inicio con la lista completa de resoluciones detectadas."));
+
+			l.AddToggleField(_Tr("Preferences", "Pantalla Completa (Fullscreen)"), "r_fullscreen");
+			l.AddHelp(_Tr("Preferences", "Ejecuta el juego en pantalla completa. Pulsa Alt+Enter en cualquier momento para alternar."));
+
+			l.AddChoiceField(_Tr("Preferences", "Sincronización Vertical (V-Sync)"), "r_vsync",
+			                 {"Desactivado", "Activado"},
+			                 {0, 1});
+			l.AddHelp(_Tr("Preferences", "Sincroniza los fotogramas con el monitor para eliminar el tearing."));
 
 			l.FinishLayout();
 		}

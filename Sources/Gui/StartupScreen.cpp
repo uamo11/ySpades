@@ -152,7 +152,7 @@ namespace spades {
 
 		void StartupScreen::Start() { startRequested = true; }
 
-		void StartupScreen::Run() {
+		void StartupScreen::Run(bool launchGameOnStart) {
 			SDL_InitSubSystem(SDL_INIT_VIDEO);
 
 			auto* helper = new StartupScreenHelper();
@@ -188,7 +188,7 @@ namespace spades {
 				startFlag = runner.RunAndGetStartFlag();
 			}
 
-			if (startFlag)
+			if (startFlag && launchGameOnStart)
 				spades::StartMainScreen();
 		}
 	} // namespace gui
