@@ -19,6 +19,15 @@
  */
 
 #include "ClientMenu.h"
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 #include <Client/ClientUI.h>
 #include <Client/ClientUIHelper.h>
 #include <Client/Fonts.h>
@@ -212,12 +221,16 @@ namespace spades {
 			};
 			al->onDetailedRequested = [](UIElement&) {
 #ifdef _WIN32
-				STARTUPINFOA si = { sizeof(si) };
-				PROCESS_INFORMATION pi = {};
+				STARTUPINFOA si;
+				ZeroMemory(&si, sizeof(si));
+				si.cb = sizeof(si);
+				PROCESS_INFORMATION pi;
+				ZeroMemory(&pi, sizeof(pi));
 				char cmdLine[] = "ySpades.exe --setup";
-				CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-				if (pi.hProcess) CloseHandle(pi.hProcess);
-				if (pi.hThread) CloseHandle(pi.hThread);
+				if (CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+					CloseHandle(pi.hProcess);
+					CloseHandle(pi.hThread);
+				}
 #endif
 			};
 			al->Run();

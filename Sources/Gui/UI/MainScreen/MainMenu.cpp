@@ -319,7 +319,6 @@ namespace spades {
 			    : manager(manager), list(std::move(list)), selectedFilename(selected) {}
 
 			int GetNumRows() override { return static_cast<int>(list.size()); }
-			float GetRowHeight() const override { return 44.0F; }
 
 			Handle<ui::UIElement> CreateElement(int row) override {
 				if (row < 0 || row >= static_cast<int>(list.size()))

@@ -61,7 +61,7 @@ namespace spades {
 				button->caption = _Tr("StartupScreen", "Cerrar");
 				button->hotKeyText = _Tr("Client", "[Esc]");
 				button->SetBounds(AABB2(sw - 330.0F, 20.0F, 140.0F, 30.0F));
-				button->activated = [this](UIElement&) { ui->shouldExit = true; };
+				button->activated = [this](UIElement&) { this->ui->shouldExit = true; };
 				AddChild(button.GetPointerOrNull());
 			}
 			float capSize = GetFont()->Measure(_Tr("StartupScreen", "Saltar esta pantalla la proxima vez")).x;
