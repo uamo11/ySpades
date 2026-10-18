@@ -456,7 +456,7 @@ namespace spades {
 			std::unique_ptr<IStream> stream{FileManager::OpenForReading("Maps/LAbeach.vxl")};
 			bool isLAbeach = (stream != nullptr);
 			if (!stream)
-				stream.reset(FileManager::OpenForReading("Maps/Title.vxl"));
+				stream = FileManager::OpenForReading("Maps/Title.vxl");
 			if (stream) {
 				titleMap.Set(client::GameMap::Load(stream.get()), false);
 				renderer->SetGameMap(*titleMap);

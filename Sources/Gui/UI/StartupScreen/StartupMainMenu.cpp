@@ -57,10 +57,10 @@ namespace spades {
 				Vector4 borderCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.90F);
 				Vector4 textCol = MakeVector4(0.95F, 0.95F, 0.95F, 1.0F);
 
-				if (down || toggled) {
+				if (pressed || toggled) {
 					bgCol = MakeVector4(0.12F, 0.45F, 0.75F, 0.75F);
 					borderCol = MakeVector4(0.35F, 0.80F, 1.0F, 1.0F);
-				} else if (hovered) {
+				} else if (hover) {
 					bgCol = MakeVector4(0.08F, 0.22F, 0.38F, 0.70F);
 					borderCol = MakeVector4(0.40F, 0.85F, 1.0F, 0.90F);
 				}
@@ -71,13 +71,13 @@ namespace spades {
 				ui::SetColorNP(r, borderCol);
 				r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
 
-				if (hovered || toggled) {
+				if (hover || toggled) {
 					ui::SetColorNP(r, MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
 					r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + 3, pos.y + sz.y - 1);
 				}
 
 				if (iconType != GuiIconType::None) {
-					Vector4 ic = hovered ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F) : iconColor;
+					Vector4 ic = hover ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F) : iconColor;
 					DrawGuiIcon(r, iconType, MakeVector2(pos.x + 18.0F, pos.y + sz.y * 0.5F), ic, 1.15F);
 				}
 
