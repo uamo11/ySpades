@@ -2400,21 +2400,39 @@ namespace spades {
 				teamColor = MakeVector4(0.70F, 0.80F, 0.95F, 1.0F);
 			}
 
-			// Format display string
-			std::string upperName = ToUpperCase(teamName);
-			std::string displayStr;
-			if (world->IsModeFFA()) {
-				displayStr = "MODO: TODOS VS TODOS (FFA)";
-			} else if (isSpectator || teamId < 0) {
-				displayStr = "ESPECTADOR";
-			} else if (upperName.find("TEAM") != std::string::npos || upperName.find("EQUIPO") != std::string::npos) {
-				displayStr = upperName;
-			} else {
-				displayStr = "EQUIPO " + upperName;
+			// Format display string with zero per-frame heap allocations
+			static int lastTeamId = -999;
+			static std::string lastTeamName;
+			static bool lastIsFFA = false;
+			static bool lastIsSpectator = false;
+			static std::string cachedDisplayStr;
+			static Vector2 cachedTextSize(0.0F, 0.0F);
+
+			bool isFFA = world->IsModeFFA();
+			if (lastTeamId != teamId || lastIsFFA != isFFA || lastIsSpectator != isSpectator || lastTeamName != teamName) {
+				lastTeamId = teamId;
+				lastIsFFA = isFFA;
+				lastIsSpectator = isSpectator;
+				lastTeamName = teamName;
+
+				std::string upperName = ToUpperCase(teamName);
+				if (isFFA) {
+					cachedDisplayStr = "MODO: TODOS VS TODOS (FFA)";
+				} else if (isSpectator || teamId < 0) {
+					cachedDisplayStr = "ESPECTADOR";
+				} else if (upperName.find("TEAM") != std::string::npos || upperName.find("EQUIPO") != std::string::npos) {
+					cachedDisplayStr = upperName;
+				} else {
+					cachedDisplayStr = "EQUIPO " + upperName;
+				}
+
+				IFont& font = fontManager->GetGuiFont();
+				cachedTextSize = font.Measure(cachedDisplayStr);
 			}
 
 			IFont& font = fontManager->GetGuiFont();
-			Vector2 textSize = font.Measure(displayStr);
+			const Vector2& textSize = cachedTextSize;
+			const std::string& displayStr = cachedDisplayStr;
 
 			float badgeH = 22.0F;
 			float badgePaddingX = 8.0F;
@@ -2938,7 +2956,7 @@ namespace spades {
 				if (cg_stats)
 					DrawStats();
 
-				if (static_cast<bool>(cg_showFpsMs))
+				if (static_cast<int>(cg_showFpsMs) > 0)
 					DrawFpsMsOverlay();
 			}
 
@@ -3157,22 +3175,48 @@ namespace spades {
 		void Client::DrawFpsMsOverlay() {
 			SPADES_MARK_FUNCTION();
 
-			if (!static_cast<bool>(cg_showFpsMs))
+			const int mode = static_cast<int>(cg_showFpsMs);
+			if (mode <= 0)
 				return;
 
 			static float lastUpdateTime = -1.0F;
-			static char cachedText[48] = "";
+			static char cachedText[96] = "";
 			static Vector2 cachedSize = MakeVector2(0.0F, 0.0F);
+			static Vector4 cachedAccent = MakeVector4(0.2F, 0.88F, 0.4F, 0.85F);
 
 			// Refresh every 100ms (10 times/second) with zero allocations per frame
 			if (time - lastUpdateTime >= 0.10F || lastUpdateTime < 0.0F) {
 				lastUpdateTime = time;
 				int fps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetFps())));
+				double ft = fpsCounter.GetFrameTimeMs();
 				int ping = activeNet ? activeNet->GetPing() : 0;
-				if (fps <= 0)
-					snprintf(cachedText, sizeof(cachedText), "FPS: -- | %d ms", ping);
-				else
-					snprintf(cachedText, sizeof(cachedText), "%d FPS | %d ms", fps, ping);
+
+				if (fps >= 60) {
+					cachedAccent = MakeVector4(0.2F, 0.88F, 0.4F, 0.85F); // Emerald green
+				} else if (fps >= 30) {
+					cachedAccent = MakeVector4(0.95F, 0.75F, 0.2F, 0.85F); // Amber warning
+				} else {
+					cachedAccent = MakeVector4(0.95F, 0.25F, 0.25F, 0.90F); // Red drop/stutter alert
+				}
+
+				if (mode >= 2) {
+					// Modo Depuración FPS detallado
+					int minFps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetMinFps())));
+					int maxFps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetMaxFps())));
+					if (fps <= 0) {
+						snprintf(cachedText, sizeof(cachedText), "FPS: -- | %.1f ms | %d ms ping", ft, ping);
+					} else {
+						snprintf(cachedText, sizeof(cachedText), "%d FPS [min %d / max %d] | %.1f ms | %d ms",
+						         fps, minFps, maxFps, ft, ping);
+					}
+				} else {
+					// Modo Simple
+					if (fps <= 0) {
+						snprintf(cachedText, sizeof(cachedText), "FPS: -- | %d ms", ping);
+					} else {
+						snprintf(cachedText, sizeof(cachedText), "%d FPS (%.1f ms) | %d ms", fps, ft, ping);
+					}
+				}
 
 				IFont& font = fontManager->GetSmallFont();
 				cachedSize = font.Measure(cachedText);
@@ -3185,11 +3229,11 @@ namespace spades {
 
 			// Sleek dark pill backdrop
 			AABB2 bgRect(pos.x - 6.0F, pos.y - 2.0F, cachedSize.x + 12.0F, cachedSize.y + 4.0F);
-			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.55F).Premultiplied());
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.60F).Premultiplied());
 			renderer->DrawImage(nullptr, bgRect);
 
-			// Subtle outline accent line at bottom of badge
-			renderer->SetColorAlphaPremultiplied(MakeVector4(0.2F, 0.8F, 0.4F, 0.50F).Premultiplied());
+			// Dynamic colored accent line at bottom of badge indicating stability
+			renderer->SetColorAlphaPremultiplied(cachedAccent.Premultiplied());
 			renderer->DrawLine(MakeVector2(bgRect.min.x, bgRect.max.y), MakeVector2(bgRect.max.x, bgRect.max.y), 1.5F);
 
 			// Draw text with shadow

@@ -55,6 +55,7 @@
 #include <Gui/UI/Components/LimboMenu.h>
 #include "Corpse.h"
 #include "SmokeSpriteEntity.h"
+#include "PlayerCosmetics.h"
 
 #include "GameMap.h"
 #include "Weapon.h"
@@ -367,6 +368,8 @@ namespace spades {
 			centerMessageView.reset();
 			hurtRingView.reset();
 			world.reset();
+
+			PlayerCosmetics::ClearCache();
 		}
 
 		/** Initiate an initialization which likely to take some time */

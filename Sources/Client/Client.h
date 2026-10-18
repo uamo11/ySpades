@@ -101,13 +101,20 @@ namespace spades {
 
 			class FPSCounter {
 				Stopwatch sw;
+				Stopwatch windowSw;
 				int numFrames;
 				double lastFps;
+				double minFps;
+				double maxFps;
+				double frameTimeMs;
 
 			public:
 				FPSCounter();
 				void MarkFrame();
-				double GetFps() { return lastFps; }
+				double GetFps() const { return lastFps; }
+				double GetMinFps() const { return minFps; }
+				double GetMaxFps() const { return maxFps; }
+				double GetFrameTimeMs() const { return frameTimeMs; }
 			};
 
 			FPSCounter fpsCounter;

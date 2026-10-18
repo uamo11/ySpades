@@ -271,7 +271,10 @@ namespace spades {
 			                  _Tr("Preferences", "Bottom")},
 			                 {0, 2, 1});
 			l.AddToggleField(_Tr("Preferences", "Small Stats Font"), "cg_statsSmallFont");
-			l.AddToggleField(_Tr("Preferences", "Show FPS & Ping (Ms) Overlay"), "cg_showFpsMs");
+			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Depuración"), "cg_showFpsMs",
+			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS / Ms)"),
+			                  _Tr("Preferences", "Depuración (FPS / Frametime / Min-Max / Ping)")},
+			                 {0, 1, 2});
 			l.AddToggleField(_Tr("Preferences", "Show Player Statistics"), "cg_playerStats");
 			l.AddToggleField(_Tr("Preferences", "Show Placed Blocks"),
 			                 "cg_playerStatsShowPlacedBlocks");
@@ -782,6 +785,16 @@ namespace spades {
 			l.AddHelp(_Tr("Preferences", "0 = Agua simple opaca, 1 = Translúcida, 2 = Reflejos y cáusticas avanzadas."));
 
 			l.AddHeading(_Tr("Preferences", "Rendimiento y Optimización"));
+			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Depuración"), "cg_showFpsMs",
+			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS / Ms)"),
+			                  _Tr("Preferences", "Depuración (FPS / Frametime / Min-Max / Ping)")},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Superpone la tasa de fotogramas (FPS), tiempo de cuadro en ms, ping y estadísticas de estabilidad en pantalla."));
+			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores (FPS)"), "cg_simpleOtherWeapons",
+			                 {_Tr("Preferences", "OFF (Cargar Skins Mod)"),
+			                  _Tr("Preferences", "Básicas Optimizadas (Alto Rendimiento)")},
+			                 {0, 1});
+			l.AddHelp(_Tr("Preferences", "Usa modelos básicos y ligeros para otros jugadores, evitando caídas bruscas de FPS si tienes mods de armas instalados."));
 			l.AddToggleField(_Tr("Preferences", "Depth Prepass"), "r_depthPrepass");
 			l.AddHelp(_Tr("Preferences", "Rellena el búfer de profundidad primero para descartar píxeles ocultos. Aumenta FPS."));
 			l.AddToggleField(_Tr("Preferences", "Occlusion Querying"), "r_occlusionQuery");

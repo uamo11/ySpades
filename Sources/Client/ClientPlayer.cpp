@@ -22,6 +22,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <unordered_map>
 
 #include "CTFGameMode.h"
 #include "Client.h"
@@ -79,6 +80,39 @@ SPADES_SETTING(cg_playerAccessory);
 
 namespace spades {
 	namespace client {
+
+		struct CachedPlayerModels {
+			Handle<IModel> leg;
+			Handle<IModel> legCrouch;
+			Handle<IModel> legRight;
+			Handle<IModel> legRightCrouch;
+			Handle<IModel> torso;
+			Handle<IModel> torsoCrouch;
+			Handle<IModel> arms;
+			Handle<IModel> head;
+			Handle<IModel> dead;
+		};
+
+		static CachedPlayerModels GetPlayerModels(IRenderer& renderer, const std::string& modelPath) {
+			static std::unordered_map<std::string, CachedPlayerModels> s_cache;
+			auto it = s_cache.find(modelPath);
+			if (it != s_cache.end())
+				return it->second;
+
+			CachedPlayerModels m;
+			m.leg = renderer.RegisterModel((modelPath + "Leg.kv6").c_str());
+			m.legCrouch = renderer.RegisterModel((modelPath + "LegCrouch.kv6").c_str());
+			m.legRight = renderer.RegisterModel((modelPath + "LegRight.kv6").c_str());
+			m.legRightCrouch = renderer.RegisterModel((modelPath + "LegRightCrouch.kv6").c_str());
+			m.torso = renderer.RegisterModel((modelPath + "Torso.kv6").c_str());
+			m.torsoCrouch = renderer.RegisterModel((modelPath + "TorsoCrouch.kv6").c_str());
+			m.arms = renderer.RegisterModel((modelPath + "Arms.kv6").c_str());
+			m.head = renderer.RegisterModel((modelPath + "Head.kv6").c_str());
+			m.dead = renderer.RegisterModel((modelPath + "Dead.kv6").c_str());
+
+			s_cache[modelPath] = m;
+			return m;
+		}
 
 		class SandboxedRenderer : public IRenderer {
 			Handle<IRenderer> base;
@@ -690,6 +724,7 @@ namespace spades {
 			std::string modelPath = "Models/Player/";
 			if (!cg_classicPlayerModels)
 				modelPath += w.GetName() + "/";
+			CachedPlayerModels bodyModels = GetPlayerModels(renderer, modelPath);
 
 			const Vector3 origin = eyeMatrix.GetOrigin();
 
@@ -982,21 +1017,15 @@ namespace spades {
 
 			// Legs and Torso
 			if (!cg_hideBody) {
-				model = inp.crouch
-					? renderer.RegisterModel((modelPath + "LegCrouch.kv6").c_str())
-					: renderer.RegisterModel((modelPath + "Leg.kv6").c_str());
+				model = inp.crouch ? bodyModels.legCrouch : bodyModels.leg;
 				param.matrix = legLeft * scaler;
 				renderer.RenderModel(*model, param);
 
-				model = inp.crouch
-					? renderer.RegisterModel((modelPath + "LegRightCrouch.kv6").c_str())
-					: renderer.RegisterModel((modelPath + "LegRight.kv6").c_str());
+				model = inp.crouch ? bodyModels.legRightCrouch : bodyModels.legRight;
 				param.matrix = legRight * scaler;
 				renderer.RenderModel(*model, param);
 
-				model = inp.crouch
-					? renderer.RegisterModel((modelPath + "TorsoCrouch.kv6").c_str())
-					: renderer.RegisterModel((modelPath + "Torso.kv6").c_str());
+				model = inp.crouch ? bodyModels.torsoCrouch : bodyModels.torso;
 				param.matrix = torso * scaler;
 				renderer.RenderModel(*model, param);
 			}
@@ -1102,6 +1131,7 @@ namespace spades {
 			std::string modelPath = "Models/Player/";
 			if (!cg_classicPlayerModels)
 				modelPath += w.GetName() + "/";
+			CachedPlayerModels bodyModels = GetPlayerModels(renderer, modelPath);
 
 			Vector3 o = p.GetFront(cg_orientationSmoothing); // interpolated
 			Vector3 front2D = MakeVector3(o.x, o.y, 0).Normalize();
@@ -1117,7 +1147,7 @@ namespace spades {
 
 			if (!p.IsAlive()) {
 				if (!cg_ragdoll) {
-					model = renderer.RegisterModel((modelPath + "Dead.kv6").c_str());
+					model = bodyModels.dead;
 					param.matrix = Matrix4::FromAxis(-right, front2D, -up, p.GetEye());
 					param.matrix = param.matrix * Matrix4::Translate(0.0F, 0.0F, -0.1F);
 					param.matrix = param.matrix * Matrix4::Scale(0.1F);
@@ -1147,10 +1177,15 @@ namespace spades {
 			param.xrayColor = xrayColor;
 			sandboxedRenderer->SetPlayerXRay(reveal, xrayColor);
 
-			// ready for tool rendering
-			asIScriptObject* curSkin = GetCurrentSkin(false);
-			SetSkinParameterForTool(currentTool, curSkin);
-			SetCommonSkinParameter(curSkin);
+			// ready for tool rendering (skip heavy AngelScript VM executions when simple other weapons mode is active)
+			asIScriptObject* curSkin = nullptr;
+			if (p.IsLocalPlayer() || !cg_simpleOtherWeapons) {
+				curSkin = GetCurrentSkin(false);
+				if (curSkin) {
+					SetSkinParameterForTool(currentTool, curSkin);
+					SetCommonSkinParameter(curSkin);
+				}
+			}
 
 			float yaw = atan2f(o.y, o.x) + kHalfPi;
 			float pitch = -atan2f(o.z, o.GetLength2D());
@@ -1243,27 +1278,18 @@ namespace spades {
 
 			// Legs
 			{
-				model = inp.crouch
-					? renderer.RegisterModel((modelPath + "LegCrouch.kv6").c_str())
-					: renderer.RegisterModel((modelPath + "Leg.kv6").c_str());
-
+				model = inp.crouch ? bodyModels.legCrouch : bodyModels.leg;
 				param.matrix = legLeft * scaler;
 				renderer.RenderModel(*model, param);
 
-				model = inp.crouch
-					? renderer.RegisterModel((modelPath + "LegRightCrouch.kv6").c_str())
-					: renderer.RegisterModel((modelPath + "LegRight.kv6").c_str());
-
+				model = inp.crouch ? bodyModels.legRightCrouch : bodyModels.legRight;
 				param.matrix = legRight * scaler;
 				renderer.RenderModel(*model, param);
 			}
 
 			// Torso
 			{
-				model = inp.crouch
-					? renderer.RegisterModel((modelPath + "TorsoCrouch.kv6").c_str())
-					: renderer.RegisterModel((modelPath + "Torso.kv6").c_str());
-
+				model = inp.crouch ? bodyModels.torsoCrouch : bodyModels.torso;
 				param.matrix = torso * scaler;
 				renderer.RenderModel(*model, param);
 
@@ -1291,8 +1317,7 @@ namespace spades {
 
 			// Arms
 			{
-				model = renderer.RegisterModel((modelPath + "Arms.kv6").c_str());
-
+				model = bodyModels.arms;
 				param.matrix = arms * scaler;
 				renderer.RenderModel(*model, param);
 			}
@@ -1301,7 +1326,7 @@ namespace spades {
 			{
 				model = client.isChristmasOn
 					? renderer.RegisterModel("Models/Player/XmasHat.kv6")
-					: renderer.RegisterModel((modelPath + "Head.kv6").c_str());
+					: bodyModels.head;
 
 				param.matrix = head * scaler;
 				renderer.RenderModel(*model, param);
@@ -1324,7 +1349,7 @@ namespace spades {
 			// Tool
 			if (!p.IsLocalPlayer() && cg_simpleOtherWeapons) {
 				RenderBasicOtherWeapon(arms, param);
-			} else {
+			} else if (curSkin) {
 				{
 					ScriptIThirdPersonToolSkin interface(curSkin);
 					interface.SetOriginMatrix(arms);

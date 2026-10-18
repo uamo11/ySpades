@@ -26,15 +26,36 @@
 namespace spades {
 	namespace client {
 
-		Client::FPSCounter::FPSCounter() : numFrames(0), lastFps(0.0) { sw.Reset(); }
+		Client::FPSCounter::FPSCounter()
+		    : numFrames(0), lastFps(0.0), minFps(0.0), maxFps(0.0), frameTimeMs(0.0) {
+			sw.Reset();
+			windowSw.Reset();
+		}
 
 		void Client::FPSCounter::MarkFrame() {
 			numFrames++;
-			if (sw.GetTime() > 0.5) {
+			if (sw.GetTime() >= 0.25) {
 				auto diff = sw.GetTime();
-				lastFps = static_cast<double>(numFrames) / diff;
+				double curFps = static_cast<double>(numFrames) / diff;
+				lastFps = curFps;
+				frameTimeMs = (curFps > 0.0) ? (1000.0 / curFps) : 0.0;
+
+				if (minFps <= 0.0 || curFps < minFps)
+					minFps = curFps;
+				if (curFps > maxFps)
+					maxFps = curFps;
+
 				numFrames = 0;
 				sw.Reset();
+			}
+
+			// Periodically refresh rolling window to keep min/max metrics responsive during play
+			if (windowSw.GetTime() >= 3.0) {
+				windowSw.Reset();
+				if (lastFps > 0.0) {
+					minFps = lastFps;
+					maxFps = lastFps;
+				}
 			}
 		}
 	} // namespace client
