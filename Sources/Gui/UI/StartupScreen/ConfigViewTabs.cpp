@@ -28,6 +28,7 @@
 #include <Client/IRenderer.h>
 #include <Core/Strings.h>
 #include <Gui/StartupScreenHelper.h>
+#include <Gui/ProxyManager.h>
 #include <Gui/UI/Framework/UIManager.h>
 
 namespace spades {
@@ -1127,5 +1128,254 @@ namespace spades {
 		}
 
 		void StartupScreenAdvancedTab::LoadConfig() { configView->LoadConfig(); }
+
+		// -- StartupScreenProxyTab --
+
+		StartupScreenProxyTab::StartupScreenProxyTab(StartupScreenUI* ui, Vector2 size)
+		    : UIElement(&ui->GetUIManager()),
+		      ui(ui),
+		      helper(&ui->GetHelper()),
+		      net_useProxy("net_useProxy", nullptr),
+		      net_proxyType("net_proxyType", nullptr),
+		      net_proxyServer("net_proxyServer", nullptr),
+		      net_proxyAuth("net_proxyAuth", nullptr) {
+			UIManager* manager = &GetManager();
+			float mainWidth = size.x - 220.0F;
+
+			{
+				Handle<TextViewer> e = Handle<TextViewer>::New(manager);
+				e->SetBounds(AABB2(mainWidth + 10.0F, 0.0F, size.x - mainWidth - 10.0F, size.y));
+				e->SetFont(&ui->GetFontManager().GetGuiFont());
+				e->isMouseInteractive = false;
+				e->parseInlineCode = true;
+				AddChild(e.GetPointerOrNull());
+				helpView = e.GetPointerOrNull();
+			}
+
+			// Proxy enable checkbox
+			AddConfigLabel(*this, 0.0F, 0.0F, 24.0F, _Tr("StartupScreen", "Estado de Red"));
+			{
+				Handle<CheckBox> e = Handle<CheckBox>::New(manager);
+				e->caption = _Tr("StartupScreen", "Activar Enrutamiento Proxy");
+				float capSize = ui->GetFontManager().GetGuiFont().Measure(e->caption).x;
+				e->SetBounds(AABB2(160.0F, 0.0F, capSize + 24.0F, 24.0F));
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Enruta las conexiones a los servidores de juego (SOCKS5 UDP) y "
+				              "las descargas web a través del servidor proxy especificado."));
+				e->activated = [this](UIElement& s) { OnEnableProxyCheck(s); };
+				AddChild(e.GetPointerOrNull());
+				enableProxyCheck = e.GetPointerOrNull();
+			}
+
+			// Proxy Type radio buttons
+			AddConfigLabel(*this, 0.0F, 32.0F, 24.0F, _Tr("StartupScreen", "Tipo de Proxy"));
+			{
+				Handle<RadioButton> e = Handle<RadioButton>::New(manager);
+				e->caption = _Tr("StartupScreen", "SOCKS5 (Juego UDP + Web)");
+				e->SetBounds(AABB2(160.0F, 32.0F, 190.0F, 24.0F));
+				e->groupName = "proxy_type";
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "SOCKS5 soporta encapsulación UDP para los servidores de juego "
+				              "además de consultas HTTP/HTTPS a listas y descargas."));
+				e->activated = [this](UIElement& s) { OnTypeSocks5(s); };
+				AddChild(e.GetPointerOrNull());
+				typeSocks5 = e.GetPointerOrNull();
+			}
+			{
+				Handle<RadioButton> e = Handle<RadioButton>::New(manager);
+				e->caption = _Tr("StartupScreen", "HTTP (Solo Web)");
+				e->SetBounds(AABB2(360.0F, 32.0F, 150.0F, 24.0F));
+				e->groupName = "proxy_type";
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Proxy HTTP estándar. Solo aplica a la lista de servidores y "
+				              "descargas de mapas/mods (no soporta UDP de juego)."));
+				e->activated = [this](UIElement& s) { OnTypeHttp(s); };
+				AddChild(e.GetPointerOrNull());
+				typeHttp = e.GetPointerOrNull();
+			}
+
+			// Server field
+			AddConfigLabel(*this, 0.0F, 64.0F, 24.0F, _Tr("StartupScreen", "Servidor Proxy"));
+			{
+				Handle<Field> e = Handle<Field>::New(manager);
+				e->SetBounds(AABB2(160.0F, 64.0F, 260.0F, 24.0F));
+				e->changed = [this](UIElement& s) { OnServerEdited(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Dirección IP y puerto del servidor proxy en formato IP:Puerto (ej. 209.50.190.137:1081)."));
+				AddChild(e.GetPointerOrNull());
+				serverField = e.GetPointerOrNull();
+			}
+
+			// Auth field
+			AddConfigLabel(*this, 0.0F, 96.0F, 24.0F, _Tr("StartupScreen", "Autenticación"));
+			{
+				Handle<Field> e = Handle<Field>::New(manager);
+				e->SetBounds(AABB2(160.0F, 96.0F, 260.0F, 24.0F));
+				e->changed = [this](UIElement& s) { OnAuthEdited(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Credenciales de acceso en formato usuario:contraseña (dejar vacío si el proxy no requiere contraseña)."));
+				AddChild(e.GetPointerOrNull());
+				authField = e.GetPointerOrNull();
+			}
+
+			// Action Buttons
+			AddConfigLabel(*this, 0.0F, 134.0F, 24.0F, _Tr("StartupScreen", "Carga Rápida"));
+			{
+				Handle<Button> e = Handle<Button>::New(manager);
+				e->caption = _Tr("StartupScreen", "Cargar SOCKS5 Premium");
+				e->SetBounds(AABB2(160.0F, 134.0F, 185.0F, 28.0F));
+				e->activated = [this](UIElement& s) { OnLoadSocksScrape(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Carga automáticamente la lista proxyscrape_premium_socks_proxies.txt "
+				              "desde tu carpeta de Descargas y activa el primer proxy."));
+				AddChild(e.GetPointerOrNull());
+			}
+			{
+				Handle<Button> e = Handle<Button>::New(manager);
+				e->caption = _Tr("StartupScreen", "Cargar HTTP Premium");
+				e->SetBounds(AABB2(355.0F, 134.0F, 175.0F, 28.0F));
+				e->activated = [this](UIElement& s) { OnLoadHttpScrape(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Carga automáticamente la lista proxyscrape_premium_http_proxies.txt "
+				              "desde tu carpeta de Descargas y activa el primer proxy."));
+				AddChild(e.GetPointerOrNull());
+			}
+
+			AddConfigLabel(*this, 0.0F, 170.0F, 24.0F, _Tr("StartupScreen", "Control"));
+			{
+				Handle<Button> e = Handle<Button>::New(manager);
+				e->caption = _Tr("StartupScreen", "Siguiente Proxy");
+				e->SetBounds(AABB2(160.0F, 170.0F, 185.0F, 28.0F));
+				e->activated = [this](UIElement& s) { OnNextProxy(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Cambia al siguiente servidor proxy de la lista cargada."));
+				AddChild(e.GetPointerOrNull());
+			}
+			{
+				Handle<Button> e = Handle<Button>::New(manager);
+				e->caption = _Tr("StartupScreen", "Probar Conexión");
+				e->SetBounds(AABB2(355.0F, 170.0F, 175.0F, 28.0F));
+				e->activated = [this](UIElement& s) { OnTestProxy(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Realiza una petición de prueba al servidor master para comprobar si el proxy funciona y medir el ping."));
+				AddChild(e.GetPointerOrNull());
+			}
+
+			UpdateHelpDisplay();
+		}
+
+		void StartupScreenProxyTab::HandleHelpText(const std::string& text) {
+			if (!text.empty()) {
+				helpView->SetText(text);
+			} else {
+				UpdateHelpDisplay();
+			}
+		}
+
+		void StartupScreenProxyTab::OnEnableProxyCheck(ui::UIElement&) {
+			net_useProxy = enableProxyCheck->toggled ? 1 : 0;
+			UpdateHelpDisplay();
+		}
+
+		void StartupScreenProxyTab::OnTypeSocks5(ui::UIElement&) {
+			typeSocks5->toggled = true;
+			typeHttp->toggled = false;
+			net_proxyType = "socks5";
+			UpdateHelpDisplay();
+		}
+
+		void StartupScreenProxyTab::OnTypeHttp(ui::UIElement&) {
+			typeHttp->toggled = true;
+			typeSocks5->toggled = false;
+			net_proxyType = "http";
+			UpdateHelpDisplay();
+		}
+
+		void StartupScreenProxyTab::OnServerEdited(ui::UIElement&) {
+			net_proxyServer = serverField->GetText();
+			UpdateHelpDisplay();
+		}
+
+		void StartupScreenProxyTab::OnAuthEdited(ui::UIElement&) {
+			net_proxyAuth = authField->GetText();
+			UpdateHelpDisplay();
+		}
+
+		void StartupScreenProxyTab::OnLoadSocksScrape(ui::UIElement&) {
+			if (ProxyManager::GetInstance().LoadDefaultSocksFile()) {
+				LoadConfig();
+			}
+		}
+
+		void StartupScreenProxyTab::OnLoadHttpScrape(ui::UIElement&) {
+			if (ProxyManager::GetInstance().LoadDefaultHttpFile()) {
+				LoadConfig();
+			}
+		}
+
+		void StartupScreenProxyTab::OnNextProxy(ui::UIElement&) {
+			ProxyManager::GetInstance().NextProxy();
+			LoadConfig();
+		}
+
+		void StartupScreenProxyTab::OnTestProxy(ui::UIElement&) {
+			std::string result = ProxyManager::GetInstance().TestActiveProxy();
+			std::string info = _Tr("StartupScreen", "Resultado de prueba:\n\n") + result;
+			helpView->SetText(info);
+		}
+
+		void StartupScreenProxyTab::UpdateHelpDisplay() {
+			std::string status = (static_cast<int>(net_useProxy) != 0) ? "ACTIVADO" : "DESACTIVADO";
+			std::string type = net_proxyType.CString();
+			std::string srv = net_proxyServer.CString();
+			size_t total = ProxyManager::GetInstance().GetLoadedProxies().size();
+			size_t cur = ProxyManager::GetInstance().GetCurrentProxyIndex() + 1;
+
+			std::string text = "== ESTADO DEL PROXY ==\n\n";
+			text += "Estado: " + status + "\n";
+			text += "Tipo: " + type + "\n";
+			text += "Servidor: " + (srv.empty() ? "(ninguno)" : srv) + "\n";
+			if (total > 0) {
+				text += "Lista: Proxy " + std::to_string(cur) + " de " + std::to_string(total) + " cargados\n";
+			}
+			std::string last = ProxyManager::GetInstance().GetLastTestResult();
+			if (!last.empty()) {
+				text += "\nUltima prueba:\n" + last + "\n";
+			}
+			helpView->SetText(text);
+		}
+
+		void StartupScreenProxyTab::LoadConfig() {
+			enableProxyCheck->toggled = (static_cast<int>(net_useProxy) != 0);
+			std::string type = net_proxyType.CString();
+			if (type == "http") {
+				typeHttp->toggled = true;
+				typeSocks5->toggled = false;
+			} else {
+				typeSocks5->toggled = true;
+				typeHttp->toggled = false;
+			}
+			serverField->SetText(net_proxyServer.CString());
+			authField->SetText(net_proxyAuth.CString());
+			UpdateHelpDisplay();
+		}
 	} // namespace gui
 } // namespace spades

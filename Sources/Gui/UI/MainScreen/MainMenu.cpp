@@ -630,7 +630,7 @@ namespace spades {
 					Handle<Button> openFolderBtn = Handle<Button>::New(manager);
 					openFolderBtn->caption = _Tr("MainScreen", "Abrir Carpeta");
 					openFolderBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 365.0F, 200.0F, 115.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 310.0F, 200.0F, 140.0F, 30.0F));
 					openFolderBtn->activated = [](UIElement&) {
 #ifdef _WIN32
 						ShowDirectoryInShell("Resources\\Maps");
@@ -640,24 +640,11 @@ namespace spades {
 					};
 					worldsPanel->AddChild(openFolderBtn.GetPointerOrNull());
 
-					Handle<Button> viewLobbyBtn = Handle<Button>::New(manager);
-					viewLobbyBtn->caption = _Tr("MainScreen", "Fondo 3D");
-					viewLobbyBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 245.0F, 200.0F, 115.0F, 30.0F));
-					viewLobbyBtn->activated = [this](UIElement&) {
-						if (this->ui) {
-							std::string map = selectedWorldMap.empty() ? "LAbeach.vxl" : selectedWorldMap;
-							this->ui->LoadBackgroundMap("Maps/" + map);
-							this->ui->ShowLobby();
-						}
-					};
-					worldsPanel->AddChild(viewLobbyBtn.GetPointerOrNull());
-
 					Handle<Button> playWorldBtn = Handle<Button>::New(manager);
-					playWorldBtn->caption = _Tr("MainScreen", "Jugar Mundo");
+					playWorldBtn->caption = _Tr("MainScreen", "Entrar al Mundo");
 					playWorldBtn->hotKeyText = _Tr("Client", "[Enter]");
 					playWorldBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 125.0F, 200.0F, 125.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 160.0F, 200.0F, 160.0F, 30.0F));
 					playWorldBtn->activated = [this](UIElement&) { PlaySelectedWorld(); };
 					worldsPanel->AddChild(playWorldBtn.GetPointerOrNull());
 
@@ -1530,7 +1517,7 @@ namespace spades {
 		void MainScreenMainMenu::PlaySelectedWorld() {
 			if (selectedWorldMap.empty())
 				selectedWorldMap = "LAbeach.vxl";
-			helper->ConnectServer("127.0.0.1:32887", 3, selectedWorldMap);
+			helper->PlayWorld(selectedWorldMap);
 		}
 
 		void MainScreenMainMenu::UpdateSearchFilterVisibility() {

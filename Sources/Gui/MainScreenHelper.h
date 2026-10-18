@@ -123,6 +123,7 @@ namespace spades {
 
 			std::vector<std::string> GetDemoList();
 			std::string PlayDemo(const std::string& filename);
+			std::string PlayWorld(const std::string& filename);
 			int64_t GetDemoFileSize(const std::string& filename);
 			bool DeleteDemo(const std::string& filename);
 			bool RenameDemo(const std::string& oldName, const std::string& newName);

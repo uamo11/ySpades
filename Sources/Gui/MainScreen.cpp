@@ -333,6 +333,18 @@ namespace spades {
 			return "";
 		}
 
+		std::string MainScreen::PlayWorld(const std::string& mapPath) {
+			try {
+				subview = Handle<client::Client>::New(&*renderer, &*audioDevice,
+				              ServerAddress(), fontManager, "", mapPath)
+				            .Cast<View>();
+			} catch (const std::exception& ex) {
+				SPLog("[!] Error starting local world: %s", ex.what());
+				return ex.what();
+			}
+			return "";
+		}
+
 		void MainScreen::OpenStartupScreen() {
 			auto sHelper = Handle<StartupScreenHelper>::New();
 			sHelper->ExamineSystem();

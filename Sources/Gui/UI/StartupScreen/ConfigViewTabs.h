@@ -208,6 +208,40 @@ namespace spades {
 			StartupScreenSystemInfoTab(StartupScreenUI* ui, Vector2 size);
 		};
 
+		/** The Proxy/Network tab: configure SOCKS5/HTTP proxies, load scrape files, test connection. */
+		class StartupScreenProxyTab : public ui::UIElement {
+			StartupScreenUI* ui;         // weak
+			StartupScreenHelper* helper; // weak
+			ui::TextViewer* helpView;
+
+			ui::CheckBox* enableProxyCheck;
+			ui::RadioButton* typeSocks5;
+			ui::RadioButton* typeHttp;
+			ui::Field* serverField;
+			ui::Field* authField;
+
+			Settings::ItemHandle net_useProxy;
+			Settings::ItemHandle net_proxyType;
+			Settings::ItemHandle net_proxyServer;
+			Settings::ItemHandle net_proxyAuth;
+
+			void HandleHelpText(const std::string& text);
+			void OnEnableProxyCheck(ui::UIElement&);
+			void OnTypeSocks5(ui::UIElement&);
+			void OnTypeHttp(ui::UIElement&);
+			void OnServerEdited(ui::UIElement&);
+			void OnAuthEdited(ui::UIElement&);
+			void OnLoadSocksScrape(ui::UIElement&);
+			void OnLoadHttpScrape(ui::UIElement&);
+			void OnNextProxy(ui::UIElement&);
+			void OnTestProxy(ui::UIElement&);
+			void UpdateHelpDisplay();
+
+		public:
+			StartupScreenProxyTab(StartupScreenUI* ui, Vector2 size);
+			void LoadConfig();
+		};
+
 		/** The Advanced tab: a filterable editor for every config variable. */
 		class StartupScreenAdvancedTab : public ui::UIElement {
 			StartupScreenHelper* helper; // weak

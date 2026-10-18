@@ -34,6 +34,8 @@
 #include "GameProperties.h"
 #include "Grenade.h"
 #include "NetClient.h"
+#include "Socks5UdpRelay.h"
+#include <Gui/ProxyManager.h>
 #include "Player.h"
 #include "TCGameMode.h"
 #include "Teamplay.h"
@@ -300,6 +302,26 @@ namespace spades {
 			ENetAddress addr = hostname.GetENetAddress();
 			SPLog("Connecting to %u:%u", (unsigned int)addr.host, (unsigned int)addr.port);
 
+			if (gui::ProxyManager::GetInstance().IsProxyEnabled() &&
+			    gui::ProxyManager::GetInstance().GetProxyType() == "socks5") {
+				gui::ProxyEntry proxy = gui::ProxyManager::GetInstance().GetActiveProxy();
+				if (!proxy.host.empty() && proxy.port > 0) {
+					socks5Relay.reset(new Socks5UdpRelay());
+					uint16_t localPort = 0;
+					SPLog("NetClient: Establishing SOCKS5 UDP Relay through %s:%d...",
+					      proxy.host.c_str(), proxy.port);
+					if (socks5Relay->Start(proxy.host, proxy.port, proxy.user, proxy.pass, addr, localPort)) {
+						SPLog("NetClient: SOCKS5 UDP Relay active on 127.0.0.1:%u", (unsigned int)localPort);
+						enet_address_set_host_ip(&addr, "127.0.0.1");
+						addr.port = localPort;
+					} else {
+						SPLog("NetClient: Warning: Failed to initialize SOCKS5 UDP Relay: %s",
+						      socks5Relay->GetLastError().c_str());
+						socks5Relay.reset();
+					}
+				}
+			}
+
 			savedPackets.clear();
 			customKickReasonString.clear();
 			serverExtensions.clear();
@@ -322,6 +344,11 @@ namespace spades {
 
 		void NetClient::Disconnect() {
 			SPADES_MARK_FUNCTION();
+
+			if (socks5Relay) {
+				socks5Relay->Stop();
+				socks5Relay.reset();
+			}
 
 			if (!peer)
 				return;

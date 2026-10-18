@@ -156,6 +156,8 @@ namespace spades {
 			    Handle<StartupScreenAudioTab>::New(ui, clientSize);
 			Handle<StartupScreenGenericTab> genericTabH =
 			    Handle<StartupScreenGenericTab>::New(ui, clientSize);
+			Handle<StartupScreenProxyTab> proxyTabH =
+			    Handle<StartupScreenProxyTab>::New(ui, clientSize);
 			Handle<StartupScreenSystemInfoTab> profileTabH =
 			    Handle<StartupScreenSystemInfoTab>::New(ui, clientSize);
 			Handle<StartupScreenAdvancedTab> advancedTabH =
@@ -163,23 +165,27 @@ namespace spades {
 			graphicsTabH->SetBounds(clientArea);
 			audioTabH->SetBounds(clientArea);
 			genericTabH->SetBounds(clientArea);
+			proxyTabH->SetBounds(clientArea);
 			profileTabH->SetBounds(clientArea);
 			advancedTabH->SetBounds(clientArea);
 			AddChild(graphicsTabH.GetPointerOrNull());
 			AddChild(audioTabH.GetPointerOrNull());
 			AddChild(genericTabH.GetPointerOrNull());
+			AddChild(proxyTabH.GetPointerOrNull());
 			AddChild(profileTabH.GetPointerOrNull());
 			AddChild(advancedTabH.GetPointerOrNull());
 			audioTabH->visible = false;
-			profileTabH->visible = false;
 			genericTabH->visible = false;
+			proxyTabH->visible = false;
+			profileTabH->visible = false;
 			advancedTabH->visible = false;
 
 			graphicsTab = graphicsTabH.GetPointerOrNull();
 			audioTab = audioTabH.GetPointerOrNull();
-			advancedTab = advancedTabH.GetPointerOrNull();
-			systemInfoTab = profileTabH.GetPointerOrNull();
 			genericTab = genericTabH.GetPointerOrNull();
+			proxyTab = proxyTabH.GetPointerOrNull();
+			systemInfoTab = profileTabH.GetPointerOrNull();
+			advancedTab = advancedTabH.GetPointerOrNull();
 
 			{
 				Handle<SimpleTabStrip> tabStrip = Handle<SimpleTabStrip>::New(manager);
@@ -188,6 +194,7 @@ namespace spades {
 				tabStrip->AddItem(_Tr("StartupScreen", "Graphics"), graphicsTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Audio"), audioTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Generic"), genericTab);
+				tabStrip->AddItem(_Tr("StartupScreen", "Red / Proxy"), proxyTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "System Info"), systemInfoTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Advanced"), advancedTab);
 				tabStrip->changed = [this](UIElement& s) { OnTabChanged(s); };
@@ -223,6 +230,7 @@ namespace spades {
 			graphicsTab->LoadConfig();
 			audioTab->LoadConfig();
 			genericTab->LoadConfig();
+			proxyTab->LoadConfig();
 			advancedTab->LoadConfig();
 		}
 
@@ -234,10 +242,12 @@ namespace spades {
 				state.activeTabIndex = 1;
 			} else if (genericTab->visible) {
 				state.activeTabIndex = 2;
-			} else if (systemInfoTab->visible) {
+			} else if (proxyTab->visible) {
 				state.activeTabIndex = 3;
-			} else if (advancedTab->visible) {
+			} else if (systemInfoTab->visible) {
 				state.activeTabIndex = 4;
+			} else if (advancedTab->visible) {
+				state.activeTabIndex = 5;
 			}
 			return state;
 		}
@@ -246,8 +256,9 @@ namespace spades {
 			graphicsTab->visible = state.activeTabIndex == 0;
 			audioTab->visible = state.activeTabIndex == 1;
 			genericTab->visible = state.activeTabIndex == 2;
-			systemInfoTab->visible = state.activeTabIndex == 3;
-			advancedTab->visible = state.activeTabIndex == 4;
+			proxyTab->visible = state.activeTabIndex == 3;
+			systemInfoTab->visible = state.activeTabIndex == 4;
+			advancedTab->visible = state.activeTabIndex == 5;
 		}
 
 		void StartupScreenMainMenu::OnBypassStartupWindowCheckChanged(UIElement&) {

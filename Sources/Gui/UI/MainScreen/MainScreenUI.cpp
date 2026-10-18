@@ -452,21 +452,13 @@ namespace spades {
 		}
 
 		void MainScreenUI::SetupRenderer() {
-			// load map: prefer Los Angeles Beach map (LAbeach.vxl) if available
-			std::unique_ptr<IStream> stream{FileManager::OpenForReading("Maps/LAbeach.vxl")};
-			bool isLAbeach = (stream != nullptr);
-			if (!stream)
-				stream = FileManager::OpenForReading("Maps/Title.vxl");
+			// load map
+			std::unique_ptr<IStream> stream{FileManager::OpenForReading("Maps/Title.vxl")};
 			if (stream) {
 				titleMap.Set(client::GameMap::Load(stream.get()), false);
 				renderer->SetGameMap(*titleMap);
-				if (isLAbeach) {
-					renderer->SetFogColor(MakeVector3(0.55F, 0.75F, 0.95F)); // tropical sky blue
-					renderer->SetFogDistance(240.0F);
-				} else {
-					renderer->SetFogColor(MakeVector3(0.1F, 0.1F, 0.1F));
-					renderer->SetFogDistance(128.0F);
-				}
+				renderer->SetFogColor(MakeVector3(0.1F, 0.1F, 0.1F));
+				renderer->SetFogDistance(128.0F);
 			}
 			time = -1.0F;
 

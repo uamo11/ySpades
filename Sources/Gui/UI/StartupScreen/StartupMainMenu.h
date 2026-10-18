@@ -39,6 +39,7 @@ namespace spades {
 			StartupScreenGraphicsTab* graphicsTab;
 			StartupScreenAudioTab* audioTab;
 			StartupScreenGenericTab* genericTab;
+			StartupScreenProxyTab* proxyTab;
 			StartupScreenSystemInfoTab* systemInfoTab;
 			StartupScreenAdvancedTab* advancedTab;
 

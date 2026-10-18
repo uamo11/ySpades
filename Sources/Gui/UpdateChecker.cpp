@@ -19,6 +19,7 @@
  */
 
 #include "UpdateChecker.h"
+#include "ProxyManager.h"
 
 #include <cctype>
 #include <memory>
@@ -160,6 +161,7 @@ namespace spades {
 				curl_easy_setopt(handle.get(), CURLOPT_NOSIGNAL, 1L);
 				curl_easy_setopt(handle.get(), CURLOPT_CONNECTTIMEOUT, kConnectTimeoutSeconds);
 				curl_easy_setopt(handle.get(), CURLOPT_TIMEOUT, kTotalTimeoutSeconds);
+				ProxyManager::GetInstance().ApplyToCurl(handle.get());
 
 				CURLcode rc = curl_easy_perform(handle.get());
 				if (rc != CURLE_OK) {

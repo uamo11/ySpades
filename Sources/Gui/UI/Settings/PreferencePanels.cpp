@@ -23,6 +23,7 @@
 #include <Core/Strings.h>
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/MainScreen/SelectCountryScreen.h>
+#include <Gui/ProxyManager.h>
 
 SPADES_SETTING(cg_country);
 SPADES_SETTING(cg_countryIsSet);
@@ -503,6 +504,7 @@ namespace spades {
 				    }
 			    });
 
+			l.AddHeading(_Tr("Preferences", "Pantalla y Modo de Ventana"));
 			l.AddToggleField(_Tr("Preferences", "Pantalla Completa (Fullscreen)"), "r_fullscreen");
 			l.AddHelp(_Tr("Preferences", "Ejecuta el juego en pantalla completa. Pulsa Alt+Enter en cualquier momento para alternar."));
 
@@ -510,6 +512,70 @@ namespace spades {
 			                 {"Desactivado", "Activado"},
 			                 {0, 1});
 			l.AddHelp(_Tr("Preferences", "Sincroniza los fotogramas con el monitor para eliminar el tearing."));
+
+			l.AddSliderField(_Tr("Preferences", "Límite de FPS (Max FPS)"), "cl_fps", 0.0F, 360.0F, 10.0F,
+			                 NumberFormatter(0, " FPS", "Ilimitado"));
+			l.AddHelp(_Tr("Preferences", "Fija un límite máximo de cuadros por segundo. 0 significa sin límite."));
+
+			l.AddChoiceStringField(_Tr("Preferences", "Renderizador Gráfico"), "r_renderer",
+			                       {"OpenGL (Aceleración GPU)", "Software (CPU Puro)"},
+			                       {"gl", "sw"});
+			l.AddHelp(_Tr("Preferences", "OpenGL aprovecha la GPU. Software corre en CPU si no hay drivers gráficos."));
+
+			l.AddChoiceField(_Tr("Preferences", "Antialiasing MSAA"), "r_multisamples",
+			                 {"Desactivado", "2x MSAA", "4x MSAA"},
+			                 {0, 2, 4});
+			l.AddHelp(_Tr("Preferences", "Suavizado de bordes geométricos por hardware."));
+
+			l.AddToggleField(_Tr("Preferences", "Filtro FXAA"), "r_fxaa");
+			l.AddHelp(_Tr("Preferences", "Antialiasing de post-procesado rápido."));
+
+			l.AddToggleField(_Tr("Preferences", "Mostrar Ventana al Iniciar"), "cl_showStartupWindow");
+			l.AddHelp(_Tr("Preferences", "Muestra la ventana de configuración clásica cada vez que ejecutas el juego."));
+
+			l.AddHeading(_Tr("Preferences", "Red y Configuración de Proxy"));
+			l.AddHelp(_Tr("Preferences", "Permite enrutar las conexiones de juego ENet y consultas HTTP a través de un proxy SOCKS5 o HTTP."));
+
+			l.AddToggleField(_Tr("Preferences", "Activar Conexión Proxy"), "net_useProxy");
+			l.AddHelp(_Tr("Preferences", "Habilita el enrutamiento de red a través del proxy configurado."));
+
+			l.AddChoiceStringField(_Tr("Preferences", "Tipo de Proxy"), "net_proxyType",
+			                       {"SOCKS5 (Juego UDP + Web)", "HTTP (Solo Web / Master)"},
+			                       {"socks5", "http"});
+			l.AddHelp(_Tr("Preferences", "SOCKS5 soporta UDP para servidores de juego y peticiones HTTP. HTTP solo soporta peticiones web."));
+
+			l.AddInputField(_Tr("Preferences", "Servidor Proxy"), "net_proxyServer", true, true);
+			l.AddHelp(_Tr("Preferences", "Dirección IP y puerto del proxy en formato IP:Puerto (ej. 209.50.190.137:1081)."));
+
+			l.AddInputField(_Tr("Preferences", "Autenticación"), "net_proxyAuth", true, true);
+			l.AddHelp(_Tr("Preferences", "Credenciales opcionales en formato usuario:contraseña."));
+
+			l.AddInputField(_Tr("Preferences", "Archivo de Proxies"), "net_proxyFile", true, true);
+			l.AddHelp(_Tr("Preferences", "Ruta al archivo .txt con lista de proxies (ej. proxyscrape_premium_socks_proxies.txt)."));
+
+			l.AddButtonField(_Tr("Preferences", "Proxies SOCKS5"), _Tr("Preferences", "Cargar SOCKS5 Premium"),
+			    [](UIElement&) {
+				    ProxyManager::GetInstance().LoadDefaultSocksFile();
+			    });
+			l.AddHelp(_Tr("Preferences", "Carga automáticamente la lista SOCKS5 premium desde la carpeta de Descargas."));
+
+			l.AddButtonField(_Tr("Preferences", "Proxies HTTP"), _Tr("Preferences", "Cargar HTTP Premium"),
+			    [](UIElement&) {
+				    ProxyManager::GetInstance().LoadDefaultHttpFile();
+			    });
+			l.AddHelp(_Tr("Preferences", "Carga automáticamente la lista HTTP premium desde la carpeta de Descargas."));
+
+			l.AddButtonField(_Tr("Preferences", "Rotar Proxy"), _Tr("Preferences", "Siguiente Proxy"),
+			    [](UIElement&) {
+				    ProxyManager::GetInstance().NextProxy();
+			    });
+			l.AddHelp(_Tr("Preferences", "Avanza al siguiente proxy de la lista cargada."));
+
+			l.AddButtonField(_Tr("Preferences", "Probar Proxy"), _Tr("Preferences", "Comprobar Latencia"),
+			    [](UIElement&) {
+				    ProxyManager::GetInstance().TestActiveProxy();
+			    });
+			l.AddHelp(_Tr("Preferences", "Envía una solicitud de prueba al master server para medir la velocidad de respuesta."));
 
 			l.FinishLayout();
 		}

@@ -68,6 +68,7 @@ namespace spades {
 		class Grenade;
 		struct GameProperties;
 		class GameMapLoader;
+		class Socks5UdpRelay;
 
 		class NetClient : public INetClient {
 			Client* client;
@@ -126,6 +127,7 @@ namespace spades {
 			std::unique_ptr<BandwidthMonitor> bandwidthMonitor;
 
 			std::unique_ptr<DemoRecorder> demoRecorder;
+			std::unique_ptr<Socks5UdpRelay> socks5Relay;
 
 			std::vector<Vector3> savedPlayerPos;
 			std::vector<Vector3> savedPlayerFront;

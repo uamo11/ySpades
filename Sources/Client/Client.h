@@ -79,6 +79,7 @@ namespace spades {
 		class ClientUI;
 		class PieMenuView;
 		class Teamplay;
+		class LocalWorldNetClient;
 
 		class Client : public IWorldListener, public gui::View {
 			friend class ScoreboardView;
@@ -88,6 +89,7 @@ namespace spades {
 			friend class TCProgressView;
 			friend class ClientPlayer;
 			friend class ClientUI;
+			friend class LocalWorldNetClient;
 
 			/** used to keep the input state of keypad so that
 			 * after user pressed left and right, and then
@@ -113,8 +115,10 @@ namespace spades {
 
 			std::unique_ptr<NetClient> net;
 			std::unique_ptr<DemoNetClient> demoNet;
-			INetClient* activeNet; // points to net.get() or demoNet.get(), never null after DoInit
+			std::unique_ptr<LocalWorldNetClient> localNet;
+			INetClient* activeNet; // points to net.get(), demoNet.get(), or localNet.get()
 			std::string demoFilePath;
+			std::string localWorldPath;
 
 			// Seek-key hold state.
 			// While a seek key is held, SeekPreview() advances demoSeekPendingTime so
@@ -703,10 +707,12 @@ namespace spades {
 		public:
 			Client(Handle<IRenderer>, Handle<IAudioDevice>,
 				const ServerAddress& host, Handle<FontManager>,
-				const std::string& demoPath = "");
+				const std::string& demoPath = "",
+				const std::string& localWorldPath = "");
 
 			bool HasLocalPlayer();
 			bool IsDemoMode() const { return demoNet != nullptr; }
+			bool IsLocalWorldMode() const { return localNet != nullptr; }
 			DemoNetClient* GetDemoNetClient() { return demoNet.get(); }
 			void ReloadDemo();
 			

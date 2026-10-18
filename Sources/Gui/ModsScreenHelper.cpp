@@ -19,6 +19,7 @@
  */
 
 #include "ModsScreenHelper.h"
+#include "ProxyManager.h"
 
 #include <algorithm>
 #include <chrono>
@@ -344,6 +345,7 @@ namespace spades {
 					curl_easy_setopt(h.get(), CURLOPT_CONNECTTIMEOUT, 30L);
 					curl_easy_setopt(h.get(), CURLOPT_LOW_SPEED_TIME, 30L);
 					curl_easy_setopt(h.get(), CURLOPT_LOW_SPEED_LIMIT, 15L);
+					ProxyManager::GetInstance().ApplyToCurl(h.get());
 					CURLcode rc = curl_easy_perform(h.get());
 					long code = 0;
 					curl_easy_getinfo(h.get(), CURLINFO_RESPONSE_CODE, &code);
@@ -389,6 +391,7 @@ namespace spades {
 					curl_easy_setopt(h.get(), CURLOPT_WRITEFUNCTION, CurlWriteToFile);
 					curl_easy_setopt(h.get(), CURLOPT_WRITEDATA, f);
 					curl_easy_setopt(h.get(), CURLOPT_CONNECTTIMEOUT, 30L);
+					ProxyManager::GetInstance().ApplyToCurl(h.get());
 					CURLcode rc = curl_easy_perform(h.get());
 					long code = 0;
 					curl_easy_getinfo(h.get(), CURLINFO_RESPONSE_CODE, &code);

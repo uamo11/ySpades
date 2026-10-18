@@ -26,6 +26,7 @@
 #include <fstream>
 
 #include "Client.h"
+#include "LocalWorldNetClient.h"
 #include "Fonts.h"
 #include <Core/FileManager.h>
 #include <Core/IStream.h>
@@ -81,9 +82,10 @@ namespace spades {
 
 		Client::Client(Handle<IRenderer> r, Handle<IAudioDevice> audioDev,
 					   const ServerAddress& host, Handle<FontManager> fontManager,
-					   const std::string& demoPath)
+					   const std::string& demoPath, const std::string& localWorldPath)
 			: activeNet(nullptr),
 			  demoFilePath(demoPath),
+			  localWorldPath(localWorldPath),
 			  playerName(StripNewlines(cg_playerName.operator std::string()).substr(0, 15)),
 			  logStream(nullptr),
 			  hostname(host),
@@ -657,8 +659,15 @@ namespace spades {
 			mumbleLink.SetContext(fullHostStr);
 			mumbleLink.SetIdentity(playerName);
 
-			// create demo file
-			if (!demoFilePath.empty()) {
+			// create local world / demo file / network connection
+			if (!localWorldPath.empty()) {
+				SPLog("Starting local world: '%s'", localWorldPath.c_str());
+				serverName = "Mundo Local (" + localWorldPath + ")";
+				localNet = stmp::make_unique<LocalWorldNetClient>(this, localWorldPath);
+				if (!localNet->OpenWorld())
+					SPRaise("Failed to open local world: %s", localWorldPath.c_str());
+				activeNet = localNet.get();
+			} else if (!demoFilePath.empty()) {
 				SPLog("Starting demo playback: '%s'", demoFilePath.c_str());
 				demoNet = stmp::make_unique<DemoNetClient>(this);
 				if (!demoNet->OpenDemo(demoFilePath))

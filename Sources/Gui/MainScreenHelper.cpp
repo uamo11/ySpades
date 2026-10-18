@@ -34,6 +34,7 @@
 #include "Main.h"
 #include "MainScreen.h"
 #include "MainScreenHelper.h"
+#include "ProxyManager.h"
 #include <Client/DemoRecorder.h>
 #include <Core/FileManager.h>
 #include <Core/IStream.h>
@@ -171,6 +172,7 @@ namespace spades {
 				curl_easy_setopt(cHandle.get(), CURLOPT_LOW_SPEED_TIME, 30l);
 				curl_easy_setopt(cHandle.get(), CURLOPT_LOW_SPEED_LIMIT, 15l);
 				curl_easy_setopt(cHandle.get(), CURLOPT_CONNECTTIMEOUT, 30l);
+				ProxyManager::GetInstance().ApplyToCurl(cHandle.get());
 				return curl_easy_perform(cHandle.get());
 			}
 
@@ -558,6 +560,12 @@ namespace spades {
 			if (mainScreen == NULL)
 				return "mainScreen == NULL";
 			return mainScreen->PlayDemo(filename);
+		}
+
+		std::string MainScreenHelper::PlayWorld(const std::string& filename) {
+			if (mainScreen == NULL)
+				return "mainScreen == NULL";
+			return mainScreen->PlayWorld(filename);
 		}
 
 		bool MainScreenHelper::DeleteDemo(const std::string& filename) {
