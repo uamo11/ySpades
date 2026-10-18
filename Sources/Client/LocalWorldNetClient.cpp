@@ -85,7 +85,7 @@ namespace spades {
 			                          static_cast<float>(spawnY) + 0.5F,
 			                          static_cast<float>(spawnZ));
 
-			auto p = stmp::make_unique<Player>(*w, pId, WeaponTypeRifle, TeamGreen);
+			auto p = stmp::make_unique<Player>(*w, pId, RIFLE_WEAPON, 0);
 			p->SetPosition(pos);
 			w->SetPlayer(pId, std::move(p));
 
@@ -111,16 +111,17 @@ namespace spades {
 			if (!wOpt)
 				return;
 			World& w = *wOpt;
-			GameMap* map = w.GetMap();
-			if (!map)
-				return;
 
 			if (type == BlockActionDig || type == BlockActionTool) {
-				w.DestroyBlock(v.x, v.y, v.z);
+				std::vector<IntVector3> cells;
+				cells.push_back(v);
+				w.DestroyBlock(cells);
+				client->PlayerDestroyedBlockWithWeaponOrTool(v);
 			} else if (type == BlockActionCreate) {
-				if (v.x >= 0 && v.x < 512 && v.y >= 0 && v.y < 512 && v.z >= 0 && v.z < 64) {
-					unsigned int color = 0xFF000000 | (localBlockColor.x << 16) | (localBlockColor.y << 8) | localBlockColor.z;
-					map->SetColor(v.x, v.y, v.z, color);
+				w.CreateBlock(v, localBlockColor);
+				auto pOpt = w.GetPlayer(w.GetLocalPlayerIndex());
+				if (pOpt) {
+					client->PlayerCreatedBlock(pOpt.value());
 				}
 			}
 		}
@@ -130,23 +131,10 @@ namespace spades {
 			if (!wOpt)
 				return;
 			World& w = *wOpt;
-			GameMap* map = w.GetMap();
-			if (!map)
-				return;
 
-			int dx = std::abs(v2.x - v1.x);
-			int dy = std::abs(v2.y - v1.y);
-			int dz = std::abs(v2.z - v1.z);
-			int steps = std::max({dx, dy, dz, 1});
-			for (int i = 0; i <= steps; i++) {
-				float t = static_cast<float>(i) / static_cast<float>(steps);
-				int x = static_cast<int>(v1.x + t * (v2.x - v1.x) + 0.5F);
-				int y = static_cast<int>(v1.y + t * (v2.y - v1.y) + 0.5F);
-				int z = static_cast<int>(v1.z + t * (v2.z - v1.z) + 0.5F);
-				if (x >= 0 && x < 512 && y >= 0 && y < 512 && z >= 0 && z < 64) {
-					unsigned int color = 0xFF000000 | (localBlockColor.x << 16) | (localBlockColor.y << 8) | localBlockColor.z;
-					map->SetColor(x, y, z, color);
-				}
+			auto cells = w.CubeLine(v1, v2, 50);
+			for (const auto& c : cells) {
+				w.CreateBlock(c, localBlockColor);
 			}
 		}
 
