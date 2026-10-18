@@ -119,7 +119,7 @@ namespace spades {
 				client->PlayerDestroyedBlockWithWeaponOrTool(v);
 			} else if (type == BlockActionCreate) {
 				w.CreateBlock(v, localBlockColor);
-				auto pOpt = w.GetPlayer(w.GetLocalPlayerIndex());
+				auto pOpt = w.GetPlayer(0);
 				if (pOpt) {
 					client->PlayerCreatedBlock(pOpt.value());
 				}
