@@ -417,7 +417,9 @@ namespace spades {
 				    while (p && !dynamic_cast<PreferenceView*>(p))
 					    p = p->GetParent();
 				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
-					    pv->SelectTab(5);
+					    pv->Close();
+					    if (pv->onDetailedRequested)
+						    pv->onDetailedRequested(*pv);
 				    }
 			    });
 			l.AddSliderField(_Tr("Preferences", "Render Scale"), "r_scale", 0.2F, 1, 0.01F,
@@ -539,7 +541,9 @@ namespace spades {
 				    while (p && !dynamic_cast<PreferenceView*>(p))
 					    p = p->GetParent();
 				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
-					    pv->SelectTab(6);
+					    pv->Close();
+					    if (pv->onDetailedRequested)
+						    pv->onDetailedRequested(*pv);
 				    }
 			    });
 			l.AddHelp(_Tr("Preferences", "Abre la pantalla de configuración original de inicio con la lista completa de resoluciones detectadas."));

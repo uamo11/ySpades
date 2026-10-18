@@ -57,30 +57,22 @@ namespace spades {
 				Vector2 pos = GetScreenPosition();
 				Vector2 sz = size;
 
-				// Background color
-				Vector4 bg(0.04F, 0.06F, 0.10F, 0.70F);
+				// Background color: sleek neutral transparent black
+				Vector4 bg(0.0F, 0.0F, 0.0F, 0.55F);
 				if (pressed && hover) {
-					bg = MakeVector4(0.12F, 0.20F, 0.32F, 0.95F);
+					bg = MakeVector4(0.02F, 0.02F, 0.02F, 0.90F);
 				} else if (hover) {
-					bg = MakeVector4(0.09F, 0.14F, 0.24F, 0.85F);
+					bg = MakeVector4(0.12F, 0.12F, 0.12F, 0.80F);
 				}
 
 				SetColorNP(r, bg);
 				r.DrawImage(nullptr, AABB2(pos.x, pos.y, sz.x, sz.y));
 
-				// Border line
-				Vector4 borderColor(0.25F, 0.40F, 0.65F, 0.35F);
+				// Border line: sharp 1px black border with silver highlight on hover
+				Vector4 borderColor(0.0F, 0.0F, 0.0F, 0.90F);
 				float borderW = 1.0F;
 				if (hover) {
-					if (iconType == LobbyIconType::Play)
-						borderColor = MakeVector4(0.35F, 0.85F, 0.55F, 0.9F);
-					else if (iconType == LobbyIconType::Skins)
-						borderColor = MakeVector4(0.85F, 0.50F, 1.0F, 0.9F);
-					else if (iconType == LobbyIconType::Settings)
-						borderColor = MakeVector4(0.45F, 0.75F, 1.0F, 0.9F);
-					else if (iconType == LobbyIconType::Quit)
-						borderColor = MakeVector4(0.95F, 0.35F, 0.35F, 0.9F);
-					borderW = 2.0F;
+					borderColor = MakeVector4(0.70F, 0.70F, 0.70F, 0.85F);
 				}
 
 				SetColorNP(r, borderColor);
@@ -89,17 +81,10 @@ namespace spades {
 				r.DrawImage(nullptr, AABB2(pos.x, pos.y, borderW, sz.y));
 				r.DrawImage(nullptr, AABB2(pos.x + sz.x - borderW, pos.y, borderW, sz.y));
 
-				// Icon color
-				Vector4 iconCol(0.85F, 0.90F, 0.95F, 0.85F);
+				// Icon color: crisp white / silver
+				Vector4 iconCol(0.92F, 0.92F, 0.92F, 0.95F);
 				if (hover) {
-					if (iconType == LobbyIconType::Play)
-						iconCol = MakeVector4(0.40F, 1.0F, 0.60F, 1.0F);
-					else if (iconType == LobbyIconType::Skins)
-						iconCol = MakeVector4(0.92F, 0.65F, 1.0F, 1.0F);
-					else if (iconType == LobbyIconType::Settings)
-						iconCol = MakeVector4(0.60F, 0.85F, 1.0F, 1.0F);
-					else if (iconType == LobbyIconType::Quit)
-						iconCol = MakeVector4(1.0F, 0.45F, 0.45F, 1.0F);
+					iconCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
 				}
 
 				SetColorNP(r, iconCol);
@@ -326,13 +311,6 @@ namespace spades {
 			float btnX = 64.0F;
 			if (sz.x < 640.0F)
 				btnX = 24.0F;
-
-			// Sleek backdrop card behind the 4 buttons
-			SetColorNP(r, MakeVector4(0.02F, 0.04F, 0.07F, 0.60F));
-			r.DrawImage(nullptr, AABB2(btnX - 12.0F, startY - 14.0F, btnSize + 24.0F, totalH + 28.0F));
-
-			SetColorNP(r, MakeVector4(0.2F, 0.45F, 0.85F, 0.40F));
-			r.DrawImage(nullptr, AABB2(btnX - 12.0F, startY - 14.0F, 2.5F, totalH + 28.0F));
 
 			UIElement::Render();
 

@@ -27,6 +27,7 @@
 #include <Gui/UI/MainScreen/ModListView.h>
 #include <Gui/UI/MainScreen/ServerListView.h>
 #include <Gui/UI/Widgets/Button.h>
+#include <Gui/UI/Widgets/DropDownList.h>
 #include <Gui/UI/Widgets/Field.h>
 #include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/Label.h>
@@ -123,7 +124,7 @@ namespace spades {
 
 			ui::Button* versionFilterButton = nullptr;
 			ServerVersionFilter currentVersionFilter = ServerVersionFilter::All;
-			void CycleVersionFilter();
+			void OpenVersionDropdown();
 
 			MenuIconButton* searchFilterButton = nullptr;
 			bool showSearchFilter = false;
@@ -144,6 +145,14 @@ namespace spades {
 
 			TabPanel* serverPanel = nullptr;
 			TabPanel* worldsPanel = nullptr;
+
+			// Worlds tab state
+			ui::ListView* worldsList = nullptr;
+			std::string selectedWorldMap = "LAbeach.vxl";
+			void LoadWorldList();
+			void WorldListItemActivated(const std::string& mapName);
+			void WorldListItemDoubleClicked(const std::string& mapName);
+			void PlaySelectedWorld();
 
 			// Demo tab state
 			TabPanel* demoPanel = nullptr;

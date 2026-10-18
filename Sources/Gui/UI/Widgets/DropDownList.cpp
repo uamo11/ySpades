@@ -32,10 +32,12 @@ namespace spades {
 				Vector2 pos = GetScreenPosition();
 				Vector2 sz = size;
 
-				SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, hover ? 0.2F : 0.0F));
+				Vector4 bgCol = hover ? MakeVector4(0.18F, 0.18F, 0.18F, 0.95F) : MakeVector4(0.05F, 0.05F, 0.05F, 0.92F);
+				SetColorNP(r, bgCol);
 				r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
 
-				SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, hover ? 0.3F : 0.0F));
+				Vector4 borderCol = hover ? MakeVector4(0.70F, 0.70F, 0.70F, 0.85F) : MakeVector4(0.0F, 0.0F, 0.0F, 0.80F);
+				SetColorNP(r, borderCol);
 				r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
 
 				client::IFont* font = GetFont();
@@ -44,8 +46,8 @@ namespace spades {
 				Vector2 txtSize = font->Measure(caption);
 				font->DrawShadow(caption,
 				                 pos + (sz - txtSize) * MakeVector2(0.0F, 0.5F) +
-				                     MakeVector2(4.0F, 0.0F),
-				                 1.0F, MakeVector4(1, 1, 1, 1), MakeVector4(0, 0, 0, 0.4F));
+				                     MakeVector2(8.0F, 0.0F),
+				                 1.0F, MakeVector4(0.95F, 0.95F, 0.95F, 1.0F), MakeVector4(0.0F, 0.0F, 0.0F, 0.6F));
 			}
 
 			// -- DropDownViewModel --

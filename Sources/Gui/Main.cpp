@@ -209,6 +209,7 @@ namespace {
 
 	bool g_printVersion = false;
 	bool g_printHelp = false;
+	bool g_setup = false;
 
 	std::string g_tryModPath;
 
@@ -274,6 +275,10 @@ namespace {
 			}
 			if (!strcasecmp(a, "--help") || !strcasecmp(a, "-h")) {
 				g_printHelp = true;
+				return ++i;
+			}
+			if (!strcasecmp(a, "--setup") || !strcasecmp(a, "--config") || !strcasecmp(a, "-s")) {
+				g_setup = true;
 				return ++i;
 			}
 			if (!strcasecmp(a, "--replay") || !strcasecmp(a, "-r")) {
@@ -1009,6 +1014,11 @@ int main(int argc, char** argv) {
 
 			SPLog("Starting demo replay: %s", g_replayDemoPath.c_str());
 			spades::StartDemoReplay(g_replayDemoPath);
+		} else if (g_setup) {
+			splashWindow.reset();
+
+			SPLog("Starting setup configuration screen");
+			spades::gui::StartupScreen::Run();
 		} else if (!g_autoconnect) {
 			splashWindow.reset();
 

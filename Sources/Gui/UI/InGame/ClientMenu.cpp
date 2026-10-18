@@ -210,6 +210,16 @@ namespace spades {
 				if (escHint)
 					escHint->visible = true; // restore on close
 			};
+			al->onDetailedRequested = [](UIElement&) {
+#ifdef _WIN32
+				STARTUPINFOA si = { sizeof(si) };
+				PROCESS_INFORMATION pi = {};
+				char cmdLine[] = "ySpades.exe --setup";
+				CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+				if (pi.hProcess) CloseHandle(pi.hProcess);
+				if (pi.hThread) CloseHandle(pi.hThread);
+#endif
+			};
 			al->Run();
 		}
 

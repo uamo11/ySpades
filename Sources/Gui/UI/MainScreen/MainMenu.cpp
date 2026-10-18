@@ -27,6 +27,7 @@
 #include <Client/Fonts.h>
 #include <Client/IImage.h>
 #include <Client/IRenderer.h>
+#include <Core/FileManager.h>
 #include <Core/Settings.h>
 #include <Core/ShellApi.h>
 #include <Core/Strings.h>
@@ -72,15 +73,15 @@ namespace spades {
 			Vector2 pos = GetScreenPosition();
 			Vector2 sz = size;
 
-			Vector4 color = MakeVector4(0.08F, 0.12F, 0.18F, 0.70F);
-			Vector4 iconCol = MakeVector4(0.85F, 0.90F, 0.95F, 0.90F);
+			Vector4 color = MakeVector4(0.0F, 0.0F, 0.0F, 0.60F);
+			Vector4 iconCol = MakeVector4(0.92F, 0.92F, 0.92F, 0.95F);
 
 			if (IsEnabled()) {
 				if (toggled || (pressed && hover)) {
-					color = MakeVector4(0.18F, 0.28F, 0.44F, 0.95F);
-					iconCol = MakeVector4(0.40F, 0.85F, 1.0F, 1.0F);
+					color = MakeVector4(0.04F, 0.04F, 0.04F, 0.90F);
+					iconCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
 				} else if (hover) {
-					color = MakeVector4(0.12F, 0.18F, 0.28F, 0.85F);
+					color = MakeVector4(0.12F, 0.12F, 0.12F, 0.80F);
 					iconCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
 				}
 			} else {
@@ -91,8 +92,8 @@ namespace spades {
 			SetColorNP(r, color);
 			r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
 
-			Vector4 borderCol = (hover || toggled) ? MakeVector4(0.35F, 0.65F, 0.95F, 0.85F)
-			                                       : MakeVector4(0.20F, 0.35F, 0.55F, 0.40F);
+			Vector4 borderCol = (hover || toggled) ? MakeVector4(0.70F, 0.70F, 0.70F, 0.85F)
+			                                       : MakeVector4(0.0F, 0.0F, 0.0F, 0.90F);
 			SetColorNP(r, borderCol);
 			r.DrawOutlinedRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
 
@@ -235,6 +236,108 @@ namespace spades {
 			}
 		}
 
+		struct WorldItemData {
+			std::string filename;
+			std::string displayName;
+			std::string description;
+			std::string tag;
+			std::string sizeText;
+		};
+
+		class WorldListItem : public ui::ButtonBase {
+			WorldItemData data;
+
+		public:
+			bool selected = false;
+
+			WorldListItem(ui::UIManager* manager, WorldItemData data)
+			    : ButtonBase(manager), data(std::move(data)) {}
+
+			void Render() override {
+				client::IRenderer& r = GetManager().GetRenderer();
+				Vector2 pos = GetScreenPosition();
+				Vector2 sz = size;
+
+				Vector4 bgCol = MakeVector4(0.03F, 0.03F, 0.03F, 0.65F);
+				Vector4 borderCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.85F);
+
+				if (selected) {
+					bgCol = MakeVector4(0.12F, 0.16F, 0.22F, 0.90F);
+					borderCol = MakeVector4(0.85F, 0.70F, 0.20F, 0.85F);
+				} else if (hover) {
+					bgCol = MakeVector4(0.10F, 0.10F, 0.10F, 0.80F);
+					borderCol = MakeVector4(0.50F, 0.50F, 0.50F, 0.70F);
+				}
+
+				SetColorNP(r, bgCol);
+				r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
+
+				SetColorNP(r, borderCol);
+				r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+				client::IFont* font = GetFont();
+				if (!font)
+					return;
+
+				Vector4 titleCol = selected ? MakeVector4(1.0F, 0.95F, 0.60F, 1.0F)
+				                            : MakeVector4(0.95F, 0.95F, 0.95F, 1.0F);
+				font->DrawShadow(data.displayName, pos + MakeVector2(12.0F, 5.0F), 1.0F, titleCol,
+				                 MakeVector4(0.0F, 0.0F, 0.0F, 0.6F));
+
+				font->DrawShadow(data.description, pos + MakeVector2(14.0F, 24.0F), 0.85F,
+				                 MakeVector4(0.70F, 0.75F, 0.80F, 0.90F),
+				                 MakeVector4(0.0F, 0.0F, 0.0F, 0.5F));
+
+				Vector4 tagCol = (data.filename == "LAbeach.vxl")
+				                     ? MakeVector4(1.0F, 0.80F, 0.20F, 1.0F)
+				                     : MakeVector4(0.40F, 0.85F, 1.0F, 0.90F);
+				Vector2 tagSz = font->Measure(data.tag);
+				font->DrawShadow(data.tag, pos + MakeVector2(sz.x - tagSz.x - 16.0F, 8.0F), 0.90F,
+				                 tagCol, MakeVector4(0.0F, 0.0F, 0.0F, 0.6F));
+
+				if (!data.sizeText.empty()) {
+					Vector2 sizeSz = font->Measure(data.sizeText);
+					font->DrawShadow(data.sizeText,
+					                 pos + MakeVector2(sz.x - sizeSz.x * 0.85F - 16.0F, 24.0F),
+					                 0.85F, MakeVector4(0.60F, 0.60F, 0.60F, 0.85F),
+					                 MakeVector4(0.0F, 0.0F, 0.0F, 0.5F));
+				}
+			}
+		};
+
+		class WorldListModel : public ui::ListViewModel {
+			ui::UIManager* manager;
+			std::vector<WorldItemData> list;
+			std::string selectedFilename;
+
+		public:
+			std::function<void(const std::string&)> itemActivated;
+			std::function<void(const std::string&)> itemDoubleClicked;
+
+			WorldListModel(ui::UIManager* manager, std::vector<WorldItemData> list,
+			               const std::string& selected)
+			    : manager(manager), list(std::move(list)), selectedFilename(selected) {}
+
+			int GetNumRows() override { return static_cast<int>(list.size()); }
+			float GetRowHeight() const override { return 44.0F; }
+
+			Handle<ui::UIElement> CreateElement(int row) override {
+				if (row < 0 || row >= static_cast<int>(list.size()))
+					return Handle<ui::UIElement>();
+				Handle<WorldListItem> item = Handle<WorldListItem>::New(manager, list[row]);
+				item->selected = (list[row].filename == selectedFilename);
+				item->activated = [this, row](ui::UIElement&) {
+					if (itemActivated)
+						itemActivated(list[row].filename);
+				};
+				item->doubleClicked = [this, row](ui::UIElement&) {
+					if (itemDoubleClicked)
+						itemDoubleClicked(list[row].filename);
+				};
+				return std::move(item).Cast<ui::UIElement>();
+			}
+		};
+
 		// -- MainScreenMainMenu --
 
 		MainScreenMainMenu::MainScreenMainMenu(MainScreenUI* ui)
@@ -328,7 +431,7 @@ namespace spades {
 					Handle<Label> label = Handle<Label>::New(manager);
 					goldNoticeLabel = label.GetPointerOrNull();
 					goldNoticeLabel->SetBounds(
-					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 230.0F, 30.0F));
+					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 235.0F, 30.0F));
 					goldNoticeLabel->alignment = MakeVector2(0.0F, 0.5F);
 					goldNoticeLabel->backgroundColor = MakeVector4(0.18F, 0.14F, 0.04F, 0.65F);
 					goldNoticeLabel->outlineColor = MakeVector4(0.85F, 0.70F, 0.20F, 0.60F);
@@ -337,6 +440,7 @@ namespace spades {
 					goldNoticeLabel->text = _Tr(
 					    "MainScreen",
 					    " [★] El server más jugado tras 1 año recibirá fondo dorado por 3 meses en enero");
+					goldNoticeLabel->visible = false; // Only shown when Versión Y is selected!
 					serverPanel->AddChild(goldNoticeLabel);
 				}
 
@@ -375,7 +479,7 @@ namespace spades {
 					searchFilterButton->toggle = true;
 					searchFilterButton->toggled = false;
 					searchFilterButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 175.0F, 200.0F, 34.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 190.0F, 200.0F, 34.0F, 30.0F));
 					searchFilterButton->activated = [this](UIElement&) {
 						showSearchFilter = !showSearchFilter;
 						UpdateSearchFilterVisibility();
@@ -390,19 +494,19 @@ namespace spades {
 				{
 					Handle<RefreshButton> button = Handle<RefreshButton>::New(manager);
 					button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 135.0F, 200.0F, 30.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 150.0F, 200.0F, 30.0F, 30.0F));
 					button->activated = [this](UIElement&) { LoadServerList(); };
 					serverPanel->AddChild(button.GetPointerOrNull());
 				}
 
-				// Single unified version selector button (ALL -> 0.75 -> 0.76 -> Y -> ALL)
+				// Version selector dropdown button (Todos -> Versión Y / 0.76 / 0.75)
 				{
 					Handle<Button> button = Handle<Button>::New(manager);
 					versionFilterButton = button.GetPointerOrNull();
 					versionFilterButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 100.0F, 200.0F, 100.0F, 30.0F));
-					versionFilterButton->caption = _Tr("MainScreen", "Ver: ALL");
-					versionFilterButton->activated = [this](UIElement&) { CycleVersionFilter(); };
+					    AABB2(contentsLeft + contentsWidth - 115.0F, 200.0F, 115.0F, 30.0F));
+					versionFilterButton->caption = _Tr("MainScreen", "Todos");
+					versionFilterButton->activated = [this](UIElement&) { OpenVersionDropdown(); };
 					serverPanel->AddChild(versionFilterButton);
 				}
 				{
@@ -518,16 +622,16 @@ namespace spades {
 				// --- Worlds panel contents (Mundos) ---
 				{
 					Handle<Label> titleLabel = Handle<Label>::New(manager);
-					titleLabel->text = _Tr("MainScreen", "MUNDOS Y MAPAS - Un Jugador & Sandbox");
+					titleLabel->text = _Tr("MainScreen", "MUNDOS GUARDADOS (.VXL)");
 					titleLabel->textColor = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
 					titleLabel->alignment = MakeVector2(0.0F, 0.5F);
-					titleLabel->SetBounds(AABB2(contentsLeft, 200.0F, contentsWidth - 380.0F, 30.0F));
+					titleLabel->SetBounds(AABB2(contentsLeft, 200.0F, 240.0F, 30.0F));
 					worldsPanel->AddChild(titleLabel.GetPointerOrNull());
 
 					Handle<Button> openFolderBtn = Handle<Button>::New(manager);
 					openFolderBtn->caption = _Tr("MainScreen", "Abrir Carpeta");
 					openFolderBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 465.0F, 200.0F, 110.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 365.0F, 200.0F, 115.0F, 30.0F));
 					openFolderBtn->activated = [](UIElement&) {
 #ifdef _WIN32
 						ShowDirectoryInShell("Resources\\Maps");
@@ -538,64 +642,42 @@ namespace spades {
 					worldsPanel->AddChild(openFolderBtn.GetPointerOrNull());
 
 					Handle<Button> viewLobbyBtn = Handle<Button>::New(manager);
-					viewLobbyBtn->caption = _Tr("MainScreen", "Fondo: LAbeach");
+					viewLobbyBtn->caption = _Tr("MainScreen", "Fondo 3D");
 					viewLobbyBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 350.0F, 200.0F, 115.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 245.0F, 200.0F, 115.0F, 30.0F));
 					viewLobbyBtn->activated = [this](UIElement&) {
 						if (this->ui) {
-							this->ui->LoadBackgroundMap("Maps/LAbeach.vxl");
+							std::string map = selectedWorldMap.empty() ? "LAbeach.vxl" : selectedWorldMap;
+							this->ui->LoadBackgroundMap("Maps/" + map);
 							this->ui->ShowLobby();
 						}
 					};
 					worldsPanel->AddChild(viewLobbyBtn.GetPointerOrNull());
 
-					Handle<Button> playLAbeachBtn = Handle<Button>::New(manager);
-					playLAbeachBtn->caption = _Tr("MainScreen", "Jugar LAbeach");
-					playLAbeachBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 230.0F, 200.0F, 110.0F, 30.0F));
-					playLAbeachBtn->activated = [this](UIElement&) {
-						helper->ConnectServer("127.0.0.1:32887", 3, "LAbeach");
-					};
-					worldsPanel->AddChild(playLAbeachBtn.GetPointerOrNull());
-
 					Handle<Button> playWorldBtn = Handle<Button>::New(manager);
-					playWorldBtn->caption = _Tr("MainScreen", "Jugar Sandbox");
+					playWorldBtn->caption = _Tr("MainScreen", "Jugar Mundo");
+					playWorldBtn->hotKeyText = _Tr("Client", "[Enter]");
 					playWorldBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 115.0F, 200.0F, 115.0F, 30.0F));
-					playWorldBtn->activated = [this](UIElement&) {
-						helper->ConnectServer("127.0.0.1:32887", 3, "");
-					};
+					    AABB2(contentsLeft + contentsWidth - 125.0F, 200.0F, 125.0F, 30.0F));
+					playWorldBtn->activated = [this](UIElement&) { PlaySelectedWorld(); };
 					worldsPanel->AddChild(playWorldBtn.GetPointerOrNull());
 
-					float cardY = listPos;
-					float cardH = footerPos - listPos - 12.0F;
-					Handle<Label> infoBg = Handle<Label>::New(manager);
-					infoBg->backgroundColor = MakeVector4(0.03F, 0.05F, 0.09F, 0.70F);
-					infoBg->outlineColor = MakeVector4(0.20F, 0.35F, 0.60F, 0.40F);
-					infoBg->textColor = MakeVector4(0.85F, 0.90F, 0.95F, 0.90F);
-					infoBg->text = _Tr(
-					    "MainScreen",
-					    " =========================================================================\n"
-					    "  MUNDOS GUARDADOS Y MAPAS VOXEL (.VXL)\n"
-					    " =========================================================================\n\n"
-					    "  [1] LAbeach.vxl  -  Playa Los Angeles (aos.party #1303)\n"
-					    "      - Estado: GUARDADO Y DISPONIBLE\n"
-					    "      - Tamano: 2.1 MB (512x512x64 Voxel Island / Beach)\n"
-					    "      - Descripcion: Paisaje costero con palmeras, arena dorada, mar y muelles.\n"
-					    "      - Accion: Haz clic en 'Jugar LAbeach' para cargar esta arena costera.\n\n"
-					    "  [2] Title.vxl  -  Mundo Introductorio ySpades\n"
-					    "      - Estado: INTEGRADO EN EL JUEGO\n"
-					    "      - Tamano: 1.5 MB (512x512x64 Escenario Principal)\n\n"
-					    "  [3] Sandbox Clasico  -  Servidor Local (127.0.0.1:32887)\n"
-					    "      - Modo practica, construccion libre y pruebas de bloques.\n\n"
-					    " -------------------------------------------------------------------------\n"
-					    "  COMO AGREGAR TUS PROPIOS MAPAS:\n"
-					    "  1. Haz clic en 'Abrir Carpeta' para abrir la carpeta de mapas.\n"
-					    "  2. Arrastra cualquier archivo de mapa .vxl (ej. descargado de aos.party).\n"
-					    "  3. Ya estara listo para cargar en tu servidor local o partida!");
-					infoBg->alignment = MakeVector2(0.04F, 0.08F);
-					infoBg->SetBounds(AABB2(contentsLeft, cardY, contentsWidth, cardH));
-					worldsPanel->AddChild(infoBg.GetPointerOrNull());
+					Handle<DemoListHeader> header1 = Handle<DemoListHeader>::New(manager);
+					header1->SetBounds(AABB2(contentsLeft, headerPos, contentsWidth - 140.0F, headerHeight));
+					header1->text = _Tr("MainScreen", "Mundo / Archivo");
+					worldsPanel->AddChild(header1.GetPointerOrNull());
+
+					Handle<DemoListHeader> header2 = Handle<DemoListHeader>::New(manager);
+					header2->SetBounds(AABB2(contentsLeft + contentsWidth - 140.0F, headerPos, 140.0F, headerHeight));
+					header2->text = _Tr("MainScreen", "Estado");
+					worldsPanel->AddChild(header2.GetPointerOrNull());
+
+					Handle<ListView> list = Handle<ListView>::New(manager);
+					worldsList = list.GetPointerOrNull();
+					worldsList->rowHeight = 44.0F;
+					worldsList->SetBounds(
+					    AABB2(contentsLeft, listPos, contentsWidth, footerPos - listPos - 8.0F));
+					worldsPanel->AddChild(worldsList);
 				}
 
 				// --- Demo panel contents ---
@@ -837,6 +919,7 @@ namespace spades {
 
 			LoadServerList();
 			LoadDemoList();
+			LoadWorldList();
 
 			if (helper->ShouldOpenModsTab())
 				LoadModList();
@@ -869,7 +952,8 @@ namespace spades {
 		}
 
 		void MainScreenMainMenu::OnTabChanged(UIElement&) {
-			// Refresh demo list when switching to demos tab
+			if (worldsPanel && worldsPanel->visible)
+				LoadWorldList();
 			if (demoPanel && demoPanel->visible)
 				LoadDemoList();
 			if (modsPanel && modsPanel->visible)
@@ -1312,34 +1396,142 @@ namespace spades {
 			cg_protocolVersion = ver;
 		}
 
-		void MainScreenMainMenu::CycleVersionFilter() {
-			switch (currentVersionFilter) {
-				case ServerVersionFilter::All:
-					currentVersionFilter = ServerVersionFilter::v075;
-					cg_protocolVersion = 3;
-					if (versionFilterButton)
-						versionFilterButton->caption = _Tr("MainScreen", "Ver: 0.75");
-					break;
-				case ServerVersionFilter::v075:
-					currentVersionFilter = ServerVersionFilter::v076;
-					cg_protocolVersion = 4;
-					if (versionFilterButton)
-						versionFilterButton->caption = _Tr("MainScreen", "Ver: 0.76");
-					break;
-				case ServerVersionFilter::v076:
-					currentVersionFilter = ServerVersionFilter::vY;
-					cg_protocolVersion = 11;
-					if (versionFilterButton)
-						versionFilterButton->caption = _Tr("MainScreen", "Ver: Y");
-					break;
-				case ServerVersionFilter::vY:
-				default:
-					currentVersionFilter = ServerVersionFilter::All;
-					if (versionFilterButton)
-						versionFilterButton->caption = _Tr("MainScreen", "Ver: ALL");
-					break;
+		void MainScreenMainMenu::OpenVersionDropdown() {
+			if (!versionFilterButton)
+				return;
+			std::vector<std::string> items = {
+				_Tr("MainScreen", "Todos"),
+				_Tr("MainScreen", "Versión Y"),
+				_Tr("MainScreen", "Versión 0.76"),
+				_Tr("MainScreen", "Versión 0.75")
+			};
+			AABB2 b = versionFilterButton->GetScreenBounds();
+			float dropW = 125.0F;
+			float dropX = b.max.x - dropW;
+			ui::ShowDropDownList(&GetManager(), dropX, b.max.y + 2.0F, dropW, std::move(items),
+			                     [this](int index) {
+				if (index < 0)
+					return;
+				switch (index) {
+					case 0:
+						currentVersionFilter = ServerVersionFilter::All;
+						if (versionFilterButton)
+							versionFilterButton->caption = _Tr("MainScreen", "Todos");
+						break;
+					case 1:
+						currentVersionFilter = ServerVersionFilter::vY;
+						cg_protocolVersion = 11;
+						if (versionFilterButton)
+							versionFilterButton->caption = _Tr("MainScreen", "Versión Y");
+						break;
+					case 2:
+						currentVersionFilter = ServerVersionFilter::v076;
+						cg_protocolVersion = 4;
+						if (versionFilterButton)
+							versionFilterButton->caption = _Tr("MainScreen", "Versión 0.76");
+						break;
+					case 3:
+						currentVersionFilter = ServerVersionFilter::v075;
+						cg_protocolVersion = 3;
+						if (versionFilterButton)
+							versionFilterButton->caption = _Tr("MainScreen", "Versión 0.75");
+						break;
+					default:
+						break;
+				}
+				UpdateDirectConnectVisibility();
+				UpdateServerList();
+			});
+		}
+
+		void MainScreenMainMenu::LoadWorldList() {
+			if (!worldsList)
+				return;
+
+			std::vector<std::string> mapFiles = FileManager::EnumFiles("Maps");
+			std::vector<WorldItemData> worldItems;
+			bool foundLAbeach = false;
+			bool foundTitle = false;
+
+			for (const std::string& rawFile : mapFiles) {
+				std::string fn = rawFile;
+				if (fn.size() > 5 && (fn.substr(0, 5) == "Maps/" || fn.substr(0, 5) == "Maps\\")) {
+					fn = fn.substr(5);
+				}
+				std::string lowerFn = fn;
+				std::transform(lowerFn.begin(), lowerFn.end(), lowerFn.begin(), ::tolower);
+				if (lowerFn.size() < 4 || lowerFn.substr(lowerFn.size() - 4) != ".vxl")
+					continue;
+
+				WorldItemData data;
+				data.filename = fn;
+
+				if (lowerFn == "labeach.vxl") {
+					foundLAbeach = true;
+					data.displayName = "Playa Los Ángeles (LAbeach.vxl)";
+					data.description = "aos.party #1303 • Playa tropical con palmeras, arena dorada y muelles";
+					data.tag = "[★ Preinstalado]";
+					data.sizeText = "2.1 MB";
+					worldItems.insert(worldItems.begin(), data);
+				} else if (lowerFn == "title.vxl") {
+					foundTitle = true;
+					data.displayName = "Mundo de Inicio (Title.vxl)";
+					data.description = "Escenario principal del lobby interactivo de ySpades";
+					data.tag = "[Integrado]";
+					data.sizeText = "2.1 MB";
+					worldItems.push_back(data);
+				} else {
+					data.displayName = fn;
+					data.description = "Mapa de bloques voxel personalizado (.vxl)";
+					data.tag = "[Guardado]";
+					data.sizeText = "";
+					worldItems.push_back(data);
+				}
 			}
-			UpdateServerList();
+
+			if (!foundLAbeach) {
+				WorldItemData data;
+				data.filename = "LAbeach.vxl";
+				data.displayName = "Playa Los Ángeles (LAbeach.vxl)";
+				data.description = "aos.party #1303 • Playa tropical con palmeras, arena dorada y muelles";
+				data.tag = "[★ Preinstalado]";
+				data.sizeText = "2.1 MB";
+				worldItems.insert(worldItems.begin(), data);
+			}
+			if (!foundTitle) {
+				WorldItemData data;
+				data.filename = "Title.vxl";
+				data.displayName = "Mundo de Inicio (Title.vxl)";
+				data.description = "Escenario principal del lobby interactivo de ySpades";
+				data.tag = "[Integrado]";
+				data.sizeText = "2.1 MB";
+				worldItems.push_back(data);
+			}
+
+			if (selectedWorldMap.empty())
+				selectedWorldMap = "LAbeach.vxl";
+
+			Handle<WorldListModel> model =
+			    Handle<WorldListModel>::New(&GetManager(), worldItems, selectedWorldMap);
+			worldsList->SetModel(model.GetPointerOrNull());
+			model->itemActivated = [this](const std::string& fn) { WorldListItemActivated(fn); };
+			model->itemDoubleClicked = [this](const std::string& fn) { WorldListItemDoubleClicked(fn); };
+		}
+
+		void MainScreenMainMenu::WorldListItemActivated(const std::string& mapName) {
+			selectedWorldMap = mapName;
+			LoadWorldList();
+		}
+
+		void MainScreenMainMenu::WorldListItemDoubleClicked(const std::string& mapName) {
+			selectedWorldMap = mapName;
+			PlaySelectedWorld();
+		}
+
+		void MainScreenMainMenu::PlaySelectedWorld() {
+			if (selectedWorldMap.empty())
+				selectedWorldMap = "LAbeach.vxl";
+			helper->ConnectServer("127.0.0.1:32887", 3, selectedWorldMap);
 		}
 
 		void MainScreenMainMenu::UpdateSearchFilterVisibility() {
@@ -1394,7 +1586,7 @@ namespace spades {
 			if (toggleIpButton)
 				toggleIpButton->toggled = showDirectConnect;
 			if (goldNoticeLabel)
-				goldNoticeLabel->visible = !showDirectConnect;
+				goldNoticeLabel->visible = (currentVersionFilter == ServerVersionFilter::vY && !showDirectConnect);
 		}
 
 		void MainScreenMainMenu::ReturnToLobby() {
@@ -1405,6 +1597,8 @@ namespace spades {
 			if (IsEnabled() && key == "Enter") {
 				if (demoPanel->visible) {
 					PlaySelectedDemo();
+				} else if (worldsPanel && worldsPanel->visible) {
+					PlaySelectedWorld();
 				} else {
 					Connect();
 				}

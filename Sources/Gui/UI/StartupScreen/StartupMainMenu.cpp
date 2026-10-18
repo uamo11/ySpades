@@ -57,23 +57,19 @@ namespace spades {
 				AddChild(button.GetPointerOrNull());
 			}
 			{
-				Handle<LinkButton> button = Handle<LinkButton>::New(manager);
-				button->caption = _Tr("StartupScreen", "Official Website");
-				float capSize = GetFont()->Measure(button->caption).x;
-				button->SetBounds(AABB2(
-					sw - 200.0F - (capSize + 20.0F) - 10.0F,
-					24.0F,
-					capSize + 20.0F, 24.0F
-				));
-				button->activated = [this](UIElement& s) { OnWebsitePressed(s); };
+				Handle<Button> button = Handle<Button>::New(manager);
+				button->caption = _Tr("StartupScreen", "Cerrar");
+				button->hotKeyText = _Tr("Client", "[Esc]");
+				button->SetBounds(AABB2(sw - 330.0F, 20.0F, 140.0F, 30.0F));
+				button->activated = [this](UIElement&) { ui->shouldExit = true; };
 				AddChild(button.GetPointerOrNull());
 			}
+			float capSize = GetFont()->Measure(_Tr("StartupScreen", "Saltar esta pantalla la proxima vez")).x;
 			{
 				Handle<CheckBox> button = Handle<CheckBox>::New(manager);
-				button->caption = _Tr("StartupScreen", "Skip this screen next time");
-				float capSize = GetFont()->Measure(button->caption).x;
-				button->SetBounds(AABB2(8.0F, 45.0F, capSize + 18.0F, 20.0F));
-				button->visible = false;
+				button->caption = _Tr("StartupScreen", "Saltar esta pantalla la proxima vez");
+				button->SetBounds(AABB2(sw - capSize - 30.0F, 72.0F, capSize + 24.0F, 20.0F));
+				button->visible = true;
 				AddChild(button.GetPointerOrNull());
 				bypassStartupWindowCheck = button.GetPointerOrNull();
 				button->activated = [this](UIElement& s) {
@@ -118,7 +114,7 @@ namespace spades {
 			{
 				Handle<SimpleTabStrip> tabStrip = Handle<SimpleTabStrip>::New(manager);
 				AddChild(tabStrip.GetPointerOrNull());
-				tabStrip->SetBounds(AABB2(10.0F, 70.0F, sw - 20.0F, 24.0F));
+				tabStrip->SetBounds(AABB2(10.0F, 70.0F, sw - capSize - 50.0F, 24.0F));
 				tabStrip->AddItem(_Tr("StartupScreen", "Graphics"), graphicsTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Audio"), audioTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Generic"), genericTab);
