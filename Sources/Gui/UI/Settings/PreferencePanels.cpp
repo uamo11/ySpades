@@ -256,6 +256,7 @@ namespace spades {
 			// The compass also needs the server's permission, so turning this on does
 			// not put one on screen where the server does not allow it.
 			l.AddToggleField(_Tr("Preferences", "Show Compass Bar"), "cg_hudCompassBar");
+			l.AddToggleField(_Tr("Preferences", "Indicador de Equipo Ingame"), "cg_hudTeamIndicator");
 			l.AddBadgeNew();
 			l.AddChoiceField(_Tr("Preferences", "Show Alive Player Count"), "cg_hudPlayerCount",
 			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Top"),
@@ -532,6 +533,9 @@ namespace spades {
 
 			l.AddToggleField(_Tr("Preferences", "Mostrar Ventana al Iniciar"), "cl_showStartupWindow");
 			l.AddHelp(_Tr("Preferences", "Muestra la ventana de configuración clásica cada vez que ejecutas el juego."));
+
+			l.AddToggleField(_Tr("Preferences", "Indicador de Equipo Ingame"), "cg_hudTeamIndicator");
+			l.AddHelp(_Tr("Preferences", "Muestra una insignia flotante en pantalla con tu equipo actual (Azul, Verde, Red, etc.)."));
 
 			l.AddHeading(_Tr("Preferences", "Red y Configuración de Proxy"));
 			l.AddHelp(_Tr("Preferences", "Permite enrutar las conexiones de juego ENet y consultas HTTP a través de un proxy SOCKS5 o HTTP."));

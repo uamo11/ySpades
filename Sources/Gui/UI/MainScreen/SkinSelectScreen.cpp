@@ -144,7 +144,19 @@ namespace spades {
 				}
 
 				// Color tag badge (preview swatch)
-				if (colorTag.w > 0.0F) {
+				if (valueId == "default" || valueId == "off") {
+					float tagW = 14.0F;
+					float tagH = 12.0F;
+					float tagX = chkX + 22.0F;
+					float tagY = pos.y + 11.0F;
+					// Dual Blue / Green swatch representing server team colors
+					SetColorNP(r, MakeVector4(0.18F, 0.45F, 0.85F, 1.0F));
+					r.DrawFilledRect(tagX, tagY, tagX + tagW * 0.5F, tagY + tagH);
+					SetColorNP(r, MakeVector4(0.20F, 0.60F, 0.25F, 1.0F));
+					r.DrawFilledRect(tagX + tagW * 0.5F, tagY, tagX + tagW, tagY + tagH);
+					SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.70F));
+					r.DrawOutlinedRect(tagX, tagY, tagX + tagW, tagY + tagH);
+				} else if (colorTag.w > 0.0F) {
 					float tagW = 12.0F;
 					float tagH = 12.0F;
 					float tagX = chkX + 22.0F;
@@ -157,7 +169,7 @@ namespace spades {
 
 				client::IFont* font = GetFont();
 				if (font) {
-					float textOffsetX = (colorTag.w > 0.0F) ? 56.0F : 38.0F;
+					float textOffsetX = (colorTag.w > 0.0F || valueId == "default" || valueId == "off") ? 58.0F : 38.0F;
 					Vector4 titleCol = selected ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F)
 					                            : MakeVector4(0.90F, 0.92F, 0.96F, 0.90F);
 					Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.70F);
@@ -279,7 +291,8 @@ namespace spades {
 					Vector4 swatch;
 				};
 				std::vector<SkinDef> defs = {
-					{"default", "Azul Clásico", "Uniforme oficial predeterminado de ySpades", MakeVector4(0.18F, 0.45F, 0.85F, 1.0F)},
+					{"default", "OFF - Servidor / Equipo Real", "Desactiva skins personalizadas y usa el color/uniforme oficial del equipo en el servidor", MakeVector4(0.0F, 0.0F, 0.0F, 0.0F)},
+					{"blue", "Azul Clásico", "Uniforme azul fijo para el jugador", MakeVector4(0.18F, 0.45F, 0.85F, 1.0F)},
 					{"green", "Verde Militar", "Camuflaje táctico para combate en jungla", MakeVector4(0.20F, 0.60F, 0.25F, 1.0F)},
 					{"red", "Rojo Asalto", "Uniforme ofensivo escarlata de vanguardia", MakeVector4(0.85F, 0.22F, 0.22F, 1.0F)},
 					{"gold", "Traje Dorado VIP", "Traje ceremonial dorado para campeones", MakeVector4(1.0F, 0.84F, 0.15F, 1.0F)},
@@ -295,7 +308,7 @@ namespace spades {
 					row->SetBounds(AABB2(0.0F, y, contentW, rowH));
 					if (curSkin == d.id)
 						row->selected = true;
-					else if (curSkin.empty() && d.id == "default")
+					else if ((curSkin.empty() || curSkin == "default" || curSkin == "off") && d.id == "default")
 						row->selected = true;
 
 					row->activated = [this, r = row.GetPointerOrNull()](UIElement&) {

@@ -47,7 +47,7 @@ namespace spades {
 			color = ConvertColorRGB(p.GetColor());
 			weaponName = p.GetWeapon().GetName();
 			isLocalPlayer = p.IsLocalPlayer();
-			if (isLocalPlayer && (std::string)cg_playerSkin != "default") {
+			if (isLocalPlayer && (std::string)cg_playerSkin != "default" && (std::string)cg_playerSkin != "off") {
 				color = PlayerCosmetics::GetSkinColor(cg_playerSkin, color);
 			}
 

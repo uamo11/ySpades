@@ -70,7 +70,11 @@ namespace spades {
 		}
 
 		Vector3 PlayerCosmetics::GetSkinColor(const std::string& skinId, const Vector3& defaultColor) {
-			if (skinId == "gold")
+			if (skinId == "default" || skinId == "off" || skinId.empty())
+				return defaultColor;
+			else if (skinId == "blue")
+				return MakeVector3(0.18F, 0.45F, 0.85F); // Classic Blue
+			else if (skinId == "gold")
 				return MakeVector3(1.0F, 0.82F, 0.15F); // VIP Gold
 			else if (skinId == "green")
 				return MakeVector3(0.22F, 0.45F, 0.25F); // Military Green

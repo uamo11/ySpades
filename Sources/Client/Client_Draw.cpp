@@ -94,6 +94,7 @@ DEFINE_SPADES_SETTING(cg_hudSafezoneX, "1");
 DEFINE_SPADES_SETTING(cg_hudSafezoneY, "1");
 DEFINE_SPADES_SETTING(cg_hudCompassBar, "1");
 DEFINE_SPADES_SETTING(cg_hudPlayerCount, "0");
+DEFINE_SPADES_SETTING(cg_hudTeamIndicator, "1");
 DEFINE_SPADES_SETTING(cg_hudHealthBar, "1");
 DEFINE_SPADES_SETTING(cg_hudHealthAnimation, "1");
 DEFINE_SPADES_SETTING(cg_hudReloadIndicator, "1");
@@ -508,6 +509,24 @@ namespace spades {
 			pos.x = x + (teamBarW * 0.5F) - (size.x * 0.5F);
 			font.Draw(str, pos + MakeVector2(1, 1), 1.0F, shadowColor);
 			font.Draw(str, pos, 1.0F, brightCol2);
+
+			// Underline local player's team in the alive count
+			auto maybeLocal = world->GetLocalPlayer();
+			if (maybeLocal && !maybeLocal->IsSpectator()) {
+				int myTeam = maybeLocal->GetTeamId();
+				float indW = 14.0F;
+				float indH = 2.5F;
+				float indY = (teamBarY - 2.0F) + iconSize + iconSpacing + size.y + 2.0F;
+				if (myTeam == 0) {
+					float indX = x - (teamBarW * 0.5F) - (indW * 0.5F);
+					renderer->SetColorAlphaPremultiplied(brightCol1);
+					renderer->DrawFilledRect(indX, indY, indX + indW, indY + indH);
+				} else if (myTeam == 1) {
+					float indX = x + (teamBarW * 0.5F) - (indW * 0.5F);
+					renderer->SetColorAlphaPremultiplied(brightCol2);
+					renderer->DrawFilledRect(indX, indY, indX + indW, indY + indH);
+				}
+			}
 		}
 
 		void Client::DrawHurtSprites() {
@@ -2296,6 +2315,126 @@ namespace spades {
 			}
 		}
 
+		void Client::DrawTeamIndicator() {
+			if (!cg_hudTeamIndicator)
+				return;
+
+			if (!world)
+				return;
+
+			auto maybeLocal = world->GetLocalPlayer();
+			Player* targetPlayer = maybeLocal ? &maybeLocal.value() : nullptr;
+
+			// If spectating another player, show that player's team, or show spectator status
+			bool isSpectator = localPlayerIsSpectator;
+			if (!targetPlayer || isSpectator) {
+				int focusedId = GetCameraTargetPlayerId();
+				auto maybeFocused = world->GetPlayer(focusedId);
+				if (maybeFocused && !maybeFocused->IsSpectator()) {
+					targetPlayer = &maybeFocused.value();
+					isSpectator = false;
+				}
+			}
+
+			float sw = renderer->ScreenWidth();
+			float sh = renderer->ScreenHeight();
+
+			float ratio = (sw / sh);
+			float safeZoneXMin = 0.75F;
+			if (ratio < 0.26F)
+				safeZoneXMin = 0.28F;
+			else if (ratio < 0.56F)
+				safeZoneXMin = 0.475F;
+
+			float safeZoneX = Clamp((float)cg_hudSafezoneX, safeZoneXMin, 1.0F);
+			float safeZoneY = Clamp((float)cg_hudSafezoneY, 0.85F, 1.0F);
+
+			float x = (sw - 16.0F) * safeZoneX;
+			float y = (sh - 16.0F) * safeZoneY;
+
+			int teamId = -1;
+			std::string teamName = "";
+			Vector4 teamColor = MakeVector4(0.8F, 0.8F, 0.85F, 1.0F);
+
+			if (world->IsModeFFA()) {
+				teamName = "FFA";
+				teamColor = MakeVector4(0.95F, 0.75F, 0.20F, 1.0F);
+			} else if (targetPlayer && !targetPlayer->IsSpectator()) {
+				teamId = targetPlayer->GetTeamId();
+				teamName = targetPlayer->GetTeamName();
+				if (teamName.empty()) {
+					teamName = (teamId == 0) ? "Azul" : ((teamId == 1) ? "Verde" : ("Equipo " + ToString(teamId)));
+				}
+				IntVector3 rawColor = world->GetTeamColor(teamId);
+				teamColor = ConvertColorRGBA(rawColor);
+			} else {
+				teamName = _Tr("Client", "Espectador");
+				teamColor = MakeVector4(0.70F, 0.80F, 0.95F, 1.0F);
+			}
+
+			// Format display string
+			std::string upperName = ToUpperCase(teamName);
+			std::string displayStr;
+			if (world->IsModeFFA()) {
+				displayStr = "MODO: TODOS VS TODOS (FFA)";
+			} else if (isSpectator || teamId < 0) {
+				displayStr = "ESPECTADOR";
+			} else if (upperName.find("TEAM") != std::string::npos || upperName.find("EQUIPO") != std::string::npos) {
+				displayStr = upperName;
+			} else {
+				displayStr = "EQUIPO " + upperName;
+			}
+
+			IFont& font = fontManager->GetGuiFont();
+			Vector2 textSize = font.Measure(displayStr);
+
+			float badgeH = 22.0F;
+			float badgePaddingX = 8.0F;
+			float dotSize = 8.0F;
+			float badgeW = badgePaddingX + dotSize + 6.0F + textSize.x + badgePaddingX;
+
+			// Position at bottom-left above health counter
+			// Health digits are at (sw - x, y - healthSize.y), where healthSize.y is ~26-30px.
+			float badgeX = floorf(sw - x);
+			float badgeY;
+			if (targetPlayer && targetPlayer->IsAlive() && !isSpectator) {
+				badgeY = floorf(y - 50.0F);
+			} else {
+				badgeY = floorf(y - 30.0F);
+			}
+
+			// Background rect (dark translucent panel with subtle team-tinted border)
+			Vector4 bgTop = MakeVector4(0.04F, 0.06F, 0.10F, 0.80F);
+			Vector4 bgBottom = MakeVector4(0.02F, 0.03F, 0.06F, 0.90F);
+			renderer->DrawFilledRectFade(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH,
+			                             bgTop, bgBottom);
+
+			// Accent left colored edge
+			Vector4 accentColor = teamColor;
+			accentColor.w = 1.0F;
+			renderer->SetColorAlphaPremultiplied(accentColor);
+			renderer->DrawFilledRect(badgeX, badgeY, badgeX + 3.0F, badgeY + badgeH);
+
+			// Subtle outline
+			Vector4 border = MakeVector4(teamColor.x * 0.7F, teamColor.y * 0.7F, teamColor.z * 0.7F, 0.60F);
+			renderer->SetColorAlphaPremultiplied(border);
+			renderer->DrawOutlinedRect(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
+
+			// Colored indicator dot
+			float dotX = badgeX + badgePaddingX + 2.0F;
+			float dotY = badgeY + (badgeH - dotSize) * 0.5F;
+			renderer->SetColorAlphaPremultiplied(accentColor);
+			renderer->DrawFilledRect(dotX, dotY, dotX + dotSize, dotY + dotSize);
+			renderer->SetColorAlphaPremultiplied(MakeVector4(1.0F, 1.0F, 1.0F, 0.80F));
+			renderer->DrawOutlinedRect(dotX, dotY, dotX + dotSize, dotY + dotSize);
+
+			// Text
+			Vector2 textPos = MakeVector2(dotX + dotSize + 6.0F, badgeY + (badgeH - textSize.y) * 0.5F);
+			Vector4 textCol = MakeVector4(0.96F, 0.98F, 1.0F, 1.0F);
+			Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.85F);
+			font.DrawShadow(displayStr, textPos, 1.0F, textCol, shadowCol);
+		}
+
 		void Client::DrawCompassBar(Player& p) {
 			const float sw = renderer->ScreenWidth();
 
@@ -2696,6 +2835,8 @@ namespace spades {
 						DrawSpectateHUD();
 					}
 
+					DrawTeamIndicator();
+
 					if (netgraphVisible && !isDemoMode)
 						DrawNetGraph();
 
@@ -2745,6 +2886,7 @@ namespace spades {
 							mapView->Draw();
 
 						DrawSpectateHUD();
+						DrawTeamIndicator();
 
 						if (!isChatPanelVisible)
 							chatWindow->Draw();

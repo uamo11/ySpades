@@ -567,6 +567,9 @@ namespace spades {
 			 */
 			void DrawSpectateHUD();
 
+			/** Ingame team indicator badge */
+			void DrawTeamIndicator();
+
 			bool staffSpectating;
 			bool spectatorPlayerNames;
 			Vector4 GetPlayerColor(Player&);

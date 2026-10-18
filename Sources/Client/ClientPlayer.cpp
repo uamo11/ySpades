@@ -1069,7 +1069,7 @@ namespace spades {
 						const bool isLeftArm = leftHanded ? (i != 0) : (i == 0);
 
 						ModelRenderParam armParam = param;
-						if (p.IsLocalPlayer() && (std::string)cg_playerSkin != "default") {
+						if (p.IsLocalPlayer() && (std::string)cg_playerSkin != "default" && (std::string)cg_playerSkin != "off") {
 							armParam.customColor = PlayerCosmetics::GetSkinColor(cg_playerSkin, armParam.customColor);
 						}
 
@@ -1110,7 +1110,7 @@ namespace spades {
 			Handle<IModel> model;
 			ModelRenderParam param;
 			param.customColor = ConvertColorRGB(p.GetColor());
-			if (p.IsLocalPlayer() && (std::string)cg_playerSkin != "default") {
+			if (p.IsLocalPlayer() && (std::string)cg_playerSkin != "default" && (std::string)cg_playerSkin != "off") {
 				param.customColor = PlayerCosmetics::GetSkinColor(cg_playerSkin, param.customColor);
 			}
 
