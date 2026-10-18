@@ -1362,58 +1362,26 @@ namespace spades {
 			IRenderer& renderer = client.GetRenderer();
 			Player& p = player;
 			Weapon& w = p.GetWeapon();
-			Handle<IModel> toolModel;
 
-			Matrix4 mat = Matrix4::Scale(0.051F) * Matrix4::Scale(-1.0F, -1.0F, 1.0F);
-			Vector3 trans = Vector3(0.4F, -0.9F, 0.0F);
-			mat = Matrix4::Translate(trans) * mat;
+			// Always use the lightweight, procedural basic default weapon of the game.
+			// This completely bypasses user-installed high-poly weapon mods so other players
+			// never cause FPS drops or render giant modded weapons!
+			Handle<IModel> toolModel = PlayerCosmetics::GetSimpleToolModel(renderer, currentTool, w.GetWeaponType());
+			if (!toolModel)
+				return;
+
+			Matrix4 mat = Matrix4::Translate(Vector3(0.4F, -0.9F, 0.0F))
+			            * Matrix4::Scale(-0.05F, -0.05F, 0.05F);
 
 			ModelRenderParam param = baseParam;
 			param.matrix = arms * mat;
-			param.customColor = ConvertColorRGB(p.GetColor());
-
-			int mode = cg_simpleOtherWeapons;
-
-			if (mode >= 2) {
-				toolModel = PlayerCosmetics::GetSimpleToolModel(renderer, currentTool, w.GetWeaponType());
+			if (currentTool == Player::ToolBlock) {
+				param.customColor = ConvertColorRGB(p.GetBlockColor());
 			} else {
-				switch (currentTool) {
-					case Player::ToolSpade:
-						toolModel = renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
-						break;
-					case Player::ToolBlock:
-						toolModel = renderer.RegisterModel("Models/Weapons/Block/Block.kv6");
-						param.customColor = ConvertColorRGB(p.GetBlockColor());
-						break;
-					case Player::ToolGrenade:
-						toolModel = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
-						break;
-					case Player::ToolWeapon:
-						switch (w.GetWeaponType()) {
-							case RIFLE_WEAPON:
-								toolModel = renderer.RegisterModel("Models/Weapons/Rifle/Weapon.kv6");
-								break;
-							case SMG_WEAPON:
-								toolModel = renderer.RegisterModel("Models/Weapons/SMG/Weapon.kv6");
-								break;
-							case SHOTGUN_WEAPON:
-								toolModel = renderer.RegisterModel("Models/Weapons/Shotgun/Weapon.kv6");
-								break;
-							default: break;
-						}
-						break;
-					default: break;
-				}
+				param.customColor = ConvertColorRGB(p.GetColor());
 			}
 
-			// Fallback to procedural low-poly model if registering fails
-			if (!toolModel) {
-				toolModel = PlayerCosmetics::GetSimpleToolModel(renderer, currentTool, w.GetWeaponType());
-			}
-
-			if (toolModel) {
-				renderer.RenderModel(*toolModel, param);
-			}
+			renderer.RenderModel(*toolModel, param);
 		}
 
 		void ClientPlayer::AddToScene() {

@@ -2349,6 +2349,7 @@ namespace spades {
 			auto maybeLocal = world->GetLocalPlayer();
 			Player* targetPlayer = maybeLocal ? &maybeLocal.value() : nullptr;
 
+			bool isSpectator = !maybeLocal || maybeLocal->IsSpectator();
 			// If local player belongs to a team, ALWAYS display their team (even when dead!)
 			bool localHasTeam = maybeLocal && !maybeLocal->IsSpectator();
 			if (localHasTeam) {
@@ -3166,7 +3167,7 @@ namespace spades {
 			// Refresh every 100ms (10 times/second) with zero allocations per frame
 			if (time - lastUpdateTime >= 0.10F || lastUpdateTime < 0.0F) {
 				lastUpdateTime = time;
-				int fps = static_cast<int>(roundf(fpsCounter.GetFps()));
+				int fps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetFps())));
 				int ping = activeNet ? activeNet->GetPing() : 0;
 				if (fps <= 0)
 					snprintf(cachedText, sizeof(cachedText), "FPS: -- | %d ms", ping);

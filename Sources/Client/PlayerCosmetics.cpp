@@ -387,7 +387,7 @@ namespace spades {
 				if (toolType == 0) { // Player::ToolSpade
 					int w = 3, d = 16, h = 3;
 					vm = Handle<VoxelModel>::New(w, d, h);
-					vm->SetOrigin(MakeVector3(-1.0F, 0.0F, -1.0F));
+					vm->SetOrigin(MakeVector3(-1.0F, -2.0F, -1.0F));
 					// Handle / shaft
 					for (int y = 0; y < 11; ++y)
 						vm->SetSolid(1, y, 1, woodBrown);
@@ -409,7 +409,7 @@ namespace spades {
 					if (weaponType == 0) { // RIFLE_WEAPON
 						int w = 2, d = 18, h = 4;
 						vm = Handle<VoxelModel>::New(w, d, h);
-						vm->SetOrigin(MakeVector3(-1.0F, 2.0F, -2.0F));
+						vm->SetOrigin(MakeVector3(-1.0F, -5.0F, -2.0F));
 						// Stock
 						for (int y = 0; y < 6; ++y)
 							for (int z = 0; z < 3; ++z)
@@ -424,7 +424,7 @@ namespace spades {
 					} else if (weaponType == 1) { // SMG_WEAPON
 						int w = 2, d = 13, h = 5;
 						vm = Handle<VoxelModel>::New(w, d, h);
-						vm->SetOrigin(MakeVector3(-1.0F, 2.0F, -2.0F));
+						vm->SetOrigin(MakeVector3(-1.0F, -4.0F, -2.0F));
 						// Body
 						for (int y = 1; y < 10; ++y)
 							for (int z = 2; z < 4; ++z)
@@ -438,7 +438,7 @@ namespace spades {
 					} else { // SHOTGUN_WEAPON
 						int w = 3, d = 16, h = 4;
 						vm = Handle<VoxelModel>::New(w, d, h);
-						vm->SetOrigin(MakeVector3(-1.0F, 2.0F, -2.0F));
+						vm->SetOrigin(MakeVector3(-1.5F, -5.0F, -2.0F));
 						// Heavy stock
 						for (int y = 0; y < 6; ++y)
 							for (int z = 0; z < 3; ++z)
