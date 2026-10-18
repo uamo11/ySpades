@@ -1077,6 +1077,18 @@ namespace spades {
 				return true;
 			}
 
+			// If local player is dead, reveal their killer through walls with glowing silhouette!
+			if (maybeLocal && !maybeLocal->IsAlive() && !maybeLocal->IsSpectator() && !staffSpectating) {
+				if (lastKillerPlayerId >= 0 && p.GetId() == lastKillerPlayerId) {
+					IntVector3 tc = world->GetTeamColor(p.GetTeamId());
+					outColor = MakeVector3(tc.x / 255.0F, tc.y / 255.0F, tc.z / 255.0F);
+					if (outColor.GetLength() < 0.4F) {
+						outColor = MakeVector3(1.0F, 0.25F, 0.25F);
+					}
+					return true;
+				}
+			}
+
 			// TEAM_ESP reveals the client's own teammates, in their team's colour, and
 			// only while the overlay key spends that permission.
 			if (!IsTeamESPRevealing(p))
@@ -1089,6 +1101,18 @@ namespace spades {
 
 		bool Client::HasRevealedPlayers() {
 			SPADES_MARK_FUNCTION();
+
+			// If local player is dead and has an active killer, enable X-Ray pass
+			if (world) {
+				auto maybeLocal = world->GetLocalPlayer();
+				if (maybeLocal && !maybeLocal->IsAlive() && !maybeLocal->IsSpectator() && !staffSpectating) {
+					if (lastKillerPlayerId >= 0 && lastKillerPlayerId < static_cast<int>(world->GetNumPlayerSlots())) {
+						auto maybeKiller = world->GetPlayer(lastKillerPlayerId);
+						if (maybeKiller && maybeKiller->IsAlive())
+							return true;
+					}
+				}
+			}
 
 			// A mark reveals its player whatever the feature bits say, but only one that
 			// asked for the world surface puts anything through a wall.
@@ -2325,9 +2349,12 @@ namespace spades {
 			auto maybeLocal = world->GetLocalPlayer();
 			Player* targetPlayer = maybeLocal ? &maybeLocal.value() : nullptr;
 
-			// If spectating another player, show that player's team, or show spectator status
-			bool isSpectator = !maybeLocal || maybeLocal->IsSpectator();
-			if (!targetPlayer || isSpectator) {
+			// If local player belongs to a team, ALWAYS display their team (even when dead!)
+			bool localHasTeam = maybeLocal && !maybeLocal->IsSpectator();
+			if (localHasTeam) {
+				targetPlayer = &maybeLocal.value();
+				isSpectator = false;
+			} else if (!targetPlayer || isSpectator) {
 				int focusedId = GetCameraTargetPlayerId();
 				auto maybeFocused = world->GetPlayer(focusedId);
 				if (maybeFocused && !maybeFocused->IsSpectator()) {
@@ -2393,15 +2420,9 @@ namespace spades {
 			float dotSize = 8.0F;
 			float badgeW = badgePaddingX + dotSize + 6.0F + textSize.x + badgePaddingX;
 
-			// Position at bottom-left above health counter
-			// Health digits are at (sw - x, y - healthSize.y), where healthSize.y is ~26-30px.
+			// Position higher up at bottom-left so it never covers ammo or health counters
 			float badgeX = floorf(sw - x);
-			float badgeY;
-			if (targetPlayer && targetPlayer->IsAlive() && !isSpectator) {
-				badgeY = floorf(y - 50.0F);
-			} else {
-				badgeY = floorf(y - 30.0F);
-			}
+			float badgeY = floorf(y - 78.0F);
 
 			// Background rect (dark translucent panel with subtle team-tinted border)
 			Vector4 bgTop = MakeVector4(0.04F, 0.06F, 0.10F, 0.80F);
@@ -3116,45 +3137,20 @@ namespace spades {
 
 			Vector2 targetPos = hasHead ? headPos : originPos;
 
-			// Animated rainbow RGB chroma
-			float t = static_cast<float>(time);
-			float hue = fmodf(t * 1.5F, 1.0F);
-			float h6 = hue * 6.0F;
-			float f = h6 - floorf(h6);
-			float q = 1.0F - f;
-			int hi = static_cast<int>(h6) % 6;
-			Vector4 rgbCol;
-			switch (hi) {
-				case 0: rgbCol = MakeVector4(1.0F, f, 0.0F, 0.95F); break;
-				case 1: rgbCol = MakeVector4(q, 1.0F, 0.0F, 0.95F); break;
-				case 2: rgbCol = MakeVector4(0.0F, 1.0F, f, 0.95F); break;
-				case 3: rgbCol = MakeVector4(0.0F, q, 1.0F, 0.95F); break;
-				case 4: rgbCol = MakeVector4(f, 0.0F, 1.0F, 0.95F); break;
-				default: rgbCol = MakeVector4(1.0F, 0.0F, q, 0.95F); break;
-			}
-
-			Vector2 center = MakeVector2(renderer->ScreenWidth() * 0.5F, renderer->ScreenHeight() * 0.5F);
-
-			// Drop shadow line
-			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.6F).Premultiplied());
-			renderer->DrawLine(center, targetPos, 3.5F);
-
-			// Dynamic RGB tracer line
-			renderer->SetColorAlphaPremultiplied(rgbCol.Premultiplied());
-			renderer->DrawLine(center, targetPos, 2.0F);
-
-			// Killer name tag label
+			// Killer name tag label above head (no screen-crossing tracer lines)
 			IFont& font = fontManager->GetGuiFont();
-			std::string tagText = killer.GetName();
+			std::string tagText = "☠ " + killer.GetName();
 			Vector2 tagSize = font.Measure(tagText);
 			Vector2 labelPos = targetPos - MakeVector2(tagSize.x * 0.5F, tagSize.y + 14.0F);
 
-			// Label background
-			AABB2 tagBg(labelPos.x - 4.0F, labelPos.y - 2.0F, tagSize.x + 8.0F, tagSize.y + 4.0F);
-			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.65F).Premultiplied());
+			// Label background with red accent border
+			AABB2 tagBg(labelPos.x - 6.0F, labelPos.y - 3.0F, tagSize.x + 12.0F, tagSize.y + 6.0F);
+			renderer->SetColorAlphaPremultiplied(MakeVector4(0.04F, 0.04F, 0.06F, 0.85F).Premultiplied());
 			renderer->DrawImage(nullptr, tagBg);
+			renderer->SetColorAlphaPremultiplied(MakeVector4(1.0F, 0.25F, 0.25F, 0.90F).Premultiplied());
+			renderer->DrawOutlinedRect(tagBg.min.x, tagBg.min.y, tagBg.max.x, tagBg.max.y);
 
-			font.DrawShadow(tagText, labelPos, 1.0F, rgbCol, MakeVector4(0.0F, 0.0F, 0.0F, 0.9F));
+			font.DrawShadow(tagText, labelPos, 1.0F, MakeVector4(1.0F, 0.9F, 0.9F, 1.0F), MakeVector4(0.0F, 0.0F, 0.0F, 0.95F));
 		}
 
 		void Client::DrawFpsMsOverlay() {

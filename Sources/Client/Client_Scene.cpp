@@ -377,6 +377,16 @@ namespace spades {
 							&& !player.IsAlive()) { // deathcam.
 							float timeSinceDeath = time - lastAliveTime;
 							distance -= 3.0F * expf(-timeSinceDeath * 1.0F);
+
+							// Zoom in towards the enemy killer (just like weapon ADS zoom)
+							if (lastKillerPlayerId >= 0 && lastKillerPlayerId < static_cast<int>(world->GetNumPlayerSlots())) {
+								auto maybeKiller = world->GetPlayer(lastKillerPlayerId);
+								if (maybeKiller && maybeKiller->IsAlive()) {
+									float zoomState = Clamp(timeSinceDeath / 0.5F, 0.0F, 1.0F);
+									float zoomScale = 2.2F; // ADS rifle-level zoom
+									scale /= Mix(1.0F, zoomScale, SmoothStep(zoomState));
+								}
+							}
 						}
 
 						Vector3 eye = center;
