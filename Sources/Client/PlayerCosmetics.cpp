@@ -33,6 +33,7 @@ namespace spades {
 		namespace {
 			static std::map<std::string, Handle<IModel>> g_capeCache;
 			static std::map<std::string, Handle<IModel>> g_accCache;
+			static std::map<int, Handle<IModel>> g_simpleToolCache;
 			static Vector3 g_customSkinColor(0.20F, 0.50F, 0.85F);
 			static bool g_customSkinLoaded = false;
 		} // namespace
@@ -368,9 +369,117 @@ namespace spades {
 			}
 		}
 
+		Handle<IModel> PlayerCosmetics::GetSimpleToolModel(IRenderer& renderer, int toolType, int weaponType) {
+			int key = toolType * 10 + weaponType;
+			auto it = g_simpleToolCache.find(key);
+			if (it != g_simpleToolCache.end() && it->second)
+				return it->second;
+
+			try {
+				Handle<VoxelModel> vm;
+				// Colors stored as little-endian 0xBBGGRR
+				const uint32_t darkSteel = 0x222222;
+				const uint32_t steel = 0x444444;
+				const uint32_t woodBrown = 0x1E3B5C;
+				const uint32_t brightMetal = 0x888888;
+				const uint32_t oliveDrab = 0x204525;
+
+				if (toolType == 0) { // Player::ToolSpade
+					int w = 3, d = 16, h = 3;
+					vm = Handle<VoxelModel>::New(w, d, h);
+					vm->SetOrigin(MakeVector3(-1.0F, 0.0F, -1.0F));
+					// Handle / shaft
+					for (int y = 0; y < 11; ++y)
+						vm->SetSolid(1, y, 1, woodBrown);
+					// Spade blade
+					for (int y = 11; y < 16; ++y) {
+						for (int x = 0; x < 3; ++x) {
+							vm->SetSolid(x, y, 1, brightMetal);
+						}
+					}
+				} else if (toolType == 1) { // Player::ToolBlock
+					int s = 5;
+					vm = Handle<VoxelModel>::New(s, s, s);
+					vm->SetOrigin(MakeVector3(-2.0F, -2.0F, -2.0F));
+					for (int x = 0; x < s; ++x)
+						for (int y = 0; y < s; ++y)
+							for (int z = 0; z < s; ++z)
+								vm->SetSolid(x, y, z, 0x757575);
+				} else if (toolType == 2) { // Player::ToolWeapon
+					if (weaponType == 0) { // RIFLE_WEAPON
+						int w = 2, d = 18, h = 4;
+						vm = Handle<VoxelModel>::New(w, d, h);
+						vm->SetOrigin(MakeVector3(-1.0F, 2.0F, -2.0F));
+						// Stock
+						for (int y = 0; y < 6; ++y)
+							for (int z = 0; z < 3; ++z)
+								vm->SetSolid(0, y, z, woodBrown);
+						// Receiver
+						for (int y = 6; y < 12; ++y)
+							for (int z = 1; z < 3; ++z)
+								vm->SetSolid(0, y, z, darkSteel);
+						// Barrel
+						for (int y = 12; y < 18; ++y)
+							vm->SetSolid(0, y, 2, steel);
+					} else if (weaponType == 1) { // SMG_WEAPON
+						int w = 2, d = 13, h = 5;
+						vm = Handle<VoxelModel>::New(w, d, h);
+						vm->SetOrigin(MakeVector3(-1.0F, 2.0F, -2.0F));
+						// Body
+						for (int y = 1; y < 10; ++y)
+							for (int z = 2; z < 4; ++z)
+								vm->SetSolid(0, y, z, darkSteel);
+						// Magazine (extending down)
+						for (int z = 0; z < 2; ++z)
+							vm->SetSolid(0, 5, z, 0x151515);
+						// Short barrel
+						for (int y = 10; y < 13; ++y)
+							vm->SetSolid(0, y, 3, steel);
+					} else { // SHOTGUN_WEAPON
+						int w = 3, d = 16, h = 4;
+						vm = Handle<VoxelModel>::New(w, d, h);
+						vm->SetOrigin(MakeVector3(-1.0F, 2.0F, -2.0F));
+						// Heavy stock
+						for (int y = 0; y < 6; ++y)
+							for (int z = 0; z < 3; ++z)
+								vm->SetSolid(1, y, z, woodBrown);
+						// Forend pump
+						for (int y = 8; y < 12; ++y)
+							vm->SetSolid(1, y, 1, woodBrown);
+						// Dual barrel
+						for (int y = 6; y < 16; ++y) {
+							vm->SetSolid(0, y, 2, steel);
+							vm->SetSolid(1, y, 2, steel);
+						}
+					}
+				} else if (toolType == 3) { // Player::ToolGrenade
+					int w = 4, d = 4, h = 5;
+					vm = Handle<VoxelModel>::New(w, d, h);
+					vm->SetOrigin(MakeVector3(-2.0F, -2.0F, -2.0F));
+					// Body
+					for (int x = 0; x < 4; ++x)
+						for (int y = 0; y < 4; ++y)
+							for (int z = 0; z < 4; ++z)
+								vm->SetSolid(x, y, z, oliveDrab);
+					// Top pin
+					vm->SetSolid(1, 1, 4, brightMetal);
+					vm->SetSolid(2, 1, 4, brightMetal);
+				}
+
+				if (vm) {
+					Handle<IModel> model = renderer.CreateModel(*vm);
+					g_simpleToolCache[key] = model;
+					return model;
+				}
+			} catch (...) {}
+
+			return Handle<IModel>();
+		}
+
 		void PlayerCosmetics::ClearCache() {
 			g_capeCache.clear();
 			g_accCache.clear();
+			g_simpleToolCache.clear();
 		}
 	} // namespace client
 } // namespace spades

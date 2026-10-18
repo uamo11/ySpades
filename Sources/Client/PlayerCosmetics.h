@@ -45,6 +45,9 @@ namespace spades {
 			/** Returns (and caches) procedural 3D head accessory model (crown, helmet) */
 			static Handle<IModel> GetAccessoryModel(IRenderer& renderer, const std::string& accId);
 
+			/** Returns (and caches) procedural lightweight LOD tool/weapon model for high FPS */
+			static Handle<IModel> GetSimpleToolModel(IRenderer& renderer, int toolType, int weaponType);
+
 			/** Clears cached cosmetic models (e.g. on renderer reset) */
 			static void ClearCache();
 

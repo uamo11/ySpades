@@ -104,6 +104,10 @@ namespace spades {
 				"Automatically exits aim down sights after firing (except with the SMG). "
 				"Useful for faster follow-up shots with rifle and shotgun."));
 			l.AddBadgeNew();
+			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores"), "cg_simpleOtherWeapons",
+			                 {"Normal (Mods de Todos)", "Básicas (Sin Mods)", "Baja Calidad (Ultra FPS)"},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Optimiza las armas de los otros jugadores a modelos básicos o de baja calidad para evitar caídas bruscas de FPS con mods de armas."));
 
 			l.AddHeading(_Tr("Preferences", "Effects"));
 			l.AddChoiceField(_Tr("Preferences", "Blood"), "cg_blood",
@@ -536,6 +540,11 @@ namespace spades {
 
 			l.AddToggleField(_Tr("Preferences", "Indicador de Equipo Ingame"), "cg_hudTeamIndicator");
 			l.AddHelp(_Tr("Preferences", "Muestra una insignia flotante en pantalla con tu equipo actual (Azul, Verde, Red, etc.)."));
+
+			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores (FPS)"), "cg_simpleOtherWeapons",
+			                 {"Detalladas / Mods", "Básicas (Juego Original)", "Baja Calidad (Ultra FPS)"},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Fuerza a que los demás jugadores usen armas básicas o de baja calidad para que el rendimiento y los FPS no bajen si tienes mods instalados."));
 
 			l.AddHeading(_Tr("Preferences", "Red y Configuración de Proxy"));
 			l.AddHelp(_Tr("Preferences", "Permite enrutar las conexiones de juego ENet y consultas HTTP a través de un proxy SOCKS5 o HTTP."));

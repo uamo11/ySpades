@@ -57,6 +57,7 @@ SPADES_SETTING(r_hdr);
 DEFINE_SPADES_SETTING(cg_environmentalAudio, "1");
 DEFINE_SPADES_SETTING(cg_classicPlayerModels, "0");
 DEFINE_SPADES_SETTING(cg_classicViewWeapon, "0");
+DEFINE_SPADES_SETTING(cg_simpleOtherWeapons, "1");
 DEFINE_SPADES_SETTING(cg_viewWeaponX, "0");
 DEFINE_SPADES_SETTING(cg_viewWeaponY, "0");
 DEFINE_SPADES_SETTING(cg_viewWeaponZ, "0");
@@ -1321,13 +1322,17 @@ namespace spades {
 			}
 
 			// Tool
-			{
-				ScriptIThirdPersonToolSkin interface(curSkin);
-				interface.SetOriginMatrix(arms);
-			}
-			{
-				ScriptIToolSkin interface(curSkin);
-				interface.AddToScene();
+			if (!p.IsLocalPlayer() && cg_simpleOtherWeapons) {
+				RenderBasicOtherWeapon(arms, param);
+			} else {
+				{
+					ScriptIThirdPersonToolSkin interface(curSkin);
+					interface.SetOriginMatrix(arms);
+				}
+				{
+					ScriptIToolSkin interface(curSkin);
+					interface.AddToScene();
+				}
 			}
 
 			hasValidOriginMatrix = true;
@@ -1351,6 +1356,64 @@ namespace spades {
 			}
 
 			// third person player rendering, done
+		}
+
+		void ClientPlayer::RenderBasicOtherWeapon(const Matrix4& arms, const ModelRenderParam& baseParam) {
+			IRenderer& renderer = client.GetRenderer();
+			Player& p = player;
+			Weapon& w = p.GetWeapon();
+			Handle<IModel> toolModel;
+
+			Matrix4 mat = Matrix4::Scale(0.051F) * Matrix4::Scale(-1.0F, -1.0F, 1.0F);
+			Vector3 trans = Vector3(0.4F, -0.9F, 0.0F);
+			mat = Matrix4::Translate(trans) * mat;
+
+			ModelRenderParam param = baseParam;
+			param.matrix = arms * mat;
+			param.customColor = ConvertColorRGB(p.GetColor());
+
+			int mode = cg_simpleOtherWeapons;
+
+			if (mode >= 2) {
+				toolModel = PlayerCosmetics::GetSimpleToolModel(renderer, currentTool, w.GetWeaponType());
+			} else {
+				switch (currentTool) {
+					case Player::ToolSpade:
+						toolModel = renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
+						break;
+					case Player::ToolBlock:
+						toolModel = renderer.RegisterModel("Models/Weapons/Block/Block.kv6");
+						param.customColor = ConvertColorRGB(p.GetBlockColor());
+						break;
+					case Player::ToolGrenade:
+						toolModel = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+						break;
+					case Player::ToolWeapon:
+						switch (w.GetWeaponType()) {
+							case RIFLE_WEAPON:
+								toolModel = renderer.RegisterModel("Models/Weapons/Rifle/Weapon.kv6");
+								break;
+							case SMG_WEAPON:
+								toolModel = renderer.RegisterModel("Models/Weapons/SMG/Weapon.kv6");
+								break;
+							case SHOTGUN_WEAPON:
+								toolModel = renderer.RegisterModel("Models/Weapons/Shotgun/Weapon.kv6");
+								break;
+							default: break;
+						}
+						break;
+					default: break;
+				}
+			}
+
+			// Fallback to procedural low-poly model if registering fails
+			if (!toolModel) {
+				toolModel = PlayerCosmetics::GetSimpleToolModel(renderer, currentTool, w.GetWeaponType());
+			}
+
+			if (toolModel) {
+				renderer.RenderModel(*toolModel, param);
+			}
 		}
 
 		void ClientPlayer::AddToScene() {

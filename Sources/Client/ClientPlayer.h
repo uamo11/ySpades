@@ -99,6 +99,7 @@ namespace spades {
 			void Update(float dt);
 			void AddToScene();
 			void Draw2D();
+			void RenderBasicOtherWeapon(const Matrix4& arms, const ModelRenderParam& baseParam);
 
 			bool IsChangingTool();
 			void FiredWeapon();
