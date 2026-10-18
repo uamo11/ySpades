@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows-x86:
     name: Build (Windows x86)
@@ -64,14 +67,27 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
+        continue-on-error: true
         with:
           name: yspades-windows-x86
+          retention-days: 1
           path: |
             ${{ runner.workspace }}\zerospades.mk\bin\Release
             !${{ runner.workspace }}\**\*.lib
             !${{ runner.workspace }}\**\*.exp
             !${{ runner.workspace }}\**\*.pdb
           if-no-files-found: warn
+
+      - name: Upload to Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $binDir = "${{ runner.workspace }}\zerospades.mk\bin\Release"
+          if (Test-Path "$binDir\ZeroSpades.exe") {
+            Copy-Item "$binDir\ZeroSpades.exe" "$binDir\ySpades-x86.exe" -Force
+            gh release upload ci-latest "$binDir\ySpades-x86.exe" --clobber
+          }
 
   build-windows-x64:
     name: Build (Windows x64)
@@ -134,11 +150,24 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
+        continue-on-error: true
         with:
           name: yspades-windows-x64
+          retention-days: 1
           path: |
             ${{ runner.workspace }}\zerospades.mk\bin\Release
             !${{ runner.workspace }}\**\*.lib
             !${{ runner.workspace }}\**\*.exp
             !${{ runner.workspace }}\**\*.pdb
           if-no-files-found: warn
+
+      - name: Upload to Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $binDir = "${{ runner.workspace }}\zerospades.mk\bin\Release"
+          if (Test-Path "$binDir\ZeroSpades.exe") {
+            Copy-Item "$binDir\ZeroSpades.exe" "$binDir\ySpades-x64.exe" -Force
+            gh release upload ci-latest "$binDir\ySpades-x64.exe" --clobber
+          }
