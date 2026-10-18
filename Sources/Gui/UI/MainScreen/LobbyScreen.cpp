@@ -286,8 +286,10 @@ namespace spades {
 				si.cb = sizeof(si);
 				PROCESS_INFORMATION pi;
 				ZeroMemory(&pi, sizeof(pi));
-				char cmdLine[] = "ySpades.exe --setup";
-				if (CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+				char exePath[MAX_PATH] = {0};
+				GetModuleFileNameA(NULL, exePath, MAX_PATH);
+				std::string cmd = std::string("\"") + exePath + "\" --setup";
+				if (CreateProcessA(NULL, &cmd[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
 					CloseHandle(pi.hProcess);
 					CloseHandle(pi.hThread);
 				}
