@@ -77,8 +77,8 @@ namespace spades {
 				}
 
 				if (iconType != GuiIconType::None) {
-					DrawGuiIcon(r, iconType, MakeVector2(pos.x + 18.0F, pos.y + sz.y * 0.5F),
-					            (hovered ? MakeVector4(1, 1, 1, 1) : iconColor), 1.15F);
+					Vector4 ic = hovered ? MakeVector4(1.0F, 1.0F, 1.0F, 1.0F) : iconColor;
+					DrawGuiIcon(r, iconType, MakeVector2(pos.x + 18.0F, pos.y + sz.y * 0.5F), ic, 1.15F);
 				}
 
 				client::IFont* font = GetFont();
