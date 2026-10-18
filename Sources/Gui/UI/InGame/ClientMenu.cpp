@@ -115,12 +115,11 @@ namespace spades {
 			float btnH = 34.0F;
 			float spacing = 6.0F;
 			float headerH = 34.0F;
-			float footerH = 26.0F;
 			float cardPadX = 14.0F;
 			float cardPadY = 12.0F;
 
-			// winH encompasses title header + 4 buttons + spacing + footer hint
-			float winH = headerH + (btnH + spacing) * 4.0F + 6.0F + footerH;
+			// winH encompasses title header + 4 buttons + spacing
+			float winH = headerH + 2.0F + (btnH + spacing) * 3.0F + btnH;
 			float winX = (sw - winW) * 0.5F;
 			float winY = (sh - winH) * 0.5F;
 
@@ -196,18 +195,6 @@ namespace spades {
 				button->activated = [this](UIElement& s) { OnDisconnect(s); };
 				AddChild(button.GetPointerOrNull());
 			}
-			curBtnY += btnH + 6.0F;
-
-			// add resume game hint INSIDE the card at the bottom
-			{
-				Handle<Label> escHint = Handle<Label>::New(manager);
-				escHint->text = _Tr("Client", "[Esc] Back to Game");
-				escHint->textColor = MakeVector4(0.65F, 0.65F, 0.65F, 0.85F);
-				escHint->alignment = MakeVector2(0.5F, 0.5F);
-				escHint->SetBounds(AABB2(winX, curBtnY, winW, footerH));
-				AddChild(escHint.GetPointerOrNull());
-				this->escHint = escHint.GetPointerOrNull();
-			}
 		}
 
 		void ClientMenu::OnBackToGame(UIElement&) { ui->SetActiveUI(nullptr); }
@@ -217,15 +204,9 @@ namespace spades {
 			opt.gameActive = true;
 			opt.persistedState = preferenceState;
 
-			if (escHint)
-				escHint->visible = false; // hide while in settings
-
 			Handle<PreferenceView> al =
 				Handle<PreferenceView>::New(this, opt, &ui->GetFontManager());
-			al->closed = [this](UIElement&) {
-				if (escHint)
-					escHint->visible = true; // restore on close
-			};
+			al->closed = [](UIElement&) {};
 			al->onDetailedRequested = [](UIElement&) {
 #ifdef _WIN32
 				STARTUPINFOA si;
@@ -281,7 +262,6 @@ namespace spades {
 			Vector4 shadow = MakeVector4(0, 0, 0, 0.6F);
 			Vector4 cyan = MakeVector4(0.35F, 0.85F, 1.0F, 1.0F);
 			Vector4 green = MakeVector4(0.30F, 0.85F, 0.45F, 1.0F);
-			Vector4 amber = MakeVector4(1.0F, 0.82F, 0.25F, 1.0F);
 
 			// Format playing time
 			int now = static_cast<int>(helper->GetClientTime());
@@ -300,40 +280,23 @@ namespace spades {
 			std::string timeStr = _Tr("Client", "Session time: {0}", time);
 			std::string serverName = helper->GetServerName();
 			std::string serverStr = serverName.empty() ? "" : _Tr("Client", "Connected to: {0}", serverName);
-			const auto& extensions = helper->GetServerExtensions();
 
 			// Calculate card dimensions dynamically based on font metrics
 			float cardX = 14.0F;
 			float cardY = 14.0F;
-			float cardW = 320.0F;
+			float cardW = 280.0F;
 
 			float tW = headingFont.Measure(timeStr).x + 46.0F;
 			if (tW > cardW) cardW = tW;
+			float sH = 0.0F;
 			if (!serverStr.empty()) {
 				float sW = guiFont.Measure(serverStr).x + 46.0F;
 				if (sW > cardW) cardW = sW;
-			}
-			if (!extensions.empty()) {
-				for (const auto& ext : extensions) {
-					std::string line = "  * " + GetExtensionDisplayName(ext.id) + " v" + ToString(ext.version);
-					float eW = guiFont.Measure(line).x + 46.0F;
-					if (eW > cardW) cardW = eW;
-				}
+				sH = guiFont.Measure(serverStr).y;
 			}
 
 			float timeH = headingFont.Measure(timeStr).y;
-			float serverH = !serverStr.empty() ? (guiFont.Measure(serverStr).y + 8.0F) : 0.0F;
-			float extH = 0.0F;
-			if (!extensions.empty()) {
-				std::string extHeader = _Tr("Client", "Server extensions:");
-				extH += guiFont.Measure(extHeader).y + 6.0F;
-				for (const auto& ext : extensions) {
-					std::string line = "  * " + GetExtensionDisplayName(ext.id) + " v" + ToString(ext.version);
-					extH += guiFont.Measure(line).y + 3.0F;
-				}
-			}
-
-			float cardH = 12.0F + timeH + 10.0F + serverH + extH + 12.0F;
+			float cardH = 12.0F + timeH + (!serverStr.empty() ? (8.0F + sH) : 0.0F) + 12.0F;
 
 			// Floating glass card background & border in HD transparent black
 			gui::ui::SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, 0.75F));
@@ -351,32 +314,12 @@ namespace spades {
 			// 1. Session Time with Clock icon
 			gui::DrawGuiIcon(r, gui::GuiIconType::Clock, MakeVector2(cardX + 18.0F, curY + timeH * 0.5F), cyan, 1.25F);
 			headingFont.DrawShadow(timeStr, MakeVector2(cardX + 36.0F, curY), 1.0F, white, shadow);
-			curY += timeH + 10.0F;
+			curY += timeH + 8.0F;
 
 			// 2. Server Name with Server icon
 			if (!serverStr.empty()) {
-				float sH = guiFont.Measure(serverStr).y;
 				gui::DrawGuiIcon(r, gui::GuiIconType::Server, MakeVector2(cardX + 18.0F, curY + sH * 0.5F), green, 1.15F);
 				guiFont.DrawShadow(serverStr, MakeVector2(cardX + 36.0F, curY), 1.0F, MakeVector4(0.92F, 0.95F, 0.98F, 1.0F), shadow);
-				curY += sH + 8.0F;
-			}
-
-			// 3. Server Extensions with Extension icon
-			if (!extensions.empty()) {
-				std::string extHeader = _Tr("Client", "Server extensions:");
-				float hH = guiFont.Measure(extHeader).y;
-				gui::DrawGuiIcon(r, gui::GuiIconType::Extension, MakeVector2(cardX + 18.0F, curY + hH * 0.5F), amber, 1.15F);
-				guiFont.DrawShadow(extHeader, MakeVector2(cardX + 36.0F, curY), 1.0F, amber, shadow);
-				curY += hH + 6.0F;
-
-				for (const auto& ext : extensions) {
-					std::string line = "  * " + GetExtensionDisplayName(ext.id) + " v" + ToString(ext.version);
-					Vector4 color = ext.supportedByClient
-						? MakeVector4(0.75F, 0.85F, 0.95F, 0.90F)
-						: MakeVector4(0.50F, 0.50F, 0.55F, 0.70F);
-					guiFont.Draw(line, MakeVector2(cardX + 36.0F, curY), 1.0F, color);
-					curY += guiFont.Measure(line).y + 3.0F;
-				}
 			}
 		}
 	} // namespace client

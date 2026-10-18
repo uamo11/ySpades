@@ -38,8 +38,6 @@ namespace spades {
 			// Lives for the session so reopening Setup lands on the same tab/row.
 			Handle<gui::PreferenceViewPersistedState> preferenceState;
 
-			gui::ui::Label* escHint = nullptr; // weak
-
 			void OnBackToGame(gui::ui::UIElement& sender);
 			void OnSetup(gui::ui::UIElement& sender);
 			void OnChatLog(gui::ui::UIElement& sender);
