@@ -53,6 +53,8 @@
 #include <Core/TMPUtils.h>
 
 DEFINE_SPADES_SETTING(cg_unicode, "1");
+DEFINE_SPADES_SETTING(cl_customClientName, "ySpades");
+DEFINE_SPADES_SETTING(cl_customLocale, "");
 
 DEFINE_SPADES_SETTING(cg_defaultBlockColorR, "111");
 DEFINE_SPADES_SETTING(cg_defaultBlockColorG, "111");
@@ -1621,15 +1623,23 @@ namespace spades {
 
 				auto beginLabel = w.GetPosition();
 				switch (static_cast<VersionInfoPropertyId>(propertyId)) {
-					case VersionInfoPropertyId::ApplicationNameAndVersion:
+					case VersionInfoPropertyId::ApplicationNameAndVersion: {
+						std::string appName = cl_customClientName.CString();
+						if (appName.empty())
+							appName = "OpenSpades";
 						w.WriteByte((uint8_t)OPENSPADES_VERSION_MAJOR);
 						w.WriteByte((uint8_t)OPENSPADES_VERSION_MINOR);
 						w.WriteByte((uint8_t)OPENSPADES_VERSION_PATCH);
-						w.WriteString("OpenSpades");
+						w.WriteString(appName);
 						break;
-					case VersionInfoPropertyId::UserLocale:
-						w.WriteString(GetCurrentLocaleAndRegion());
+					}
+					case VersionInfoPropertyId::UserLocale: {
+						std::string loc = cl_customLocale.CString();
+						if (loc.empty())
+							loc = GetCurrentLocaleAndRegion();
+						w.WriteString(loc);
 						break;
+					}
 					case VersionInfoPropertyId::ClientFeatureFlags1: {
 						auto flags = ClientFeatureFlags1::None;
 						if (cg_unicode)
@@ -1901,7 +1911,12 @@ namespace spades {
 			std::string osInfo = VersionInfo::GetVersionInfo();
 			std::string archInfo = VersionInfo::GetAppArchitecture();
 
-			osInfo.append(" | " ZEROSPADES_VER_STR);
+			std::string clientStr = cl_customClientName.CString();
+			if (clientStr.empty() || clientStr == "ySpades") {
+				osInfo.append(" | " ZEROSPADES_VER_STR);
+			} else {
+				osInfo.append(" | " + clientStr);
+			}
 			osInfo.append(" (" + archInfo + ")");
 
 			NetPacketWriter w(PacketTypeVersionSend);
@@ -1911,7 +1926,7 @@ namespace spades {
 			w.WriteByte((uint8_t)OPENSPADES_VERSION_PATCH);
 			w.WriteString(osInfo);
 
-			SPLog("Sending version back.");
+			SPLog("Sending version back: %s", osInfo.c_str());
 			enet_peer_send(peer, 0, w.CreatePacket());
 		}
 

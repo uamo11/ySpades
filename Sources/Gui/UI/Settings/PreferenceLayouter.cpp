@@ -56,15 +56,15 @@ namespace spades {
 			float fieldRight = panelWidth - listX - scrollBarReserve;
 
 			// Controls are right-aligned and capped in width.
-			float maxFieldWidth = 280.0F;
-			float minCaptionWidth = 200.0F;
+			float maxFieldWidth = 420.0F;
+			float minCaptionWidth = 240.0F;
 			fieldWidth = fieldRight - minCaptionWidth;
 			if (fieldWidth > maxFieldWidth)
 				fieldWidth = maxFieldWidth;
 			fieldX = fieldRight - fieldWidth;
 
 			fieldHeight = sh - 8.0F;
-			float maxFieldHeight = 550.0F;
+			float maxFieldHeight = 620.0F;
 			if (fieldHeight > maxFieldHeight)
 				fieldHeight = maxFieldHeight;
 

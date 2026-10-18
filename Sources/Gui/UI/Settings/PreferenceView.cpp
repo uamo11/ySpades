@@ -128,7 +128,7 @@ namespace spades {
 				contentsWidth = maxContentsWidth;
 
 			contentsHeight = sh - 8.0F;
-			float maxContentsHeight = 550.0F;
+			float maxContentsHeight = 620.0F;
 			if (contentsHeight > maxContentsHeight)
 				contentsHeight = maxContentsHeight;
 

@@ -40,7 +40,7 @@ namespace spades {
 
 		/** Geometry shared by `PreferenceView` and `StandardPreferenceLayouter`. */
 		struct PreferenceMetrics {
-			static constexpr float maxContentsWidth = 800.0F;
+			static constexpr float maxContentsWidth = 980.0F;
 			static constexpr float tabWidth = 150.0F;
 			static constexpr float tabInset = 2.0F;
 
