@@ -2326,7 +2326,7 @@ namespace spades {
 			Player* targetPlayer = maybeLocal ? &maybeLocal.value() : nullptr;
 
 			// If spectating another player, show that player's team, or show spectator status
-			bool isSpectator = localPlayerIsSpectator;
+			bool isSpectator = !maybeLocal || maybeLocal->IsSpectator();
 			if (!targetPlayer || isSpectator) {
 				int focusedId = GetCameraTargetPlayerId();
 				auto maybeFocused = world->GetPlayer(focusedId);
