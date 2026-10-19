@@ -772,7 +772,7 @@ namespace spades {
 					modsResetButton = button.GetPointerOrNull();
 					modsResetButton->caption = _Tr("MainScreen", "Disable all");
 					modsResetButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 270.0F, 200.0F, 130.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 300.0F, 200.0F, 130.0F, 30.0F));
 					modsResetButton->activated = [this](UIElement& s) { OnResetModsPressed(s); };
 					modsPanel->AddChild(modsResetButton);
 				}
@@ -781,7 +781,7 @@ namespace spades {
 					modsApplyButton = button.GetPointerOrNull();
 					modsApplyButton->caption = _Tr("MainScreen", "Apply changes");
 					modsApplyButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 130.0F, 200.0F, 130.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 160.0F, 200.0F, 160.0F, 30.0F));
 					modsApplyButton->activated = [this](UIElement& s) { OnApplyModsPressed(s); };
 					modsPanel->AddChild(modsApplyButton);
 				}
@@ -1030,6 +1030,8 @@ namespace spades {
 				// Toggles already persist; Apply only restarts to make pending
 				// changes live, so it's actionable only when something changed.
 				modsApplyButton->enable = modsDirty && !modsDownloading;
+				modsApplyButton->caption = modsDirty ? _Tr("MainScreen", "Aplicar y Reiniciar")
+				                                     : _Tr("MainScreen", "Apply changes");
 			}
 			if (modsDownloading) {
 				int done = modsHelper->GetRefreshDone();
@@ -1057,7 +1059,7 @@ namespace spades {
 			}
 			if (modsDirty) {
 				modsStatusLabel->text =
-				    _Tr("MainScreen", "Press 'Apply changes' to restart and apply your mods.");
+				    _Tr("MainScreen", "Cambios pendientes: Haz clic en 'Aplicar y Reiniciar' para activar tus mods en el juego.");
 				return;
 			}
 			modsStatusLabel->text = "";
@@ -1123,12 +1125,26 @@ namespace spades {
 			if (modsDownloading)
 				return;
 			std::vector<std::string> enabled = modsHelper->GetEnabledMods();
-			if (EnabledIndex(enabled, modName) >= 0)
-				modsHelper->DisableMod(modName);
-			else
+			bool enabling = (EnabledIndex(enabled, modName) < 0);
+			if (enabling)
 				modsHelper->EnableMod(modName);
+			else
+				modsHelper->DisableMod(modName);
 			modsDirty = true;
 			LoadModList();
+
+			std::string promptMsg = enabling
+			    ? _Tr("MainScreen", "Mod activado en la lista.\n¿Deseas reiniciar ySpades ahora para que se aplique en el juego?")
+			    : _Tr("MainScreen", "Mod desactivado en la lista.\n¿Deseas reiniciar ySpades ahora para que se aplique en el juego?");
+
+			Handle<ConfirmScreen> cs = Handle<ConfirmScreen>::New(this, promptMsg, 200.0F, true);
+			cs->closed = [this](UIElement& sender) {
+				ConfirmScreen* cs = dynamic_cast<ConfirmScreen*>(&sender);
+				if (cs && cs->GetResult()) {
+					helper->RelaunchForMods();
+				}
+			};
+			cs->Run();
 		}
 
 		void MainScreenMainMenu::CheckModsRefresh() {

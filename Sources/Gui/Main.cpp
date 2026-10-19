@@ -506,7 +506,11 @@ namespace spades {
 
 #ifdef _WIN32
 		std::wstring exe;
-		{
+		std::vector<wchar_t> wbuf(32768);
+		DWORD n = GetModuleFileNameW(NULL, wbuf.data(), (DWORD)wbuf.size());
+		if (n > 0 && n < wbuf.size()) {
+			exe.assign(wbuf.data(), n);
+		} else {
 			auto* ws = (wchar_t*)SDL_iconv_string(
 			  "UCS-2-INTERNAL", "UTF-8", g_executablePath.c_str(),
 			  g_executablePath.size() + 1);
@@ -815,6 +819,7 @@ int main(int argc, char** argv) {
 			}
 #endif
 			core_executablePath = exePath;
+			spades::g_executablePath = exePath;
 		}
 		pumpEvents();
 
