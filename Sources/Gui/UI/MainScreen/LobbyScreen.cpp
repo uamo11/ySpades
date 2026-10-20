@@ -280,22 +280,7 @@ namespace spades {
 			Handle<PreferenceView> pref =
 			    Handle<PreferenceView>::New(this, opt, &ui->GetFontManager());
 			pref->onDetailedRequested = [this](UIElement&) {
-#ifdef _WIN32
-				STARTUPINFOA si;
-				ZeroMemory(&si, sizeof(si));
-				si.cb = sizeof(si);
-				PROCESS_INFORMATION pi;
-				ZeroMemory(&pi, sizeof(pi));
-				char exePath[MAX_PATH] = {0};
-				GetModuleFileNameA(NULL, exePath, MAX_PATH);
-				std::string cmd = std::string("\"") + exePath + "\" --setup";
-				if (CreateProcessA(NULL, &cmd[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-					CloseHandle(pi.hProcess);
-					CloseHandle(pi.hThread);
-				}
-#else
 				ui->OpenDetailedSettings();
-#endif
 			};
 			pref->Run();
 		}

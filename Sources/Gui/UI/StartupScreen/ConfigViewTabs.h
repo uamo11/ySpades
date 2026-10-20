@@ -219,11 +219,13 @@ namespace spades {
 			ui::RadioButton* typeHttp;
 			ui::Field* serverField;
 			ui::Field* authField;
+			ui::Field* fileField;
 
 			Settings::ItemHandle net_useProxy;
 			Settings::ItemHandle net_proxyType;
 			Settings::ItemHandle net_proxyServer;
 			Settings::ItemHandle net_proxyAuth;
+			Settings::ItemHandle net_proxyFile;
 
 			void HandleHelpText(const std::string& text);
 			void OnEnableProxyCheck(ui::UIElement&);
@@ -231,6 +233,7 @@ namespace spades {
 			void OnTypeHttp(ui::UIElement&);
 			void OnServerEdited(ui::UIElement&);
 			void OnAuthEdited(ui::UIElement&);
+			void OnFileEdited(ui::UIElement&);
 			void OnLoadSocksScrape(ui::UIElement&);
 			void OnLoadHttpScrape(ui::UIElement&);
 			void OnNextProxy(ui::UIElement&);

@@ -194,7 +194,7 @@ namespace spades {
 				tabStrip->AddItem(_Tr("StartupScreen", "Graphics"), graphicsTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Audio"), audioTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Generic"), genericTab);
-				tabStrip->AddItem(_Tr("StartupScreen", "Red / Proxy"), proxyTab);
+				tabStrip->AddItem(_Tr("StartupScreen", "Proxy"), proxyTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "System Info"), systemInfoTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Advanced"), advancedTab);
 				tabStrip->changed = [this](UIElement& s) { OnTabChanged(s); };

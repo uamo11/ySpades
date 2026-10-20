@@ -1138,7 +1138,8 @@ namespace spades {
 		      net_useProxy("net_useProxy", nullptr),
 		      net_proxyType("net_proxyType", nullptr),
 		      net_proxyServer("net_proxyServer", nullptr),
-		      net_proxyAuth("net_proxyAuth", nullptr) {
+		      net_proxyAuth("net_proxyAuth", nullptr),
+		      net_proxyFile("net_proxyFile", nullptr) {
 			UIManager* manager = &GetManager();
 			float mainWidth = size.x - 220.0F;
 
@@ -1228,12 +1229,26 @@ namespace spades {
 				authField = e.GetPointerOrNull();
 			}
 
+			// Optional file field
+			AddConfigLabel(*this, 0.0F, 128.0F, 24.0F, _Tr("StartupScreen", "Archivo (Opcional)"));
+			{
+				Handle<Field> e = Handle<Field>::New(manager);
+				e->SetBounds(AABB2(160.0F, 128.0F, 260.0F, 24.0F));
+				e->changed = [this](UIElement& s) { OnFileEdited(s); };
+				WatchHelp(e.GetPointerOrNull(),
+				          [this](const std::string& s) { HandleHelpText(s); },
+				          _Tr("StartupScreen",
+				              "Ruta opcional a un archivo de texto con lista de proxies (.txt). Si usas Servidor Proxy directo, déjalo vacío."));
+				AddChild(e.GetPointerOrNull());
+				fileField = e.GetPointerOrNull();
+			}
+
 			// Action Buttons
-			AddConfigLabel(*this, 0.0F, 134.0F, 24.0F, _Tr("StartupScreen", "Carga Rápida"));
+			AddConfigLabel(*this, 0.0F, 162.0F, 24.0F, _Tr("StartupScreen", "Carga Rápida"));
 			{
 				Handle<Button> e = Handle<Button>::New(manager);
 				e->caption = _Tr("StartupScreen", "Cargar SOCKS5 Premium");
-				e->SetBounds(AABB2(160.0F, 134.0F, 185.0F, 28.0F));
+				e->SetBounds(AABB2(160.0F, 162.0F, 185.0F, 28.0F));
 				e->activated = [this](UIElement& s) { OnLoadSocksScrape(s); };
 				WatchHelp(e.GetPointerOrNull(),
 				          [this](const std::string& s) { HandleHelpText(s); },
@@ -1245,7 +1260,7 @@ namespace spades {
 			{
 				Handle<Button> e = Handle<Button>::New(manager);
 				e->caption = _Tr("StartupScreen", "Cargar HTTP Premium");
-				e->SetBounds(AABB2(355.0F, 134.0F, 175.0F, 28.0F));
+				e->SetBounds(AABB2(355.0F, 162.0F, 175.0F, 28.0F));
 				e->activated = [this](UIElement& s) { OnLoadHttpScrape(s); };
 				WatchHelp(e.GetPointerOrNull(),
 				          [this](const std::string& s) { HandleHelpText(s); },
@@ -1255,11 +1270,11 @@ namespace spades {
 				AddChild(e.GetPointerOrNull());
 			}
 
-			AddConfigLabel(*this, 0.0F, 170.0F, 24.0F, _Tr("StartupScreen", "Control"));
+			AddConfigLabel(*this, 0.0F, 198.0F, 24.0F, _Tr("StartupScreen", "Control"));
 			{
 				Handle<Button> e = Handle<Button>::New(manager);
 				e->caption = _Tr("StartupScreen", "Siguiente Proxy");
-				e->SetBounds(AABB2(160.0F, 170.0F, 185.0F, 28.0F));
+				e->SetBounds(AABB2(160.0F, 198.0F, 185.0F, 28.0F));
 				e->activated = [this](UIElement& s) { OnNextProxy(s); };
 				WatchHelp(e.GetPointerOrNull(),
 				          [this](const std::string& s) { HandleHelpText(s); },
@@ -1270,7 +1285,7 @@ namespace spades {
 			{
 				Handle<Button> e = Handle<Button>::New(manager);
 				e->caption = _Tr("StartupScreen", "Probar Conexión");
-				e->SetBounds(AABB2(355.0F, 170.0F, 175.0F, 28.0F));
+				e->SetBounds(AABB2(355.0F, 198.0F, 175.0F, 28.0F));
 				e->activated = [this](UIElement& s) { OnTestProxy(s); };
 				WatchHelp(e.GetPointerOrNull(),
 				          [this](const std::string& s) { HandleHelpText(s); },
@@ -1319,6 +1334,15 @@ namespace spades {
 			UpdateHelpDisplay();
 		}
 
+		void StartupScreenProxyTab::OnFileEdited(ui::UIElement&) {
+			net_proxyFile = fileField->GetText();
+			std::string f = fileField->GetText();
+			if (!f.empty()) {
+				ProxyManager::GetInstance().LoadProxyList(f, net_proxyType.CString());
+			}
+			UpdateHelpDisplay();
+		}
+
 		void StartupScreenProxyTab::OnLoadSocksScrape(ui::UIElement&) {
 			if (ProxyManager::GetInstance().LoadDefaultSocksFile()) {
 				LoadConfig();
@@ -1346,6 +1370,7 @@ namespace spades {
 			std::string status = (static_cast<int>(net_useProxy) != 0) ? "ACTIVADO" : "DESACTIVADO";
 			std::string type = net_proxyType.CString();
 			std::string srv = net_proxyServer.CString();
+			std::string file = net_proxyFile.CString();
 			size_t total = ProxyManager::GetInstance().GetLoadedProxies().size();
 			size_t cur = ProxyManager::GetInstance().GetCurrentProxyIndex() + 1;
 
@@ -1353,6 +1378,9 @@ namespace spades {
 			text += "Estado: " + status + "\n";
 			text += "Tipo: " + type + "\n";
 			text += "Servidor: " + (srv.empty() ? "(ninguno)" : srv) + "\n";
+			if (!file.empty()) {
+				text += "Archivo: " + file + "\n";
+			}
 			if (total > 0) {
 				text += "Lista: Proxy " + std::to_string(cur) + " de " + std::to_string(total) + " cargados\n";
 			}
@@ -1375,6 +1403,9 @@ namespace spades {
 			}
 			serverField->SetText(net_proxyServer.CString());
 			authField->SetText(net_proxyAuth.CString());
+			if (fileField) {
+				fileField->SetText(net_proxyFile.CString());
+			}
 			UpdateHelpDisplay();
 		}
 	} // namespace gui
