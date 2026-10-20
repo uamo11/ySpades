@@ -167,6 +167,14 @@ namespace spades {
 			                    client::FontManager* fontManager, HeadingNavIndex* nav = nullptr);
 		};
 
+		class ProxyOptionsPanel : public ui::UIElement {
+			Handle<StandardPreferenceLayouter> layouter;
+
+		public:
+			ProxyOptionsPanel(ui::UIManager* manager, const PreferenceViewOptions& options,
+			                  client::FontManager* fontManager, HeadingNavIndex* nav = nullptr);
+		};
+
 		class ControlOptionsPanel : public ui::UIElement {
 			Handle<StandardPreferenceLayouter> layouter;
 

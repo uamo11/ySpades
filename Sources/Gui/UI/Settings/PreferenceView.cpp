@@ -165,6 +165,7 @@ namespace spades {
 			Handle<HeadingNavIndex> hudNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> rendererNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> ventanaNav = Handle<HeadingNavIndex>::New();
+			Handle<HeadingNavIndex> proxyNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> controlsNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> miscNav = Handle<HeadingNavIndex>::New();
 			Handle<HeadingNavIndex> detailedNav = Handle<HeadingNavIndex>::New();
@@ -191,6 +192,11 @@ namespace spades {
 			           .GetPointerOrNull(),
 			       _Tr("Preferences", "Ventana++"), ventanaNav.GetPointerOrNull(),
 			       GuiIconType::Ventana);
+			AddTab(Handle<ProxyOptionsPanel>::New(manager, options, fontManager,
+			                                      proxyNav.GetPointerOrNull())
+			           .GetPointerOrNull(),
+			       _Tr("Preferences", "Proxy"), proxyNav.GetPointerOrNull(),
+			       GuiIconType::Server);
 			AddTab(Handle<ControlOptionsPanel>::New(manager, options, fontManager,
 			                                        controlsNav.GetPointerOrNull())
 			           .GetPointerOrNull(),
@@ -303,9 +309,6 @@ namespace spades {
 			    persistedState->selectedTabIndex < static_cast<int>(tabs.size()))
 				selectedTabIndex = persistedState->selectedTabIndex;
 
-			if (selectedTabIndex == 3 || selectedTabIndex == 6)
-				selectedTabIndex = 0;
-
 			size_t limit = tabs.size();
 			if (persistedState->tabScrollRows.size() < limit)
 				limit = persistedState->tabScrollRows.size();
@@ -351,12 +354,6 @@ namespace spades {
 		void PreferenceView::OnTabButtonActivated(UIElement& sender) {
 			for (size_t i = 0; i < tabs.size(); i++) {
 				if (static_cast<UIElement*>(tabs[i]->tabButton) == &sender) {
-					if (i == 3 || i == 6) {
-						Close();
-						if (onDetailedRequested)
-							onDetailedRequested(*this);
-						return;
-					}
 					selectedTabIndex = static_cast<int>(i);
 					UpdateTabs();
 					return;
@@ -365,12 +362,6 @@ namespace spades {
 		}
 
 		void PreferenceView::SelectTab(int index) {
-			if (index == 3 || index == 6) {
-				Close();
-				if (onDetailedRequested)
-					onDetailedRequested(*this);
-				return;
-			}
 			if (index >= 0 && index < static_cast<int>(tabs.size())) {
 				selectedTabIndex = index;
 				UpdateTabs();

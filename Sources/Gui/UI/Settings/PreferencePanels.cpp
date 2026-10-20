@@ -115,7 +115,8 @@ namespace spades {
 				"Useful for faster follow-up shots with rifle and shotgun."));
 			l.AddBadgeNew();
 			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores"), "cg_simpleOtherWeapons",
-			                 {"Normal (Mods de Todos)", "Básicas (Sin Mods)", "Baja Calidad (Ultra FPS)"},
+			                 {_Tr("Preferences", "Normal"), _Tr("Preferences", "Básicas"),
+			                  _Tr("Preferences", "Baja (FPS)")},
 			                 {0, 1, 2});
 			l.AddHelp(_Tr("Preferences", "Optimiza las armas de los otros jugadores a modelos básicos o de baja calidad para evitar caídas bruscas de FPS con mods de armas."));
 
@@ -284,8 +285,8 @@ namespace spades {
 			                 {0, 2, 1});
 			l.AddToggleField(_Tr("Preferences", "Small Stats Font"), "cg_statsSmallFont");
 			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
-			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS | Ping ms)"),
-			                  _Tr("Preferences", "Detallado (FPS Min-Max | Ping ms)")},
+			                 {_Tr("Preferences", "Apagado"), _Tr("Preferences", "FPS + ms"),
+			                  _Tr("Preferences", "Detallado")},
 			                 {0, 1, 2});
 			l.AddToggleField(_Tr("Preferences", "Show Player Statistics"), "cg_playerStats");
 			l.AddToggleField(_Tr("Preferences", "Show Placed Blocks"),
@@ -508,22 +509,17 @@ namespace spades {
 			StandardPreferenceLayouter& l = *layouter;
 			l.headingNav = nav;
 
-			l.AddHeading(_Tr("Preferences", "Ventana++ & Configuración Clásica"));
+			// ==========================================
+			// 1. PANTALLA & GRÁFICOS (FOTO SETUP CLÁSICA)
+			// ==========================================
+			l.AddHeading(_Tr("Preferences", "Pantalla & Gráficos"));
 			l.AddHelp(_Tr("Preferences",
-				"Abre la pantalla de configuración clásica en pantalla completa con todos los controles de gráficos, audio, proxy e información del sistema."));
+				"Configuración idéntica a la pantalla clásica de inicio: resoluciones nativas, modo de pantalla, renderizador, antialiasing y HDR."));
 
-			l.AddButtonField(_Tr("Preferences", "Configuración Completa"), _Tr("Preferences", "Abrir Ventana++"),
-			    [this](UIElement&) {
-				    UIElement* p = this;
-				    while (p && !dynamic_cast<PreferenceView*>(p))
-					    p = p->GetParent();
-				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
-					    pv->Close();
-					    if (pv->onDetailedRequested)
-						    pv->onDetailedRequested(*pv);
-				    }
-			    });
-			l.AddHelp(_Tr("Preferences", "Abre la pantalla de configuración clásica en tamaño grande para configurar todo con la interfaz original."));
+			l.AddChoiceField(_Tr("Preferences", "Resolución de Pantalla"), "r_videoPreset",
+			                 {"1080p", "900p", "768p", "720p", "1024x768", "800x600"},
+			                 {0, 1, 2, 3, 4, 5});
+			l.AddHelp(_Tr("Preferences", "Selecciona una resolución nativa común. Pulsa '¡GUARDAR Y APLICAR CAMBIOS!' al final para aplicarla de inmediato."));
 
 			l.AddToggleField(_Tr("Preferences", "Pantalla Completa (Fullscreen)"), "r_fullscreen");
 			l.AddHelp(_Tr("Preferences", "Ejecuta el juego en pantalla completa exclusiva o ventana. También puedes alternar con Alt+Enter."));
@@ -531,62 +527,162 @@ namespace spades {
 			l.AddChoiceStringField(_Tr("Preferences", "Renderizador Gráfico"), "r_renderer",
 			                       {"OpenGL", "Software"},
 			                       {"gl", "sw"});
-			l.AddHelp(_Tr("Preferences", "OpenGL para aceleración por GPU. Software renderiza por CPU en caso de problemas."));
+			l.AddHelp(_Tr("Preferences", "OpenGL aprovecha tu tarjeta gráfica para máxima fluidez. Software renderiza por CPU si tu GPU no es compatible."));
 
 			l.AddChoiceField(_Tr("Preferences", "Suavizado de Bordes (MSAA)"), "r_multisamples",
 			                 {"Apagado", "2x MSAA", "4x MSAA"},
 			                 {0, 2, 4});
-			l.AddHelp(_Tr("Preferences", "Antialiasing geométrico por hardware para eliminar bordes de sierra en los bloques."));
+			l.AddHelp(_Tr("Preferences", "Antialiasing geométrico por hardware. Genera una imagen limpia eliminando los dientes de sierra en los bloques."));
 
-			l.AddChoiceField(_Tr("Preferences", "Sincronización Vertical"), "r_vsync",
-			                 {"Off", "On"},
-			                 {0, 1});
-			l.AddHelp(_Tr("Preferences", "Sincroniza la tasa de refresco con el monitor para eliminar cortes de imagen."));
+			l.AddToggleField(_Tr("Preferences", "Filtro Antialiasing FXAA"), "r_fxaa");
+			l.AddHelp(_Tr("Preferences", "Suavizado de bordes rápido por post-procesamiento. Puede usarse en conjunto con MSAA."));
+
+			l.AddToggleField(_Tr("Preferences", "Iluminación Global (Radiosity)"), "r_radiosity");
+			l.AddHelp(_Tr("Preferences", "Simulación física de la trayectoria de los rayos de luz para iluminación y sombras ambientales más realistas."));
+
+			l.AddToggleField(_Tr("Preferences", "Renderizado Lineal HDR"), "r_hdr");
+			l.AddHelp(_Tr("Preferences", "Usa un rango dinámico más amplio y cálculo de color lineal con energía real para mezclas de iluminación precisas."));
+
+			l.AddChoiceField(_Tr("Preferences", "Sincronización Vertical (V-Sync)"), "r_vsync",
+			                 {"Off", "On", "Adapt"},
+			                 {0, 1, -1});
+			l.AddHelp(_Tr("Preferences", "Sincroniza la tasa de refresco con el monitor para eliminar cortes horizontales de imagen (screen tearing)."));
+
+			// ==========================================
+			// 2. EFECTOS & RENDIMIENTO
+			// ==========================================
+			l.AddHeading(_Tr("Preferences", "Efectos & Rendimiento"));
+			l.AddHelp(_Tr("Preferences",
+				"Efectos visuales atmosféricos, partículas, iluminación dinámica, agua y filtros de rendimiento idénticos al panel setup."));
+
+			l.AddChoiceField(_Tr("Preferences", "Calidad de Sombras"), "r_shadowMapQuality",
+			                 {"Apagado", "Rápido", "Suave"},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Sombras dinámicas proyectadas desde la luz solar o antorchas."));
+
+			l.AddChoiceField(_Tr("Preferences", "Oclusión Ambiental SSAO"), "r_ssaoQuality",
+			                 {"Apagado", "Rápido", "Completo"},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Sombreado suave en rincones y uniones de bloques para mayor profundidad tridimensional."));
+
+			l.AddToggleField(_Tr("Preferences", "Niebla del Juego"), "cg_fog");
+			l.AddHelp(_Tr("Preferences", "Activa o desactiva la niebla del mapa. Desactivarla permite ver con total nitidez a través de todo el mapa."));
 
 			l.AddSliderField(_Tr("Preferences", "Límite de FPS (Max FPS)"), "cl_fps", 0.0F, 360.0F, 10.0F,
 			                 NumberFormatter(0, " FPS", "Ilimitado"));
-			l.AddHelp(_Tr("Preferences", "Fija un tope máximo de cuadros por segundo para evitar sobrecalentamiento."));
+			l.AddHelp(_Tr("Preferences", "Fija un tope máximo de fotogramas por segundo para optimizar temperaturas y fluidez."));
 
-			l.AddToggleField(_Tr("Preferences", "Niebla del Juego"), "cg_fog");
-			l.AddHelp(_Tr("Preferences", "Activa o desactiva la niebla del mapa."));
+			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
+			                 {_Tr("Preferences", "Apagado"), _Tr("Preferences", "FPS + ms"),
+			                  _Tr("Preferences", "Detallado")},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Superpone contador ultra optimizado de FPS y ping (ms de WiFi) con barra de estabilidad verde/amarillo/rojo."));
+
+			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores"), "cg_simpleOtherWeapons",
+			                 {_Tr("Preferences", "Normal"), _Tr("Preferences", "Básicas"),
+			                  _Tr("Preferences", "Baja (FPS)")},
+			                 {0, 1, 2});
+			l.AddHelp(_Tr("Preferences", "Optimiza las armas de los otros jugadores a modelos básicos o de baja calidad para evitar caídas bruscas de FPS con mods de armas."));
 
 			l.AddToggleField(_Tr("Preferences", "Indicador de Equipo Ingame"), "cg_hudTeamIndicator");
-			l.AddHelp(_Tr("Preferences", "Muestra la insignia con tu equipo (se oculta automáticamente al escribir en el chat)."));
+			l.AddHelp(_Tr("Preferences", "Muestra la insignia flotante con tu equipo en pantalla (se oculta automáticamente al escribir en el chat)."));
 
-			l.AddToggleField(_Tr("Preferences", "Traductor de Chat (Auto ES)"), "cg_chatTranslate");
+			l.AddToggleField(_Tr("Preferences", "Traductor de Chat Ultra Ligero"), "cg_chatTranslate");
 			l.AddHelp(_Tr("Preferences", "Traduce en vivo los mensajes del chat al español en un hilo secundario sin consumir CPU ni bajar FPS."));
 
 			l.AddToggleField(_Tr("Preferences", "Mostrar Ventana al Iniciar"), "cl_showStartupWindow");
-			l.AddHelp(_Tr("Preferences", "Muestra la pantalla de configuración clásica cada vez que ejecutas el juego."));
+			l.AddHelp(_Tr("Preferences", "Muestra la pantalla de configuración clásica cada vez que ejecutas el cliente."));
+
+			// ==========================================
+			// 3. IDENTIDAD & GUARDAR CAMBIOS
+			// ==========================================
+			l.AddHeading(_Tr("Preferences", "Identidad & Guardar Cambios"));
+			l.AddHelp(_Tr("Preferences",
+				"Datos visibles para otros jugadores y guardado definitivo de la configuración."));
 
 			l.AddInputField(_Tr("Preferences", "Nombre del Cliente"), "cl_customClientName", true, false);
-			l.AddHelp(_Tr("Preferences", "Nombre de cliente reportado al servidor y a otros usuarios (ej. ySpades, OpenSpades 0.1.6)."));
+			l.AddHelp(_Tr("Preferences", "Nombre de cliente reportado al servidor y visible para otros usuarios al consultar tu cliente (ej. ySpades, OpenSpades 0.1.6)."));
+
+			l.AddButtonField(_Tr("Preferences", "Confirmar Ajustes"), _Tr("Preferences", "¡GUARDAR Y APLICAR CAMBIOS!"),
+			    [](UIElement& btn) {
+				    int preset = r_videoPreset;
+				    switch (preset) {
+					    case 0: r_videoWidth = 1920; r_videoHeight = 1080; break;
+					    case 1: r_videoWidth = 1600; r_videoHeight = 900; break;
+					    case 2: r_videoWidth = 1366; r_videoHeight = 768; break;
+					    case 3: r_videoWidth = 1280; r_videoHeight = 720; break;
+					    case 4: r_videoWidth = 1024; r_videoHeight = 768; break;
+					    case 5: r_videoWidth = 800; r_videoHeight = 600; break;
+				    }
+
+				    Settings::GetInstance()->Flush();
+
+				    SPLog("Ventana++: ¡Ajustes guardados y aplicados con éxito!");
+				    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
+					    b->caption = "¡APLICADO CORRECTAMENTE!";
+				    }
+			    });
+			l.AddHelp(_Tr("Preferences", "Guarda todos los ajustes en disco (spades.json) y aplica de inmediato resolución, pantalla completa e identidad."));
+
+			l.FinishLayout();
+		}
+
+		// -- ProxyOptionsPanel --
+
+		ProxyOptionsPanel::ProxyOptionsPanel(UIManager* manager,
+		                                     const PreferenceViewOptions& options,
+		                                     client::FontManager* fontManager,
+		                                     HeadingNavIndex* nav)
+		    : UIElement(manager) {
+			(void)options;
+			layouter = Handle<StandardPreferenceLayouter>::New(this, fontManager);
+			StandardPreferenceLayouter& l = *layouter;
+			l.headingNav = nav;
+
+			l.AddHeading(_Tr("Preferences", "Gestor de Proxies & Red"));
+			l.AddHelp(_Tr("Preferences",
+				"Configura un servidor proxy para anonimizar tu conexión y proteger tu IP pública al unirte a servidores de OpenSpades."));
 
 			l.AddToggleField(_Tr("Preferences", "Activar Conexión Proxy"), "net_useProxy");
-			l.AddHelp(_Tr("Preferences", "Habilita o deshabilita el enrutamiento de red a través del proxy."));
+			l.AddHelp(_Tr("Preferences", "Habilita o deshabilita el enrutamiento de red a través del servidor proxy configurado."));
 
 			l.AddChoiceStringField(_Tr("Preferences", "Tipo de Protocolo Proxy"), "net_proxyType",
 			                       {"SOCKS5", "HTTP"},
 			                       {"socks5", "http"});
-			l.AddHelp(_Tr("Preferences", "SOCKS5 soporta UDP del juego y web. HTTP solo enruta lista de servidores."));
+			l.AddHelp(_Tr("Preferences", "SOCKS5 soporta UDP del juego y tráfico web. HTTP solo enruta lista de servidores."));
 
 			l.AddInputField(_Tr("Preferences", "Servidor Proxy (IP:Puerto)"), "net_proxyServer", true, false);
-			l.AddHelp(_Tr("Preferences", "Introduce directamente la IP y el puerto del proxy (ej. 209.50.190.137:1081)."));
+			l.AddHelp(_Tr("Preferences", "Introduce directamente la IP y el puerto del servidor proxy (ejemplo: 209.50.190.137:1081)."));
 
 			l.AddInputField(_Tr("Preferences", "Autenticación (Opcional)"), "net_proxyAuth", true, false);
-			l.AddHelp(_Tr("Preferences", "Credenciales opcionales usuario:contraseña para el servidor proxy."));
+			l.AddHelp(_Tr("Preferences", "Credenciales opcionales usuario:contraseña si tu proxy requiere autenticación privada."));
 
 			l.AddInputField(_Tr("Preferences", "Archivo Proxies (Opcional)"), "net_proxyFile", true, false);
-			l.AddHelp(_Tr("Preferences", "Ruta opcional a un archivo .txt con lista de proxies."));
+			l.AddHelp(_Tr("Preferences", "Ruta opcional a un archivo .txt con lista de proxies (ej. proxies.txt)."));
+
+			l.AddButtonField(_Tr("Preferences", "Cargar desde Archivo"), _Tr("Preferences", "Cargar Archivo Opcional"),
+			    [](UIElement& btn) {
+				    std::string file = net_proxyFile.CString();
+				    if (!file.empty()) {
+					    ProxyManager::GetInstance().LoadProxyList(file, net_proxyType.CString());
+					    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
+						    b->caption = "¡Lista Cargada!";
+					    }
+				    }
+			    });
+			l.AddHelp(_Tr("Preferences", "Carga la lista de proxies desde el archivo .txt especificado en el campo de texto."));
 
 			l.AddButtonField(_Tr("Preferences", "Probar Proxy Activo"), _Tr("Preferences", "Comprobar Latencia"),
-			    [](UIElement&) {
+			    [](UIElement& btn) {
 				    std::string res = ProxyManager::GetInstance().TestActiveProxy();
 				    SPLog("Prueba de Proxy: %s", res.c_str());
+				    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
+					    b->caption = res.empty() ? "Error" : res;
+				    }
 			    });
 			l.AddHelp(_Tr("Preferences", "Envía una solicitud al servidor maestro para verificar si el proxy responde y medir la latencia."));
 
-			l.AddButtonField(_Tr("Preferences", "Confirmar Ajustes"), _Tr("Preferences", "¡Guardar y Aplicar!"),
+			l.AddButtonField(_Tr("Preferences", "Confirmar Ajustes"), _Tr("Preferences", "¡Guardar y Aplicar Proxy!"),
 			    [](UIElement& btn) {
 				    Settings::GetInstance()->Flush();
 				    std::string file = net_proxyFile.CString();
@@ -596,12 +692,12 @@ namespace spades {
 				    if (static_cast<int>(net_useProxy)) {
 					    ProxyManager::GetInstance().TestActiveProxy();
 				    }
-				    SPLog("Ventana++: ¡Ajustes guardados y aplicados con éxito!");
+				    SPLog("Proxy: ¡Ajustes guardados y aplicados con éxito!");
 				    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
-					    b->caption = "¡Aplicado Correctamente!";
+					    b->caption = "¡Proxy Aplicado!";
 				    }
 			    });
-			l.AddHelp(_Tr("Preferences", "Guarda todos los ajustes en disco (spades.json) y aplica de inmediato resolución, proxy e identidad."));
+			l.AddHelp(_Tr("Preferences", "Guarda permanentemente los cambios de proxy en spades.json y activa la conexión de inmediato."));
 
 			l.FinishLayout();
 		}
@@ -796,13 +892,13 @@ namespace spades {
 
 			l.AddHeading(_Tr("Preferences", "Rendimiento y Optimización"));
 			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
-			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS | Ping ms)"),
-			                  _Tr("Preferences", "Detallado (FPS Min-Max | Ping ms)")},
+			                 {_Tr("Preferences", "Apagado"), _Tr("Preferences", "FPS + ms"),
+			                  _Tr("Preferences", "Detallado")},
 			                 {0, 1, 2});
 			l.AddHelp(_Tr("Preferences", "Superpone contador ultra optimizado de FPS y ping (ms de WiFi) con barra de estabilidad verde/amarillo/rojo."));
 			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores (FPS)"), "cg_simpleOtherWeapons",
-			                 {_Tr("Preferences", "OFF (Cargar Skins Mod)"),
-			                  _Tr("Preferences", "Básicas Optimizadas (Alto Rendimiento)")},
+			                 {_Tr("Preferences", "Normal"),
+			                  _Tr("Preferences", "Básicas (FPS)")},
 			                 {0, 1});
 			l.AddHelp(_Tr("Preferences", "Usa modelos básicos y ligeros para otros jugadores, evitando caídas bruscas de FPS si tienes mods de armas instalados."));
 			l.AddToggleField(_Tr("Preferences", "Depth Prepass"), "r_depthPrepass");
