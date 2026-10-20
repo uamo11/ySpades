@@ -517,8 +517,8 @@ namespace spades {
 				"Configuración idéntica a la pantalla clásica de inicio: resoluciones nativas, modo de pantalla, renderizador, antialiasing y HDR."));
 
 			l.AddChoiceField(_Tr("Preferences", "Resolución de Pantalla"), "r_videoPreset",
-			                 {"1080p", "900p", "768p", "720p", "1024x768", "800x600"},
-			                 {0, 1, 2, 3, 4, 5});
+			                 {"1080p", "900p", "768p", "720p"},
+			                 {0, 1, 2, 3});
 			l.AddHelp(_Tr("Preferences", "Selecciona una resolución nativa común. Pulsa '¡GUARDAR Y APLICAR CAMBIOS!' al final para aplicarla de inmediato."));
 
 			l.AddToggleField(_Tr("Preferences", "Pantalla Completa (Fullscreen)"), "r_fullscreen");
@@ -569,7 +569,7 @@ namespace spades {
 			l.AddHelp(_Tr("Preferences", "Activa o desactiva la niebla del mapa. Desactivarla permite ver con total nitidez a través de todo el mapa."));
 
 			l.AddSliderField(_Tr("Preferences", "Límite de FPS (Max FPS)"), "cl_fps", 0.0F, 360.0F, 10.0F,
-			                 NumberFormatter(0, " FPS", "Ilimitado"));
+			                 FPSFormatter());
 			l.AddHelp(_Tr("Preferences", "Fija un tope máximo de fotogramas por segundo para optimizar temperaturas y fluidez."));
 
 			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
@@ -596,7 +596,7 @@ namespace spades {
 			// ==========================================
 			// 3. IDENTIDAD & GUARDAR CAMBIOS
 			// ==========================================
-			l.AddHeading(_Tr("Preferences", "Identidad & Guardar Cambios"));
+			l.AddHeading(_Tr("Preferences", "Identidad y Guardar"));
 			l.AddHelp(_Tr("Preferences",
 				"Datos visibles para otros jugadores y guardado definitivo de la configuración."));
 
@@ -868,7 +868,7 @@ namespace spades {
 			l.AddToggleField(_Tr("Preferences", "Sincronización Vertical (VSync)"), "r_vsync");
 			l.AddHelp(_Tr("Preferences", "Sincroniza los fotogramas con la tasa de refresco del monitor para evitar cortes."));
 			l.AddSliderField(_Tr("Preferences", "Límite de FPS (Max FPS)"), "cl_fps", 0.0F, 360.0F, 10.0F,
-			                 NumberFormatter(0, " FPS", "Ilimitado"));
+			                 FPSFormatter());
 			l.AddHelp(_Tr("Preferences", "Fija un límite máximo de cuadros por segundo. 0 significa sin límite."));
 
 			l.AddHeading(_Tr("Preferences", "Gráficos Avanzados y Sombras"));
