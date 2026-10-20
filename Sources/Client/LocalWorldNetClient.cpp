@@ -43,11 +43,56 @@ namespace spades {
 
 		bool LocalWorldNetClient::OpenWorld() {
 			std::string path = mapPath;
-			std::unique_ptr<IStream> stream{FileManager::OpenForReading(path.c_str())};
-			if (!stream && path.find("Maps/") != 0 && path.find("Maps\\") != 0) {
-				path = "Maps/" + mapPath;
-				stream = FileManager::OpenForReading(path.c_str());
+			std::unique_ptr<IStream> stream;
+
+			// 1. Try exact path if it exists
+			if (FileManager::FileExists(path.c_str())) {
+				try {
+					stream = FileManager::OpenForReading(path.c_str());
+				} catch (...) {
+					stream.reset();
+				}
 			}
+
+			// 2. Try prefixing Maps/ if not already present
+			if (!stream && path.find("Maps/") != 0 && path.find("Maps\\") != 0) {
+				std::string candidate = "Maps/" + path;
+				if (FileManager::FileExists(candidate.c_str())) {
+					try {
+						stream = FileManager::OpenForReading(candidate.c_str());
+						path = candidate;
+					} catch (...) {
+						stream.reset();
+					}
+				}
+			}
+
+			// 3. Fallback: try stripping Maps/ if it failed with prefix
+			if (!stream && (path.find("Maps/") == 0 || path.find("Maps\\") == 0)) {
+				std::string candidate = path.substr(5);
+				if (FileManager::FileExists(candidate.c_str())) {
+					try {
+						stream = FileManager::OpenForReading(candidate.c_str());
+						path = candidate;
+					} catch (...) {
+						stream.reset();
+					}
+				}
+			}
+
+			// 4. Last resort: try OpenForReading directly inside try/catch
+			if (!stream) {
+				try {
+					stream = FileManager::OpenForReading(path.c_str());
+				} catch (...) {
+					try {
+						stream = FileManager::OpenForReading(("Maps/" + path).c_str());
+					} catch (...) {
+						stream.reset();
+					}
+				}
+			}
+
 			if (!stream) {
 				statusString = "No se pudo abrir el mapa: " + mapPath;
 				return false;

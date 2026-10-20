@@ -1533,7 +1533,13 @@ namespace spades {
 		void MainScreenMainMenu::PlaySelectedWorld() {
 			if (selectedWorldMap.empty())
 				selectedWorldMap = "LAbeach.vxl";
-			helper->PlayWorld(selectedWorldMap);
+			std::string mapToPlay = selectedWorldMap;
+			if (mapToPlay.find("Maps/") != 0 && mapToPlay.find("Maps\\") != 0) {
+				if (FileManager::FileExists(("Maps/" + mapToPlay).c_str())) {
+					mapToPlay = "Maps/" + mapToPlay;
+				}
+			}
+			helper->PlayWorld(mapToPlay);
 		}
 
 		void MainScreenMainMenu::UpdateSearchFilterVisibility() {
