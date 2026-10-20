@@ -281,9 +281,9 @@ namespace spades {
 			                  _Tr("Preferences", "Bottom")},
 			                 {0, 2, 1});
 			l.AddToggleField(_Tr("Preferences", "Small Stats Font"), "cg_statsSmallFont");
-			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Depuración"), "cg_showFpsMs",
-			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS / Ms)"),
-			                  _Tr("Preferences", "Depuración (FPS / Frametime / Min-Max / Ping)")},
+			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
+			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS | Ping ms)"),
+			                  _Tr("Preferences", "Detallado (FPS Min-Max | Ping ms)")},
 			                 {0, 1, 2});
 			l.AddToggleField(_Tr("Preferences", "Show Player Statistics"), "cg_playerStats");
 			l.AddToggleField(_Tr("Preferences", "Show Placed Blocks"),
@@ -606,10 +606,10 @@ namespace spades {
 			                 {0, 1, 2});
 			l.AddHelp(_Tr("Preferences", "Fuerza a que los demás jugadores usen armas básicas del juego para evitar caídas bruscas de FPS cuando tengas mods instalados."));
 
-			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Frametime"), "cg_showFpsMs",
-			                 {"Desactivado (0)", "Simple (FPS + Ms) (1)", "Depuración Min/Max (2)"},
+			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
+			                 {"Desactivado (0)", "Simple (FPS | Ping ms) (1)", "Detallado Min/Max (2)"},
 			                 {0, 1, 2});
-			l.AddHelp(_Tr("Preferences", "Muestra FPS, tiempo de cuadro en ms con barra adaptativa verde/amarillo/rojo y estadísticas de estabilidad."));
+			l.AddHelp(_Tr("Preferences", "Muestra contador ultra optimizado de FPS y ping (ms de WiFi) con barra de estabilidad verde/amarillo/rojo."));
 
 			l.AddSliderField(_Tr("Preferences", "Límite de FPS (Max FPS)"), "cl_fps", 0.0F, 360.0F, 10.0F,
 			                 NumberFormatter(0, " FPS", "Ilimitado"));
@@ -926,11 +926,11 @@ namespace spades {
 			l.AddHelp(_Tr("Preferences", "0 = Agua simple opaca, 1 = Translúcida, 2 = Reflejos y cáusticas avanzadas."));
 
 			l.AddHeading(_Tr("Preferences", "Rendimiento y Optimización"));
-			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Depuración"), "cg_showFpsMs",
-			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS / Ms)"),
-			                  _Tr("Preferences", "Depuración (FPS / Frametime / Min-Max / Ping)")},
+			l.AddChoiceField(_Tr("Preferences", "Superposición FPS y Ping WiFi"), "cg_showFpsMs",
+			                 {_Tr("Preferences", "OFF"), _Tr("Preferences", "Simple (FPS | Ping ms)"),
+			                  _Tr("Preferences", "Detallado (FPS Min-Max | Ping ms)")},
 			                 {0, 1, 2});
-			l.AddHelp(_Tr("Preferences", "Superpone la tasa de fotogramas (FPS), tiempo de cuadro en ms, ping y estadísticas de estabilidad en pantalla."));
+			l.AddHelp(_Tr("Preferences", "Superpone contador ultra optimizado de FPS y ping (ms de WiFi) con barra de estabilidad verde/amarillo/rojo."));
 			l.AddChoiceField(_Tr("Preferences", "Armas de Otros Jugadores (FPS)"), "cg_simpleOtherWeapons",
 			                 {_Tr("Preferences", "OFF (Cargar Skins Mod)"),
 			                  _Tr("Preferences", "Básicas Optimizadas (Alto Rendimiento)")},

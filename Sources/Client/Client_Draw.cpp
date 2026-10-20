@@ -3187,66 +3187,96 @@ namespace spades {
 				return;
 
 			static float lastUpdateTime = -1.0F;
-			static char cachedText[96] = "";
-			static Vector2 cachedSize = MakeVector2(0.0F, 0.0F);
-			static Vector4 cachedAccent = MakeVector4(0.2F, 0.88F, 0.4F, 0.85F);
+			static int lastFps = -999;
+			static int lastPing = -999;
+			static int lastMinFps = -999;
+			static int lastMaxFps = -999;
+			static int lastMode = -1;
+			static float lastSw = 0.0F;
 
-			// Refresh every 100ms (10 times/second) with zero allocations per frame
-			if (time - lastUpdateTime >= 0.10F || lastUpdateTime < 0.0F) {
+			static char cachedText[64] = "";
+			static Vector2 cachedPos = MakeVector2(0.0F, 0.0F);
+			static AABB2 cachedBgRect = AABB2(0.0F, 0.0F, 0.0F, 0.0F);
+			static Vector4 cachedAccent = MakeVector4(0.20F, 0.85F, 0.45F, 0.90F);
+
+			float sw = renderer->ScreenWidth();
+
+			// Ultra-optimized 8 Hz refresh tick (120ms) — zero per-frame allocations or font measurements
+			if (time - lastUpdateTime >= 0.12F || lastUpdateTime < 0.0F || sw != lastSw || mode != lastMode) {
 				lastUpdateTime = time;
+				lastSw = sw;
+				lastMode = mode;
+
 				int fps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetFps())));
-				double ft = fpsCounter.GetFrameTimeMs();
-				int ping = activeNet ? activeNet->GetPing() : 0;
+				if (fps < 0) fps = 0;
 
-				if (fps >= 60) {
-					cachedAccent = MakeVector4(0.2F, 0.88F, 0.4F, 0.85F); // Emerald green
-				} else if (fps >= 30) {
-					cachedAccent = MakeVector4(0.95F, 0.75F, 0.2F, 0.85F); // Amber warning
-				} else {
-					cachedAccent = MakeVector4(0.95F, 0.25F, 0.25F, 0.90F); // Red drop/stutter alert
-				}
+				int ping = (activeNet && activeNet->GetStatus() == NetClientStatusConnected)
+				               ? activeNet->GetPing()
+				               : -1;
 
-				if (mode >= 2) {
-					// Modo Depuración FPS detallado
-					int minFps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetMinFps())));
-					int maxFps = static_cast<int>(roundf(static_cast<float>(fpsCounter.GetMaxFps())));
-					if (fps <= 0) {
-						snprintf(cachedText, sizeof(cachedText), "FPS: -- | %.1f ms | %d ms ping", ft, ping);
+				int minFps = (mode >= 2) ? static_cast<int>(roundf(static_cast<float>(fpsCounter.GetMinFps()))) : 0;
+				int maxFps = (mode >= 2) ? static_cast<int>(roundf(static_cast<float>(fpsCounter.GetMaxFps()))) : 0;
+
+				if (fps != lastFps || ping != lastPing || minFps != lastMinFps || maxFps != lastMaxFps) {
+					lastFps = fps;
+					lastPing = ping;
+					lastMinFps = minFps;
+					lastMaxFps = maxFps;
+
+					// Quality accent bar according to FPS stability
+					if (fps >= 60) {
+						cachedAccent = MakeVector4(0.20F, 0.85F, 0.45F, 0.90F); // Emerald green
+					} else if (fps >= 30) {
+						cachedAccent = MakeVector4(0.95F, 0.75F, 0.20F, 0.90F); // Amber
 					} else {
-						snprintf(cachedText, sizeof(cachedText), "%d FPS [min %d / max %d] | %.1f ms | %d ms",
-						         fps, minFps, maxFps, ft, ping);
+						cachedAccent = MakeVector4(0.95F, 0.25F, 0.25F, 0.95F); // Red drop alert
 					}
-				} else {
-					// Modo Simple
-					if (fps <= 0) {
-						snprintf(cachedText, sizeof(cachedText), "FPS: -- | %d ms", ping);
-					} else {
-						snprintf(cachedText, sizeof(cachedText), "%d FPS (%.1f ms) | %d ms", fps, ft, ping);
-					}
-				}
 
-				IFont& font = fontManager->GetSmallFont();
-				cachedSize = font.Measure(cachedText);
+					if (mode >= 2) {
+						// Detallado: FPS [min-max] + ms de WiFi (sin el frametime redundante)
+						if (ping >= 0) {
+							snprintf(cachedText, sizeof(cachedText), "%d FPS [%d-%d] | %d ms",
+							         fps, minFps, maxFps, ping);
+						} else {
+							snprintf(cachedText, sizeof(cachedText), "%d FPS [%d-%d]",
+							         fps, minFps, maxFps);
+						}
+					} else {
+						// Simple: Solo FPS y ms de WiFi
+						if (ping >= 0) {
+							snprintf(cachedText, sizeof(cachedText), "%d FPS | %d ms", fps, ping);
+						} else {
+							snprintf(cachedText, sizeof(cachedText), "%d FPS", fps);
+						}
+					}
+
+					IFont& font = fontManager->GetSmallFont();
+					Vector2 textSize = font.Measure(cachedText);
+
+					float pad = 12.0F;
+					cachedPos = MakeVector2(sw - textSize.x - pad - 8.0F, pad);
+					cachedBgRect = AABB2(cachedPos.x - 7.0F, cachedPos.y - 3.0F,
+					                     textSize.x + 14.0F, textSize.y + 6.0F);
+				}
 			}
 
-			IFont& font = fontManager->GetSmallFont();
-			float sw = renderer->ScreenWidth();
-			float pad = 12.0F;
-			Vector2 pos = MakeVector2(sw - cachedSize.x - pad - 8.0F, pad);
+			// Render pre-computed backdrop with zero math per frame
+			Vector4 bgTop = MakeVector4(0.04F, 0.05F, 0.08F, 0.75F);
+			Vector4 bgBottom = MakeVector4(0.02F, 0.03F, 0.05F, 0.85F);
+			renderer->DrawFilledRectFade(cachedBgRect.min.x, cachedBgRect.min.y,
+			                             cachedBgRect.max.x, cachedBgRect.max.y,
+			                             bgTop, bgBottom);
 
-			// Sleek dark pill backdrop
-			AABB2 bgRect(pos.x - 6.0F, pos.y - 2.0F, cachedSize.x + 12.0F, cachedSize.y + 4.0F);
-			renderer->SetColorAlphaPremultiplied(MakeVector4(0.0F, 0.0F, 0.0F, 0.60F).Premultiplied());
-			renderer->DrawImage(nullptr, bgRect);
-
-			// Dynamic colored accent line at bottom of badge indicating stability
+			// Dynamic stability accent underline
 			renderer->SetColorAlphaPremultiplied(cachedAccent.Premultiplied());
-			renderer->DrawLine(MakeVector2(bgRect.min.x, bgRect.max.y), MakeVector2(bgRect.max.x, bgRect.max.y), 1.5F);
+			renderer->DrawLine(MakeVector2(cachedBgRect.min.x, cachedBgRect.max.y),
+			                  MakeVector2(cachedBgRect.max.x, cachedBgRect.max.y), 1.5F);
 
-			// Draw text with shadow
-			Vector4 textCol = MakeVector4(0.95F, 0.95F, 0.95F, 0.95F);
-			Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
-			font.DrawShadow(cachedText, pos, 1.0F, textCol, shadowCol);
+			// Draw crisp shadow and text
+			IFont& font = fontManager->GetSmallFont();
+			Vector4 textCol = MakeVector4(0.95F, 0.96F, 0.98F, 0.95F);
+			Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.85F);
+			font.DrawShadow(cachedText, cachedPos, 1.0F, textCol, shadowCol);
 		}
 
 		void Client::DrawNetGraph() {
