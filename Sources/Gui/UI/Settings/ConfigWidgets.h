@@ -80,6 +80,16 @@ namespace spades {
 			void Render() override;
 		};
 
+		/** A modern tactile switch button (Green = ON, Red = OFF) for boolean settings. */
+		class ConfigSwitchButton : public ui::Button {
+			Settings::ItemHandle config;
+
+		public:
+			ConfigSwitchButton(ui::UIManager* manager, const std::string& configName);
+			void OnActivated() override;
+			void Render() override;
+		};
+
 		/** Base for radio-style toggle buttons that reflect and set a config item. */
 		class ConfigToggleButtonBase : public ui::RadioButton {
 		public:

@@ -223,6 +223,7 @@ namespace spades {
 				}
 #endif
 			};
+			al->onVentanaRequested = al->onDetailedRequested;
 			al->Run();
 		}
 

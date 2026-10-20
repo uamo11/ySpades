@@ -282,6 +282,9 @@ namespace spades {
 			pref->onDetailedRequested = [this](UIElement&) {
 				ui->OpenDetailedSettings();
 			};
+			pref->onVentanaRequested = [this](UIElement&) {
+				ui->OpenDetailedSettings();
+			};
 			pref->Run();
 		}
 

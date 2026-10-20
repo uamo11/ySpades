@@ -249,6 +249,92 @@ namespace spades {
 			font->Draw(text, txtPos, 1.0F, color);
 		}
 
+		// -- ConfigSwitchButton --
+
+		ConfigSwitchButton::ConfigSwitchButton(ui::UIManager* manager, const std::string& configName)
+		    : ui::Button(manager), config(configName, nullptr) {
+			alignment = MakeVector2(0.5F, 0.5F);
+		}
+
+		void ConfigSwitchButton::OnActivated() {
+			int cur = static_cast<int>(config);
+			config = (cur != 0) ? 0 : 1;
+			ui::Button::OnActivated();
+		}
+
+		void ConfigSwitchButton::Render() {
+			client::IRenderer& r = GetManager().GetRenderer();
+			Vector2 pos = GetScreenPosition();
+			Vector2 sz = size;
+
+			bool isOn = (static_cast<int>(config) != 0);
+
+			Vector4 bgCol;
+			Vector4 borderCol;
+			Vector4 knobCol;
+			Vector4 textCol = MakeVector4(1.0F, 1.0F, 1.0F, enable ? 1.0F : 0.35F);
+
+			if (!enable) {
+				bgCol = MakeVector4(0.20F, 0.20F, 0.20F, 0.35F);
+				borderCol = MakeVector4(0.35F, 0.35F, 0.35F, 0.45F);
+				knobCol = MakeVector4(0.40F, 0.40F, 0.40F, 0.50F);
+			} else if (isOn) {
+				// Vibrant Emerald Green
+				bgCol = (pressed && hover) ? MakeVector4(0.16F, 0.58F, 0.28F, 0.95F)
+				      : hover             ? MakeVector4(0.12F, 0.48F, 0.22F, 0.90F)
+				                          : MakeVector4(0.08F, 0.38F, 0.16F, 0.82F);
+				borderCol = hover ? MakeVector4(0.40F, 0.95F, 0.55F, 1.0F)
+				                  : MakeVector4(0.28F, 0.82F, 0.42F, 0.95F);
+				knobCol = (pressed && hover) ? MakeVector4(0.60F, 1.0F, 0.70F, 1.0F)
+				        : hover             ? MakeVector4(0.50F, 0.98F, 0.62F, 1.0F)
+				                            : MakeVector4(0.35F, 0.90F, 0.48F, 1.0F);
+			} else {
+				// Sleek Crimson Red
+				bgCol = (pressed && hover) ? MakeVector4(0.58F, 0.14F, 0.14F, 0.95F)
+				      : hover             ? MakeVector4(0.48F, 0.10F, 0.10F, 0.88F)
+				                          : MakeVector4(0.36F, 0.08F, 0.08F, 0.78F);
+				borderCol = hover ? MakeVector4(0.95F, 0.35F, 0.35F, 1.0F)
+				                  : MakeVector4(0.82F, 0.25F, 0.25F, 0.90F);
+				knobCol = (pressed && hover) ? MakeVector4(1.0F, 0.55F, 0.55F, 1.0F)
+				        : hover             ? MakeVector4(0.98F, 0.45F, 0.45F, 1.0F)
+				                            : MakeVector4(0.88F, 0.30F, 0.30F, 1.0F);
+			}
+
+			// Draw switch capsule / box background
+			SetColorNP(r, bgCol);
+			r.DrawFilledRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+			// Draw switch border
+			SetColorNP(r, borderCol);
+			r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
+
+			// Draw sliding knob
+			float knobW = 28.0F;
+			float knobMargin = 2.0F;
+			float knobX = isOn ? (pos.x + sz.x - knobW - knobMargin)
+			                   : (pos.x + knobMargin);
+			float knobY = pos.y + knobMargin;
+			float knobH = sz.y - knobMargin * 2.0F;
+
+			SetColorNP(r, knobCol);
+			r.DrawFilledRect(knobX, knobY, knobX + knobW, knobY + knobH);
+
+			// Subtle inner highlight on knob
+			SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.35F));
+			r.DrawOutlinedRect(knobX, knobY, knobX + knobW, knobY + knobH);
+
+			client::IFont* font = GetFont();
+			if (font) {
+				std::string label = isOn ? _Tr("Preferences", "ON") : _Tr("Preferences", "OFF");
+				Vector2 txtSz = font->Measure(label);
+				float txtX = isOn ? (pos.x + 12.0F)
+				                  : (pos.x + sz.x - txtSz.x - 12.0F);
+				float txtY = pos.y + (sz.y - txtSz.y) * 0.5F;
+				font->DrawShadow(label, MakeVector2(txtX, txtY), 1.0F,
+				                 textCol, MakeVector4(0, 0, 0, 0.5F));
+			}
+		}
+
 		// -- ConfigToggleButtonBase --
 
 		ConfigToggleButtonBase::ConfigToggleButtonBase(ui::UIManager* manager,

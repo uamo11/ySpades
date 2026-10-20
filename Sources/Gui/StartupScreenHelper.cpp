@@ -198,13 +198,21 @@ namespace spades {
 			}
 
 			bool capable = true;
-			SDL_Window* window = SDL_CreateWindow("ySpades: Please wait...", 1, 1, 1, 1,
-												  SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
-			if (window == nullptr)
-				SPLog("Failed to create SDL window: %s", SDL_GetError());
-			SDL_GLContext context = window ? SDL_GL_CreateContext(window) : nullptr;
-			if (window != nullptr && context == nullptr)
-				SPLog("Failed to create OpenGL context: %s", SDL_GetError());
+			bool createdTempContext = false;
+			SDL_Window* window = SDL_GL_GetCurrentWindow();
+			SDL_GLContext context = SDL_GL_GetCurrentContext();
+
+			if (!context) {
+				window = SDL_CreateWindow("ySpades: Please wait...", 1, 1, 1, 1,
+				                          SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
+				if (window == nullptr)
+					SPLog("Failed to create SDL window: %s", SDL_GetError());
+				context = window ? SDL_GL_CreateContext(window) : nullptr;
+				if (window != nullptr && context == nullptr)
+					SPLog("Failed to create OpenGL context: %s", SDL_GetError());
+				if (context)
+					createdTempContext = true;
+			}
 
 #ifdef __APPLE__
 #elif __unix
@@ -243,7 +251,9 @@ namespace spades {
 				postFilterHighCapable = false;
 				particleHighCapable = false;
 			} else {
-				SDL_GL_MakeCurrent(window, context);
+				if (createdTempContext) {
+					SDL_GL_MakeCurrent(window, context);
+				}
 
 				shaderHighCapable = true;
 				postFilterHighCapable = true;
@@ -603,10 +613,11 @@ namespace spades {
 							  " Falling back to the software renderer.", red);
 				}
 
-				SDL_GL_DeleteContext(context);
-				SDL_DestroyWindow(window);
-
-				SPLog("SDL Capability Query Window finalized");
+				if (createdTempContext) {
+					SDL_GL_DeleteContext(context);
+					SDL_DestroyWindow(window);
+					SPLog("SDL Capability Query Window finalized");
+				}
 			}
 
 			SPLog("OpenGL driver is OpenSpades capable: %s", capable ? "YES" : "NO");

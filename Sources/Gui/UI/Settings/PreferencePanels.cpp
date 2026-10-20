@@ -510,7 +510,27 @@ namespace spades {
 			l.headingNav = nav;
 
 			// ==========================================
-			// 1. PANTALLA & GRÁFICOS (FOTO SETUP CLÁSICA)
+			// 1. VENTANA++ CLÁSICA
+			// ==========================================
+			l.AddHeading(_Tr("Preferences", "Ventana++"));
+			l.AddButtonField(_Tr("Preferences", "Ventana Clásica"), _Tr("Preferences", "Abrir Ventana++"),
+			    [this](UIElement&) {
+				    UIElement* p = this;
+				    while (p && !dynamic_cast<PreferenceView*>(p))
+					    p = p->GetParent();
+				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
+					    pv->Close();
+					    if (pv->onVentanaRequested)
+						    pv->onVentanaRequested(*pv);
+					    else if (pv->onDetailedRequested)
+						    pv->onDetailedRequested(*pv);
+				    }
+			    });
+			l.AddHelp(_Tr("Preferences",
+				"Abre la ventana clásica completa de configuración con resolución nativa, pantalla completa, SSAO, filtros, audio y proxies."));
+
+			// ==========================================
+			// 2. PANTALLA & GRÁFICOS (FOTO SETUP CLÁSICA)
 			// ==========================================
 			l.AddHeading(_Tr("Preferences", "Pantalla & Gráficos"));
 			l.AddHelp(_Tr("Preferences",

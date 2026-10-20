@@ -257,8 +257,13 @@ namespace spades {
 
 		void StandardPreferenceLayouter::AddToggleField(const std::string& caption,
 		                                                const std::string& configName, bool enabled) {
-			AddChoiceField(caption, configName,
-			               {_Tr("Preferences", "ON"), _Tr("Preferences", "OFF")}, {1, 0}, enabled);
+			UIElement* container = CreateBasicLabel(caption, enabled);
+			float switchW = 100.0F;
+			Handle<ConfigSwitchButton> sw =
+			    Handle<ConfigSwitchButton>::New(&parent->GetManager(), configName);
+			sw->SetBounds(AABB2(fieldX, 3.0F, switchW, 26.0F));
+			sw->enable = enabled;
+			container->AddChild(sw.GetPointerOrNull());
 		}
 
 		void StandardPreferenceLayouter::AddPlusMinusField(const std::string& caption,

@@ -306,8 +306,12 @@ namespace spades {
 				return;
 
 			if (persistedState->selectedTabIndex >= 0 &&
-			    persistedState->selectedTabIndex < static_cast<int>(tabs.size()))
-				selectedTabIndex = persistedState->selectedTabIndex;
+			    persistedState->selectedTabIndex < static_cast<int>(tabs.size())) {
+				if (persistedState->selectedTabIndex == 3)
+					selectedTabIndex = 0;
+				else
+					selectedTabIndex = persistedState->selectedTabIndex;
+			}
 
 			size_t limit = tabs.size();
 			if (persistedState->tabScrollRows.size() < limit)
@@ -354,6 +358,16 @@ namespace spades {
 		void PreferenceView::OnTabButtonActivated(UIElement& sender) {
 			for (size_t i = 0; i < tabs.size(); i++) {
 				if (static_cast<UIElement*>(tabs[i]->tabButton) == &sender) {
+					if (i == 3 || tabs[i]->tabButton->caption == _Tr("Preferences", "Ventana++")) {
+						if (onVentanaRequested || onDetailedRequested) {
+							Close();
+							if (onVentanaRequested)
+								onVentanaRequested(*this);
+							else
+								onDetailedRequested(*this);
+							return;
+						}
+					}
 					selectedTabIndex = static_cast<int>(i);
 					UpdateTabs();
 					return;
@@ -363,6 +377,16 @@ namespace spades {
 
 		void PreferenceView::SelectTab(int index) {
 			if (index >= 0 && index < static_cast<int>(tabs.size())) {
+				if (index == 3 || tabs[index]->tabButton->caption == _Tr("Preferences", "Ventana++")) {
+					if (onVentanaRequested || onDetailedRequested) {
+						Close();
+						if (onVentanaRequested)
+							onVentanaRequested(*this);
+						else
+							onDetailedRequested(*this);
+						return;
+					}
+				}
 				selectedTabIndex = index;
 				UpdateTabs();
 			}

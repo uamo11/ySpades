@@ -30,6 +30,8 @@
 
 namespace spades {
 	namespace gui {
+		SPADES_SETTING(r_fullscreen);
+
 		using ui::Button;
 		using ui::CheckBox;
 		using ui::SimpleButton;
@@ -139,7 +141,7 @@ namespace spades {
 				Handle<CheckBox> button = Handle<CheckBox>::New(manager);
 				button->caption = _Tr("StartupScreen", "Saltar esta pantalla la proxima vez");
 				button->SetBounds(AABB2(sw - capSize - 30.0F, 72.0F, capSize + 24.0F, 20.0F));
-				button->visible = true;
+				button->visible = false;
 				AddChild(button.GetPointerOrNull());
 				bypassStartupWindowCheck = button.GetPointerOrNull();
 				button->activated = [this](UIElement& s) {
@@ -190,7 +192,7 @@ namespace spades {
 			{
 				Handle<SimpleTabStrip> tabStrip = Handle<SimpleTabStrip>::New(manager);
 				AddChild(tabStrip.GetPointerOrNull());
-				tabStrip->SetBounds(AABB2(10.0F, 70.0F, sw - capSize - 50.0F, 24.0F));
+				tabStrip->SetBounds(AABB2(10.0F, 68.0F, sw - 20.0F, 28.0F));
 				tabStrip->AddItem(_Tr("StartupScreen", "Graphics"), graphicsTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Audio"), audioTab);
 				tabStrip->AddItem(_Tr("StartupScreen", "Generic"), genericTab);
@@ -268,6 +270,14 @@ namespace spades {
 		void StartupScreenMainMenu::Start() {
 			helper->Start();
 			Settings::GetInstance()->Flush();
+			SDL_Window* window = SDL_GL_GetCurrentWindow();
+			if (window) {
+				if (static_cast<int>(r_fullscreen) != 0) {
+					SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+				} else {
+					SDL_SetWindowFullscreen(window, 0);
+				}
+			}
 			ui->shouldExit = true; // exit from the startup screen to return to the game
 		}
 

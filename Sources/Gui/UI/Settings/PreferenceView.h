@@ -119,6 +119,7 @@ namespace spades {
 		public:
 			ui::EventHandler closed;
 			ui::EventHandler onDetailedRequested;
+			ui::EventHandler onVentanaRequested;
 
 			PreferenceView(ui::UIElement* owner, const PreferenceViewOptions& options,
 			               client::FontManager* fontManager);
