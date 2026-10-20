@@ -620,7 +620,8 @@ namespace spades {
 					handler(url);
 				} else if (rowActivated && selection->markPosition == selection->cursorPosition) {
 					int line = static_cast<int>(std::floor((clientPosition.y - GetRowsOffsetY()) / rowHeight)) + GetTopRowIndex();
-					if (line >= 0 && line < GetNumRows()) {
+					int totalRows = textmodel ? textmodel->GetNumRows() : 0;
+					if (line >= 0 && line < totalRows) {
 						std::function<void(int)> rHandler = rowActivated;
 						rHandler(line);
 					}
