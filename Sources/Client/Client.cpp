@@ -38,6 +38,7 @@
 #include "IAudioDevice.h"
 
 #include "CenterMessageView.h"
+#include "ChatTranslator.h"
 #include "ChatWindow.h"
 #include "ClientPlayer.h"
 #include "ClientUI.h"
@@ -70,6 +71,7 @@ DEFINE_SPADES_SETTING(cg_serverAlert, "1");
 DEFINE_SPADES_SETTING(cg_skipDeadPlayersWhenDead, "0");
 DEFINE_SPADES_SETTING(cg_ignorePrivateMessages, "0");
 DEFINE_SPADES_SETTING(cg_ignoreChatMessages, "0");
+DEFINE_SPADES_SETTING(cg_chatTranslate, "1");
 DEFINE_SPADES_SETTING(cg_fog, "1");
 
 SPADES_SETTING(cg_playerName);
@@ -327,6 +329,8 @@ namespace spades {
 
 		Client::~Client() {
 			SPADES_MARK_FUNCTION();
+
+			ChatTranslator::GetInstance().ClearCache();
 
 			NetLog("Disconnecting");
 
@@ -1270,12 +1274,10 @@ namespace spades {
 
 			{
 				std::string s;
+				std::string prefix = global ? (_Tr("Client", "[Global]") + " ") : "";
 
 				// add prefix
-				if (global) {
-					s += _Tr("Client", "[Global]");
-					s += " ";
-				}
+				s += prefix;
 
 				// add player name (team-colored)
 				s += ChatWindow::TeamColorMessage(playerNameStr, p.GetTeamId());
@@ -1287,8 +1289,26 @@ namespace spades {
 				}
 
 				s += ": ";
-				s += msg;
-				chatWindow->AddMessage(s);
+
+				// Check if chat translation is enabled and eligible for incoming foreign player messages
+				if (cg_chatTranslate && !p.IsLocalPlayer() && ChatTranslator::GetInstance().ShouldTranslate(msg)) {
+					std::string fastTranslation;
+					if (ChatTranslator::GetInstance().TryFastTranslate(msg, fastTranslation)) {
+						// Instant 0ms translation from tactical gaming dictionary or in-memory LRU cache
+						s += "[ES] " + fastTranslation;
+						chatWindow->AddMessage(s);
+					} else {
+						// Display original message immediately so there is zero delay in receiving chat
+						s += msg;
+						uint64_t msgId = chatWindow->AddMessage(s);
+						// Worker thread translates asynchronously and updates in-place
+						ChatTranslator::GetInstance().QueueTranslation(
+						    msgId, prefix, playerNameStr, p.GetTeamId(), state, msg);
+					}
+				} else {
+					s += msg;
+					chatWindow->AddMessage(s);
+				}
 			}
 
 			if (!IsMuted()) {

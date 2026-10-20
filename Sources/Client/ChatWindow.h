@@ -51,14 +51,15 @@ namespace spades {
 			IFont* font;
 
 			struct ChatEntry {
+				uint64_t id;
 				std::string msg;
 				float height;
 				float fade = 0.0F; // usual fade opacity
 				float bufferFade = 0.0F;
 				float timeFade; // timeout fade opacity
 
-				ChatEntry(const std::string& Msg, float Height, float TimeFade)
-					: msg(Msg), height(Height), timeFade(TimeFade) {}
+				ChatEntry(uint64_t Id, const std::string& Msg, float Height, float TimeFade)
+					: id(Id), msg(Msg), height(Height), timeFade(TimeFade) {}
 			};
 
 			std::list<ChatEntry> entries;
@@ -76,7 +77,8 @@ namespace spades {
 			ChatWindow(Client*, IFont* font, bool killfeed);
 			~ChatWindow();
 
-			void AddMessage(const std::string&, float fadeTime = -1.0F);
+			uint64_t AddMessage(const std::string&, float fadeTime = -1.0F);
+			void UpdateMessage(uint64_t id, const std::string& newMsg);
 			static std::string ColoredMessage(const std::string&, char);
 			static std::string TeamColorMessage(const std::string&, int);
 			static std::string KillImage(int killType, int weaponType = -1);

@@ -20,6 +20,7 @@
 
 #include <cctype>
 
+#include "ChatTranslator.h"
 #include "ChatWindow.h"
 #include "Client.h"
 #include "IFont.h"
@@ -108,8 +109,11 @@ namespace spades {
 			return NULL;
 		}
 
-		void ChatWindow::AddMessage(const std::string& msg, float fadeTime) {
+		uint64_t ChatWindow::AddMessage(const std::string& msg, float fadeTime) {
 			SPADES_MARK_FUNCTION();
+
+			static uint64_t s_nextMessageId = 1;
+			uint64_t id = s_nextMessageId++;
 
 			float lh = GetLineHeight();
 			float fadeOut = killfeed ? 0.5F : 1.0F;
@@ -117,9 +121,19 @@ namespace spades {
 			if (fadeTime < 0.0F)
 				fadeTime = killfeed ? cg_killfeedFadeTime : cg_chatFadeTime;
 
-			entries.push_front(ChatEntry(msg, lh, fadeTime + fadeOut));
+			entries.push_front(ChatEntry(id, msg, lh, fadeTime + fadeOut));
 
 			firstY -= lh;
+			return id;
+		}
+
+		void ChatWindow::UpdateMessage(uint64_t id, const std::string& newMsg) {
+			for (auto& ent : entries) {
+				if (ent.id == id) {
+					ent.msg = newMsg;
+					return;
+				}
+			}
 		}
 
 		std::string ChatWindow::ColoredMessage(const std::string& msg, char c) {
@@ -159,6 +173,13 @@ namespace spades {
 		}
 
 		void ChatWindow::Update(float dt) {
+			if (!killfeed) {
+				auto completed = ChatTranslator::GetInstance().PopCompletedTranslations();
+				for (const auto& item : completed) {
+					UpdateMessage(item.msgId, item.fullTranslatedText);
+				}
+			}
+
 			if (firstY < 0.0F) {
 				firstY += dt * std::max(100.0F, -firstY);
 				if (firstY > 0.0F)

@@ -155,6 +155,8 @@ namespace spades {
 			                 !options.gameActive);
 			l.AddToggleField(_Tr("Preferences", "Ignore Chat Messages"), "cg_ignoreChatMessages");
 			l.AddToggleField(_Tr("Preferences", "Ignore Private Messages"), "cg_ignorePrivateMessages");
+			l.AddToggleField(_Tr("Preferences", "Traductor de Chat Ultra Ligero (Auto ES)"), "cg_chatTranslate");
+			l.AddHelp(_Tr("Preferences", "Traduce en vivo los mensajes del chat al español en un hilo secundario sin consumir CPU ni bajar FPS."));
 			l.AddSliderField(_Tr("Preferences", "Master Volume"), "s_volume", 0, 100, 1,
 			                 NumberFormatter(0, "%"));
 			l.AddVolumeSlider(_Tr("Preferences", "Death Camera Volume"), "cg_deathSoundGain");
@@ -619,7 +621,10 @@ namespace spades {
 			l.AddHelp(_Tr("Preferences", "Activa o desactiva la niebla del mapa. Desactivarla permite ver con total nitidez a través de todo el mapa."));
 
 			l.AddToggleField(_Tr("Preferences", "Indicador de Equipo Ingame"), "cg_hudTeamIndicator");
-			l.AddHelp(_Tr("Preferences", "Muestra la insignia flotante con tu equipo en pantalla (reubicada arriba para no tapar la munición)."));
+			l.AddHelp(_Tr("Preferences", "Muestra la insignia flotante con tu equipo en pantalla (se oculta automáticamente al escribir en el chat)."));
+
+			l.AddToggleField(_Tr("Preferences", "Traductor de Chat Ultra Ligero (Auto ES)"), "cg_chatTranslate");
+			l.AddHelp(_Tr("Preferences", "Traduce en vivo los mensajes del chat al español en un hilo secundario sin consumir CPU ni bajar FPS."));
 
 			l.AddToggleField(_Tr("Preferences", "Mostrar Ventana al Iniciar"), "cl_showStartupWindow");
 			l.AddHelp(_Tr("Preferences", "Muestra la pantalla de configuración clásica cada vez que ejecutas el cliente."));
