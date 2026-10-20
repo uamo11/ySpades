@@ -1292,8 +1292,9 @@ namespace spades {
 				// Check if player message matches an active player's name
 				bool isPlayerName = false;
 				if (world) {
-					for (const auto& playerObj : world->GetPlayers()) {
-						if (playerObj.first && EqualsIgnoringCase(playerObj.first->GetName(), msg)) {
+					for (size_t slot = 0; slot < world->GetNumPlayerSlots(); ++slot) {
+						std::string pName = world->GetPlayerName(static_cast<int>(slot));
+						if (!pName.empty() && EqualsIgnoringCase(pName, msg)) {
 							isPlayerName = true;
 							break;
 						}

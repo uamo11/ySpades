@@ -45,7 +45,6 @@ namespace spades {
 		static const char MsgColorMax = MsgTranslateIcon;
 		static const char MsgColorFriendlyFire = MsgColorRed;
 		static const char MsgColorSysInfo = MsgColorYellow;
-		static const char MsgColorSysInfo = MsgColorYellow;
 
 		class ChatWindow {
 			Client* client;
@@ -76,6 +75,7 @@ namespace spades {
 			IImage* GetKillImage(char);
 
 		public:
+			static const char MsgTranslateIcon = spades::client::MsgTranslateIcon;
 			ChatWindow(Client*, IFont* font, bool killfeed);
 			~ChatWindow();
 
