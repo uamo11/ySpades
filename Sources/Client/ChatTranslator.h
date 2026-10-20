@@ -44,6 +44,8 @@ namespace spades {
 		struct CompletedTranslation {
 			uint64_t msgId;
 			std::string fullTranslatedText;
+			std::string originalMsg;
+			std::string translatedMsg;
 		};
 
 		/**

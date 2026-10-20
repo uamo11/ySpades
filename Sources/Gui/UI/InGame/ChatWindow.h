@@ -94,6 +94,8 @@ namespace spades {
 			void BuildPanel();
 			void BuildHistory(float x, float y, float w, float h, float rowHeight,
 			                  bool interactive);
+			void RebuildHistory();
+			void OnHistoryRowClicked(int row);
 
 			void OnSetGlobal(gui::ui::UIElement& sender);
 			void OnSetTeam(gui::ui::UIElement& sender);

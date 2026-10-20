@@ -141,11 +141,34 @@ namespace spades {
 		bool ClientUI::WantsClientToBeClosed() { return shouldExit; }
 		bool ClientUI::NeedsInput() { return static_cast<bool>(activeUI) && !peeking; }
 
-		void ClientUI::RecordChatLog(const std::string& msg, Vector4 color) {
-			chatLogRecords.emplace_back(msg, color);
-			chatLogWindow->Record(msg, color);
+		void ClientUI::RecordChatLog(const std::string& msg, Vector4 color, const std::string& original) {
+			ChatLogRecord rec;
+			rec.displayed = msg;
+			rec.original = original.empty() ? msg : original;
+			rec.isTranslated = !original.empty() && original != msg;
+			rec.showingOriginal = false;
+			rec.color = color;
+			chatLogRecords.push_back(rec);
+
+			std::string drawLine = rec.displayed;
+			if (rec.isTranslated) {
+				drawLine = "[Tr] " + rec.displayed;
+			}
+			chatLogWindow->Record(drawLine, color);
 			if (chatPanel)
-				chatPanel->Record(msg, color);
+				chatPanel->Record(drawLine, color);
+		}
+
+		void ClientUI::UpdateChatLogTranslation(const std::string& original, const std::string& translated) {
+			for (auto it = chatLogRecords.rbegin(); it != chatLogRecords.rend(); ++it) {
+				if (it->original.find(original) != std::string::npos || it->displayed.find(original) != std::string::npos) {
+					it->isTranslated = true;
+					it->original = it->displayed;
+					it->displayed = translated;
+					it->showingOriginal = false;
+					break;
+				}
+			}
 		}
 
 		void ClientUI::ReloadScreens() {
@@ -161,8 +184,10 @@ namespace spades {
 			clientMenu = nullptr;
 			hksMenu = nullptr;
 			chatLogWindow = Handle<ChatLogWindow>::New(this);
-			for (const auto& record : chatLogRecords)
-				chatLogWindow->Record(record.first, record.second);
+			for (const auto& record : chatLogRecords) {
+				std::string line = record.isTranslated ? (record.showingOriginal ? ("[Original] " + record.original) : ("[Tr] " + record.displayed)) : record.displayed;
+				chatLogWindow->Record(line, record.color);
+			}
 		}
 
 		bool ClientUI::IsChatEnabled() {

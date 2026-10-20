@@ -41,6 +41,14 @@ namespace spades {
 		class ChatLogWindow;
 		class ClientChatWindow;
 
+		struct ChatLogRecord {
+			std::string displayed;
+			std::string original;
+			bool isTranslated = false;
+			bool showingOriginal = false;
+			Vector4 color = MakeVector4(1.0F, 1.0F, 1.0F, 0.8F);
+		};
+
 		class ClientUI : public gui::IGameModeUI {
 			friend class ClientUIHelper;
 			friend class ClientMenu;
@@ -68,7 +76,7 @@ namespace spades {
 
 			// The chat log only exists inside `chatLogWindow`, which a screen resize
 			// has to rebuild. Kept here so the rebuilt window can be replayed into.
-			std::vector<std::pair<std::string, Vector4>> chatLogRecords;
+			std::vector<ChatLogRecord> chatLogRecords;
 
 			std::vector<gui::ui::CommandHistoryItem> chatHistory;
 
@@ -128,7 +136,9 @@ namespace spades {
 			void EnterChatPeek();
 			void ExitChatPeek();
 
-			void RecordChatLog(const std::string&, Vector4 col = {1, 1, 1, 0.8F});
+			void RecordChatLog(const std::string&, Vector4 col = {1, 1, 1, 0.8F},
+			                   const std::string& original = "");
+			void UpdateChatLogTranslation(const std::string& original, const std::string& translated);
 
 			bool IsChatEnabled();
 

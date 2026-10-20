@@ -671,11 +671,7 @@ namespace spades {
 				scrPos.x = floorf(scrPos.x);
 				scrPos.y = floorf(scrPos.y);
 
-				float luminosity = color.x + color.y + color.z;
-				Vector4 shadowColor = (luminosity > 0.9F)
-					? MakeVector4(0, 0, 0, 0.8F)
-					: MakeVector4(1, 1, 1, 0.8F);
-
+				Vector4 shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.85F);
 				shadowColor.w *= color.w;
 
 				font.DrawShadow(str, scrPos, 1.0F, color, shadowColor);
@@ -1867,10 +1863,7 @@ namespace spades {
 			IFont& squareFont = fontManager->GetSquareDesignFont();
 
 			Vector4 color = GetHUDColor(p);
-			float luminosity = color.x + color.y + color.z;
-			Vector4 shadowColor = (luminosity > 0.9F)
-				? MakeVector4(0, 0, 0, 0.5)
-				: MakeVector4(1, 1, 1, 0.5);
+			Vector4 shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.75F);
 
 			// premultiplied
 			Vector4 shadowP = shadowColor.Premultiplied();
@@ -1878,6 +1871,7 @@ namespace spades {
 			Vector4 white = MakeVector4(1, 1, 1, 1);
 			Vector4 red = MakeVector4(1, 0, 0, 1);
 			Vector4 gray = MakeVector4(0.4F, 0.4F, 0.4F, 1);
+			float luminosity = color.x + color.y + color.z;
 			Vector4 bgColor = (luminosity > 0.9F) ? color * gray : gray;
 
 			switch (curToolType) {

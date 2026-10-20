@@ -476,6 +476,20 @@ namespace spades {
 				RefreshHover();
 			}
 
+			void TextViewer::Clear() {
+				text.clear();
+				textmodel = nullptr;
+				SetModel(nullptr);
+				if (selection) {
+					selection->markPosition = 0;
+					selection->cursorPosition = 0;
+					selection->hoverLinkId = -1;
+				}
+				pressedLinkId = -1;
+				pressedLinkUrl.clear();
+				ApplyTextCursor();
+			}
+
 			void TextViewer::SetScrollBarVisible(bool visible) {
 				scrollBar->visible = visible;
 				// 16 pixels is the default width of `ListViewBase`
@@ -604,6 +618,12 @@ namespace spades {
 					// copy the handler: it may rebuild the UI and destroy this viewer
 					std::function<void(const std::string&)> handler = linkActivated;
 					handler(url);
+				} else if (rowActivated && selection->markPosition == selection->cursorPosition) {
+					int line = static_cast<int>(std::floor((clientPosition.y - GetRowsOffsetY()) / rowHeight)) + GetTopRowIndex();
+					if (line >= 0 && line < GetNumRows()) {
+						std::function<void(int)> rHandler = rowActivated;
+						rHandler(line);
+					}
 				}
 			}
 

@@ -27,6 +27,7 @@
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/Widgets/GuiIcons.h>
 #include <Gui/UI/Widgets/TabStrip.h>
+#include <SDL.h>
 
 namespace spades {
 	namespace gui {

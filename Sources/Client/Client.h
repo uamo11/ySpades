@@ -724,6 +724,7 @@ namespace spades {
 			bool IsDemoMode() const { return demoNet != nullptr; }
 			bool IsLocalWorldMode() const { return localNet != nullptr; }
 			DemoNetClient* GetDemoNetClient() { return demoNet.get(); }
+			ClientUI* GetUI() { return scriptedUI.GetPointerOrNull(); }
 			void ReloadDemo();
 			
 			const std::string& GetServerName() const { return serverName; }

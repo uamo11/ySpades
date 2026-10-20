@@ -435,16 +435,48 @@ namespace spades {
 				viewer->linkActivated = [this](const std::string& url) {
 					gui::ConfirmOpenLink(this, url);
 				};
+				viewer->rowActivated = [this](int row) {
+					OnHistoryRowClicked(row);
+				};
 			}
 
-			// replay the most recent lines; older ones stay in the chat log window
+			RebuildHistory();
+		}
+
+		void ClientChatWindow::RebuildHistory() {
+			if (!viewer || !ui)
+				return;
+			viewer->Clear();
 			const size_t maxReplayed = 150;
 			const auto& records = ui->chatLogRecords;
 			size_t first = records.size() > maxReplayed ? records.size() - maxReplayed : 0;
-			for (size_t i = first; i < records.size(); i++)
-				viewer->AddLine(records[i].first, false, HistoryColor(records[i].second));
+			for (size_t i = first; i < records.size(); i++) {
+				const auto& r = records[i];
+				std::string line = r.isTranslated
+				    ? (r.showingOriginal ? ("[Original] " + r.original) : ("[Tr] " + r.displayed))
+				    : r.displayed;
+				viewer->AddLine(line, false, HistoryColor(r.color));
+			}
 			viewer->Layout();
 			viewer->ScrollToEnd();
+		}
+
+		void ClientChatWindow::OnHistoryRowClicked(int row) {
+			if (!ui)
+				return;
+			const size_t maxReplayed = 150;
+			const auto& records = ui->chatLogRecords;
+			size_t first = records.size() > maxReplayed ? records.size() - maxReplayed : 0;
+			size_t targetIdx = first + static_cast<size_t>(row);
+			if (targetIdx >= ui->chatLogRecords.size())
+				return;
+
+			auto& item = ui->chatLogRecords[targetIdx];
+			if (!item.isTranslated)
+				return;
+
+			item.showingOriginal = !item.showingOriginal;
+			RebuildHistory();
 		}
 
 		void ClientChatWindow::Record(const std::string& text, Vector4 color) {

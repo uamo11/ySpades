@@ -28,6 +28,7 @@
 #include <cctype>
 #include <cstring>
 #include <curl/curl.h>
+#include <unordered_set>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -184,39 +185,69 @@ namespace spades {
 			    lower.find("discord.gg") != std::string::npos)
 				return false;
 
-			// 3. Skip common universal gaming slang / laughs / emoticons
-			static const char* kUniversalSlang[] = {
-				"xd", "lol", "lmao", "rofl", "kek", "gg", "ggs", "gl", "hf", "glhf",
-				"ty", "thx", "np", "f", "rip", "wtf", "omg", "noob", "ez", "pog",
-				"bruh", "w", "l", "ok", "k", "pls", "plz", "yw", "idk", "idc",
-				"afk", "brb", "oof", "gtg", "g2g", "gn", "gm", "dc", "wp", "gj"
-			};
-			for (const char* slang : kUniversalSlang) {
-				if (lower == slang)
-					return false;
-			}
-
-			// 4. Check if text is only punctuation, numbers, or laughs
-			bool hasAlpha = false;
-			bool hasLetterRepeatOnly = true;
-			char firstLetter = 0;
-			int letterCount = 0;
-
-			for (size_t i = 0; i < lower.size(); i++) {
-				unsigned char c = static_cast<unsigned char>(lower[i]);
-				if ((c >= 'a' && c <= 'z') || c >= 128) {
-					hasAlpha = true;
-					letterCount++;
-					if (!firstLetter) firstLetter = c;
-					else if (firstLetter != c) hasLetterRepeatOnly = false;
+			// 3. Skip common universal gaming slang / laughs / emoticons / acronyms
+			// Check for 3+ consecutive identical characters anywhere in message (e.g. "AAAAA", "noooo", "?????")
+			int consec = 1;
+			for (size_t i = 1; i < lower.size(); i++) {
+				if (lower[i] == lower[i - 1]) {
+					consec++;
+					if (consec >= 3)
+						return false; // Scream / keyboard spam like "AAAAAAAAAA"
+				} else {
+					consec = 1;
 				}
 			}
 
-			if (!hasAlpha)
-				return false; // pure numbers / symbols / emoticons
+			// Extract all alphabetic words
+			std::vector<std::string> words;
+			std::string currentWord;
+			for (char c : lower) {
+				if (std::isalpha(static_cast<unsigned char>(c))) {
+					currentWord += c;
+				} else if (!currentWord.empty()) {
+					words.push_back(currentWord);
+					currentWord.clear();
+				}
+			}
+			if (!currentWord.empty())
+				words.push_back(currentWord);
 
-			if (hasLetterRepeatOnly && letterCount >= 3)
-				return false; // "aaaaaa", "hhhhhh"
+			if (words.empty())
+				return false; // No alphabetic content
+
+			// Check if all words are gamer slang / universal acronyms ("omg wtf", "gg wp", "wtf", "ty bro", etc.)
+			static const std::unordered_set<std::string> kUniversalSlangWords = {
+				"xd", "xdxd", "lol", "lmao", "rofl", "kek", "gg", "ggs", "gl", "hf", "glhf",
+				"ty", "thx", "thanks", "thank", "np", "yw", "f", "rip", "wtf", "wth", "omg", "noob",
+				"ez", "easy", "pog", "poggers", "bruh", "w", "l", "ok", "k", "kk", "pls", "plz",
+				"idk", "idc", "imo", "imho", "afk", "brb", "oof", "gtg", "g2g", "gn", "gm", "dc", "wp", "gj",
+				"lag", "ping", "fps", "ms", "hacker", "aimbot", "vxl", "aos", "admin", "mod",
+				"server", "pro", "bot", "team", "bro", "dude", "man", "u", "ur", "r", "sry", "stfu",
+				"hi", "hello", "hey", "yo", "bye", "cya", "bb"
+			};
+
+			bool allSlang = true;
+			for (const std::string& w : words) {
+				if (kUniversalSlangWords.find(w) == kUniversalSlangWords.end()) {
+					allSlang = false;
+					break;
+				}
+			}
+			if (allSlang)
+				return false; // Gamers understand "omg wtf", "gg", etc. perfectly
+
+			// Check for consonant keyboard mash (e.g. "asdfgh")
+			for (const std::string& w : words) {
+				if (w.size() >= 5) {
+					int vowels = 0;
+					for (char c : w) {
+						if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'y')
+							vowels++;
+					}
+					if (vowels == 0)
+						return false; // Keyboard spam
+				}
+			}
 
 			// Laughs: "jajaja...", "hahaha..."
 			if (lower.find("jaja") != std::string::npos ||
@@ -419,12 +450,16 @@ namespace spades {
 				if (!translated.empty()) {
 					CompletedTranslation comp;
 					comp.msgId = job.msgId;
+					comp.originalMsg = job.originalMsg;
+					comp.translatedMsg = translated;
 
 					std::string fullText = job.prefix + ChatWindow::TeamColorMessage(job.playerName, job.teamId);
 					if (!job.state.empty()) {
 						fullText += " " + job.state;
 					}
-					fullText += ": [ES] " + translated;
+					std::string trPrefix;
+					trPrefix += ChatWindow::MsgTranslateIcon;
+					fullText += ": " + trPrefix + translated;
 					comp.fullTranslatedText = fullText;
 
 					std::lock_guard<std::mutex> lock(completedMutex);

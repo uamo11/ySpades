@@ -191,10 +191,14 @@ namespace spades {
 				/** Called with the URL of a clicked link. */
 				std::function<void(const std::string&)> linkActivated;
 
+				/** Called with the 0-based row index of a clicked text row. */
+				std::function<void(int)> rowActivated;
+
 				TextViewer(UIManager* manager);
 
 				const std::string& GetText() const { return text; }
 				void SetText(const std::string& value);
+				void Clear();
 
 				/**
 				 * Shows or hides the scroll bar. A hidden one takes no room from the rows but the

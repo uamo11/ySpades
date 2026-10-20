@@ -1265,7 +1265,6 @@ namespace spades {
 
 				s += ": ";
 				s += msg;
-				scriptedUI->RecordChatLog(s, ConvertColorRGBA(p.GetColor()));
 			}
 
 			// filters chat messages (but they can still be found in logs)
@@ -1290,17 +1289,32 @@ namespace spades {
 
 				s += ": ";
 
+				// Check if player message matches an active player's name
+				bool isPlayerName = false;
+				if (world) {
+					for (const auto& playerObj : world->GetPlayers()) {
+						if (playerObj.first && EqualsIgnoringCase(playerObj.first->GetName(), msg)) {
+							isPlayerName = true;
+							break;
+						}
+					}
+				}
+
 				// Check if chat translation is enabled and eligible for incoming foreign player messages
-				if (cg_chatTranslate && !p.IsLocalPlayer() && ChatTranslator::GetInstance().ShouldTranslate(msg)) {
+				if (cg_chatTranslate && !p.IsLocalPlayer() && !isPlayerName && ChatTranslator::GetInstance().ShouldTranslate(msg)) {
 					std::string fastTranslation;
 					if (ChatTranslator::GetInstance().TryFastTranslate(msg, fastTranslation)) {
 						// Instant 0ms translation from tactical gaming dictionary or in-memory LRU cache
-						s += "[ES] " + fastTranslation;
+						std::string trPrefix;
+						trPrefix += ChatWindow::MsgTranslateIcon;
+						s += trPrefix + fastTranslation;
 						chatWindow->AddMessage(s);
+						scriptedUI->RecordChatLog(playerNameStr + ": " + fastTranslation, ConvertColorRGBA(p.GetColor()), playerNameStr + ": " + msg);
 					} else {
 						// Display original message immediately so there is zero delay in receiving chat
 						s += msg;
 						uint64_t msgId = chatWindow->AddMessage(s);
+						scriptedUI->RecordChatLog(playerNameStr + ": " + msg, ConvertColorRGBA(p.GetColor()), playerNameStr + ": " + msg);
 						// Worker thread translates asynchronously and updates in-place
 						ChatTranslator::GetInstance().QueueTranslation(
 						    msgId, prefix, playerNameStr, p.GetTeamId(), state, msg);
@@ -1308,6 +1322,7 @@ namespace spades {
 				} else {
 					s += msg;
 					chatWindow->AddMessage(s);
+					scriptedUI->RecordChatLog(playerNameStr + ": " + msg, ConvertColorRGBA(p.GetColor()));
 				}
 			}
 

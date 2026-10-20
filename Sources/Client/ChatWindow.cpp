@@ -23,6 +23,7 @@
 #include "ChatTranslator.h"
 #include "ChatWindow.h"
 #include "Client.h"
+#include "ClientUI.h"
 #include "IFont.h"
 #include "IRenderer.h"
 #include "World.h"
@@ -177,6 +178,9 @@ namespace spades {
 				auto completed = ChatTranslator::GetInstance().PopCompletedTranslations();
 				for (const auto& item : completed) {
 					UpdateMessage(item.msgId, item.fullTranslatedText);
+					if (client && client->GetUI()) {
+						client->GetUI()->UpdateChatLogTranslation(item.originalMsg, item.translatedMsg);
+					}
 				}
 			}
 
@@ -240,8 +244,7 @@ namespace spades {
 					winY += cg_statsSmallFont ? 10.0F : 20.0F;
 			}
 
-			Vector4 shadowColor = { 0, 0, 0, 0.8F };
-			Vector4 brightShadowColor = { 1, 1, 1, 0.8F };
+			Vector4 shadowColor = { 0, 0, 0, 0.85F };
 
 			std::string ch = "aaaaaa"; // let's not make a new object for each character.
 			// note: UTF-8's longest character is 6 bytes
@@ -267,7 +270,7 @@ namespace spades {
 				if (fade < 0.01F)
 					goto endDrawLine; // Skip rendering invisible messages
 
-				brightShadowColor.w = shadowColor.w = (killfeed ? 0.4F : 0.8F) * fade;
+				shadowColor.w = (killfeed ? 0.45F : 0.85F) * fade;
 				color.w = fade;
 
 				// animation for killfeed
@@ -282,7 +285,27 @@ namespace spades {
 						tx = 0.0F;
 						ty += lh;
 					} else if (msg[i] >= 1 && msg[i] <= MsgColorMax) {
-						if (msg[i] == MsgImage) {
+						if (msg[i] == MsgTranslateIcon) {
+							// Draw clean mini translator icon badge: small blue pill with white 'T' symbol
+							float iconW = 16.0F;
+							float iconH = 13.0F;
+							float iconX = tx + curPosX;
+							float iconY = ty + winY + (lh - iconH) * 0.5F;
+
+							Vector4 badgeBg = MakeVector4(0.12F, 0.42F, 0.78F, 0.85F * fade);
+							Vector4 badgeBorder = MakeVector4(0.40F, 0.82F, 1.0F, 0.95F * fade);
+							renderer.SetColorAlphaPremultiplied(badgeBg.Premultiplied());
+							renderer.DrawFilledRect(iconX, iconY, iconX + iconW, iconY + iconH);
+							renderer.SetColorAlphaPremultiplied(badgeBorder.Premultiplied());
+							renderer.DrawOutlinedRect(iconX, iconY, iconX + iconW, iconY + iconH);
+
+							Vector4 tCol = MakeVector4(1.0F, 1.0F, 1.0F, 0.95F * fade).Premultiplied();
+							renderer.SetColorAlphaPremultiplied(tCol);
+							renderer.DrawFilledRect(iconX + 3.0F, iconY + 3.0F, iconX + iconW - 3.0F, iconY + 5.0F);
+							renderer.DrawFilledRect(iconX + (iconW * 0.5F) - 1.0F, iconY + 5.0F, iconX + (iconW * 0.5F) + 1.0F, iconY + iconH - 3.0F);
+
+							tx += iconW + 4.0F;
+						} else if (msg[i] == MsgImage) {
 							IImage* img = NULL;
 							if (i + 1 < msg.size() && (img = GetKillImage(msg[i + 1]))) {
 								Vector4 colorP = color;
@@ -306,8 +329,7 @@ namespace spades {
 							ch[k] = msg[i + k];
 						i += ln - 1;
 
-						float luminosity = color.x + color.y + color.z;
-						Vector4 shadow = (luminosity > 0.9F) ? shadowColor : brightShadowColor;
+						Vector4 shadow = shadowColor;
 						Vector2 pos = MakeVector2(tx + curPosX, ty + winY).Floor();
 
 						if (killfeed) {

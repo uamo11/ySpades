@@ -676,11 +676,7 @@ namespace spades {
 				Vector4 color = focusPlayer
 					? ConvertColorRGBA(focusPlayer->GetColor())
 					: MakeVector4(1, 1, 1, 1);
-				float luminosity = color.x + color.y + color.z;
-				Vector4 shadowColor = (luminosity > 0.9F)
-					? MakeVector4(0, 0, 0, 0.8F)
-					: MakeVector4(1, 1, 1, 0.8F);
-
+				Vector4 shadowColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.85F);
 				color.w *= largeMapAlpha;
 				shadowColor.w *= largeMapAlpha;
 
