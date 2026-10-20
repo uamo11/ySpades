@@ -519,11 +519,14 @@ namespace spades {
 				    while (p && !dynamic_cast<PreferenceView*>(p))
 					    p = p->GetParent();
 				    if (auto* pv = dynamic_cast<PreferenceView*>(p)) {
+					    auto cbVentana = pv->onVentanaRequested;
+					    auto cbDetailed = pv->onDetailedRequested;
+					    UIElement* owner = pv->GetOwner();
 					    pv->Close();
-					    if (pv->onVentanaRequested)
-						    pv->onVentanaRequested(*pv);
-					    else if (pv->onDetailedRequested)
-						    pv->onDetailedRequested(*pv);
+					    if (cbVentana)
+						    cbVentana(owner ? *owner : *this);
+					    else if (cbDetailed)
+						    cbDetailed(owner ? *owner : *this);
 				    }
 			    });
 			l.AddHelp(_Tr("Preferences",

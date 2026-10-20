@@ -360,11 +360,14 @@ namespace spades {
 				if (static_cast<UIElement*>(tabs[i]->tabButton) == &sender) {
 					if (i == 3 || tabs[i]->tabButton->caption == _Tr("Preferences", "Ventana++")) {
 						if (onVentanaRequested || onDetailedRequested) {
+							auto cbVentana = onVentanaRequested;
+							auto cbDetailed = onDetailedRequested;
+							UIElement* senderOwner = owner;
 							Close();
-							if (onVentanaRequested)
-								onVentanaRequested(*this);
-							else
-								onDetailedRequested(*this);
+							if (cbVentana)
+								cbVentana(senderOwner ? *senderOwner : sender);
+							else if (cbDetailed)
+								cbDetailed(senderOwner ? *senderOwner : sender);
 							return;
 						}
 					}
@@ -379,11 +382,14 @@ namespace spades {
 			if (index >= 0 && index < static_cast<int>(tabs.size())) {
 				if (index == 3 || tabs[index]->tabButton->caption == _Tr("Preferences", "Ventana++")) {
 					if (onVentanaRequested || onDetailedRequested) {
+						auto cbVentana = onVentanaRequested;
+						auto cbDetailed = onDetailedRequested;
+						UIElement* senderOwner = owner;
 						Close();
-						if (onVentanaRequested)
-							onVentanaRequested(*this);
-						else
-							onDetailedRequested(*this);
+						if (cbVentana)
+							cbVentana(senderOwner ? *senderOwner : *this);
+						else if (cbDetailed)
+							cbDetailed(senderOwner ? *senderOwner : *this);
 						return;
 					}
 				}

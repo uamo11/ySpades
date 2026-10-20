@@ -124,6 +124,8 @@ namespace spades {
 			PreferenceView(ui::UIElement* owner, const PreferenceViewOptions& options,
 			               client::FontManager* fontManager);
 
+			ui::UIElement* GetOwner() const { return owner; }
+
 			void HotKey(const std::string& key) override;
 			void Render() override;
 			void Close();
