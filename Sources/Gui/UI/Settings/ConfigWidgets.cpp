@@ -309,7 +309,7 @@ namespace spades {
 			r.DrawOutlinedRect(pos.x, pos.y, pos.x + sz.x, pos.y + sz.y);
 
 			// Draw sliding knob
-			float knobW = 28.0F;
+			float knobW = 20.0F;
 			float knobMargin = 2.0F;
 			float knobX = isOn ? (pos.x + sz.x - knobW - knobMargin)
 			                   : (pos.x + knobMargin);
@@ -327,8 +327,9 @@ namespace spades {
 			if (font) {
 				std::string label = isOn ? _Tr("Preferences", "ON") : _Tr("Preferences", "OFF");
 				Vector2 txtSz = font->Measure(label);
-				float txtX = isOn ? (pos.x + 12.0F)
-				                  : (pos.x + sz.x - txtSz.x - 12.0F);
+				float availW = sz.x - knobW - knobMargin * 2.0F;
+				float txtX = isOn ? (pos.x + knobMargin + (availW - txtSz.x) * 0.5F)
+				                  : (pos.x + knobMargin + knobW + (availW - txtSz.x) * 0.5F);
 				float txtY = pos.y + (sz.y - txtSz.y) * 0.5F;
 				font->DrawShadow(label, MakeVector2(txtX, txtY), 1.0F,
 				                 textCol, MakeVector4(0, 0, 0, 0.5F));

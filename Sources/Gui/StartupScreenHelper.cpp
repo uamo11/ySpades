@@ -624,21 +624,7 @@ namespace spades {
 
 			openGLCapable = capable;
 			if (!openGLCapable) {
-				if (spades::EqualsIgnoringCase(r_renderer, "gl")) {
-					SPLog("Switched to software renderer");
-					r_renderer = "sw";
-				}
-
-				incapableConfigs.insert(
-				  std::make_pair("r_renderer", [](std::string value) -> std::string {
-					  if (spades::EqualsIgnoringCase(value, "gl")) {
-						  return "OpenGL renderer is disabled because "
-								 "your video card/driver doesn't support "
-								 "at least one of required OpenGL extensions/features.";
-					  } else {
-						  return std::string();
-					  }
-				  }));
+				SPLog("Warning: OpenGL capability check reported false (leaving user preference intact)");
 			}
 		}
 

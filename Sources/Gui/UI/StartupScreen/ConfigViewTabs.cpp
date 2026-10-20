@@ -428,6 +428,9 @@ namespace spades {
 
 		void StartupScreenGraphicsTab::LoadConfig() {
 			resEdit->LoadConfig();
+			if (static_cast<std::string>(r_renderer) == "sw" && helper->CheckConfigCapability("r_renderer", "gl").empty()) {
+				r_renderer = std::string("gl");
+			}
 			if (static_cast<std::string>(r_renderer) == "sw") {
 				driverSoftware->Check();
 				configViewGL->visible = false;
@@ -438,8 +441,8 @@ namespace spades {
 				configViewSoftware->visible = false;
 			}
 			fullscreenCheck->toggled = static_cast<int>(r_fullscreen) != 0;
-			driverOpenGL->enable = helper->CheckConfigCapability("r_renderer", "gl").empty();
-			driverSoftware->enable = helper->CheckConfigCapability("r_renderer", "sw").empty();
+			driverOpenGL->enable = true;
+			driverSoftware->enable = true;
 			configViewGL->LoadConfig();
 			configViewSoftware->LoadConfig();
 		}
