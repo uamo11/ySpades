@@ -86,6 +86,8 @@ namespace spades {
 
 			void Update(float dt);
 			void Draw();
+
+			bool HasVisibleMessages() const;
 		};
 	} // namespace client
 } // namespace spades

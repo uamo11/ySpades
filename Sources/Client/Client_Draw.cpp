@@ -2346,6 +2346,13 @@ namespace spades {
 			if (!world)
 				return;
 
+			// Hide team indicator when someone is writing in chat or when chat messages are visible
+			if (scriptedUI && (scriptedUI->IsChatPanelOpen() || scriptedUI->IsChatPeeking()))
+				return;
+
+			if (chatWindow && chatWindow->HasVisibleMessages())
+				return;
+
 			auto maybeLocal = world->GetLocalPlayer();
 			Player* targetPlayer = maybeLocal ? &maybeLocal.value() : nullptr;
 

@@ -304,5 +304,13 @@ namespace spades {
 				y = killfeed ? y + ent.height : entryY;
 			}
 		}
+
+		bool ChatWindow::HasVisibleMessages() const {
+			for (const auto& ent : entries) {
+				if (ent.timeFade > 0.0F)
+					return true;
+			}
+			return false;
+		}
 	} // namespace client
 } // namespace spades
