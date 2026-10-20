@@ -17,6 +17,14 @@
  along with ySpades.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unordered_set>
+#include <unordered_map>
+#include <algorithm>
+#include <cctype>
+#include <cstring>
+#include <string>
+#include <vector>
+
 #include "ChatTranslator.h"
 #include "ChatWindow.h"
 #include <Core/Math.h>
@@ -24,11 +32,7 @@
 #include <Gui/ProxyManager.h>
 #include <ZeroSpades.h>
 
-#include <algorithm>
-#include <cctype>
-#include <cstring>
 #include <curl/curl.h>
-#include <unordered_set>
 
 #ifdef _WIN32
 #include <windows.h>
