@@ -22,12 +22,21 @@
 #include <cstring>
 #include <Core/Debug.h>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <sys/select.h>
+#include <sys/socket.h>
+typedef int SOCKET;
+#endif
+
 namespace spades {
 	namespace client {
 
 		Socks5UdpRelay::Socks5UdpRelay()
 		    : tcpSocket(ENET_SOCKET_NULL),
-		      localUdpSocket(ENET_SOCKET_NULL),
+		      clientUdpSocket(ENET_SOCKET_NULL),
+		      proxyUdpSocket(ENET_SOCKET_NULL),
 		      localPort(0),
 		      isRunning(false) {}
 
@@ -220,40 +229,60 @@ namespace spades {
 				return false;
 			}
 
-			// Create local UDP relay socket
-			localUdpSocket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
-			if (localUdpSocket == ENET_SOCKET_NULL) {
-				lastError = "Failed to create local UDP relay socket";
+			// 1. Create client-facing UDP relay socket bound to 127.0.0.1
+			clientUdpSocket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
+			if (clientUdpSocket == ENET_SOCKET_NULL) {
+				lastError = "Failed to create client UDP relay socket";
 				Stop();
 				return false;
 			}
 
-			enet_socket_set_option(localUdpSocket, ENET_SOCKOPT_NONBLOCK, 1);
+			enet_socket_set_option(clientUdpSocket, ENET_SOCKOPT_NONBLOCK, 1);
 			enet_address_set_host_ip(&localBindAddress, "127.0.0.1");
 			localBindAddress.port = 0;
 
-			if (enet_socket_bind(localUdpSocket, &localBindAddress) != 0) {
-				lastError = "Failed to bind local UDP socket to 127.0.0.1";
+			if (enet_socket_bind(clientUdpSocket, &localBindAddress) != 0) {
+				lastError = "Failed to bind client UDP socket to 127.0.0.1";
 				Stop();
 				return false;
 			}
 
 			ENetAddress actualAddr;
-			if (enet_socket_get_address(localUdpSocket, &actualAddr) != 0) {
-				lastError = "Failed to query bound local port";
+			if (enet_socket_get_address(clientUdpSocket, &actualAddr) != 0) {
+				lastError = "Failed to query bound local client port";
 				Stop();
 				return false;
 			}
 
 			localPort = actualAddr.port;
 			outLocalPort = localPort;
+
+			// 2. Create WAN-facing UDP relay socket bound to 0.0.0.0
+			proxyUdpSocket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
+			if (proxyUdpSocket == ENET_SOCKET_NULL) {
+				lastError = "Failed to create proxy WAN UDP socket";
+				Stop();
+				return false;
+			}
+
+			enet_socket_set_option(proxyUdpSocket, ENET_SOCKOPT_NONBLOCK, 1);
+			ENetAddress anyAddr;
+			anyAddr.host = ENET_HOST_ANY;
+			anyAddr.port = 0;
+
+			if (enet_socket_bind(proxyUdpSocket, &anyAddr) != 0) {
+				lastError = "Failed to bind proxy WAN UDP socket";
+				Stop();
+				return false;
+			}
+
 			targetServerAddress = targetServer;
 
 			isRunning.store(true);
 			relayThread = std::thread(&Socks5UdpRelay::RelayLoop, this);
 
-			SPLog("Socks5UdpRelay: Active, relaying between 127.0.0.1:%u and proxy relay port %u",
-			      (unsigned int)localPort, (unsigned int)relayAddress.port);
+			SPLog("Socks5UdpRelay: Active, client on 127.0.0.1:%u relaying through proxy relay %s:%u",
+			      (unsigned int)localPort, proxyHost.c_str(), (unsigned int)relayAddress.port);
 			return true;
 		}
 
@@ -262,9 +291,13 @@ namespace spades {
 			if (relayThread.joinable()) {
 				relayThread.join();
 			}
-			if (localUdpSocket != ENET_SOCKET_NULL) {
-				enet_socket_destroy(localUdpSocket);
-				localUdpSocket = ENET_SOCKET_NULL;
+			if (clientUdpSocket != ENET_SOCKET_NULL) {
+				enet_socket_destroy(clientUdpSocket);
+				clientUdpSocket = ENET_SOCKET_NULL;
+			}
+			if (proxyUdpSocket != ENET_SOCKET_NULL) {
+				enet_socket_destroy(proxyUdpSocket);
+				proxyUdpSocket = ENET_SOCKET_NULL;
 			}
 			if (tcpSocket != ENET_SOCKET_NULL) {
 				enet_socket_destroy(tcpSocket);
@@ -280,56 +313,75 @@ namespace spades {
 			std::vector<uint8_t> outBuf(4096);
 
 			while (isRunning.load()) {
-				enet_uint32 condition = ENET_SOCKET_WAIT_RECEIVE;
-				if (enet_socket_wait(localUdpSocket, &condition, 15) == 0 &&
-				    (condition & ENET_SOCKET_WAIT_RECEIVE)) {
+				fd_set readSet;
+				FD_ZERO(&readSet);
+				SOCKET sClient = static_cast<SOCKET>(clientUdpSocket);
+				SOCKET sProxy = static_cast<SOCKET>(proxyUdpSocket);
+				SOCKET maxFd = (sClient > sProxy) ? sClient : sProxy;
+				FD_SET(sClient, &readSet);
+				FD_SET(sProxy, &readSet);
+
+				struct timeval tv;
+				tv.tv_sec = 0;
+				tv.tv_usec = 15000; // 15ms poll
+
+				int sel = select(static_cast<int>(maxFd + 1), &readSet, nullptr, nullptr, &tv);
+				if (sel <= 0) {
+					continue;
+				}
+
+				// 1. Datagram received from local game client -> Encapsulate and send to proxy
+				if (FD_ISSET(sClient, &readSet)) {
 					ENetAddress fromAddr;
 					ENetBuffer rxBuf;
 					rxBuf.data = inBuf.data();
 					rxBuf.dataLength = inBuf.size();
-					int recvd = enet_socket_receive(localUdpSocket, &fromAddr, &rxBuf, 1);
+					int recvd = enet_socket_receive(clientUdpSocket, &fromAddr, &rxBuf, 1);
 					if (recvd > 0) {
-						// Datagram received from local game client (127.0.0.1)
-						if (fromAddr.host == localBindAddress.host &&
-						    !(fromAddr.host == relayAddress.host && fromAddr.port == relayAddress.port)) {
-							enetClientAddr = fromAddr;
-							hasClient = true;
+						enetClientAddr = fromAddr;
+						hasClient = true;
 
-							// Prepend 10-byte SOCKS5 UDP header:
-							// [RSV(2)=0x0000, FRAG=0x00, ATYP=0x01, DST.ADDR(4), DST.PORT(2)]
-							size_t needed = static_cast<size_t>(recvd + 10);
-							if (outBuf.size() < needed) {
-								outBuf.resize(needed);
-							}
-							outBuf[0] = 0x00;
-							outBuf[1] = 0x00;
-							outBuf[2] = 0x00;
-							outBuf[3] = 0x01;
-							memcpy(outBuf.data() + 4, &targetServerAddress.host, 4);
-							enet_uint16 netPort = ENET_HOST_TO_NET_16(targetServerAddress.port);
-							memcpy(outBuf.data() + 8, &netPort, 2);
-							memcpy(outBuf.data() + 10, inBuf.data(), recvd);
-
-							ENetBuffer txBuf;
-							txBuf.data = outBuf.data();
-							txBuf.dataLength = needed;
-							enet_socket_send(localUdpSocket, &relayAddress, &txBuf, 1);
+						// Prepend 10-byte SOCKS5 UDP header:
+						// [RSV(2)=0x0000, FRAG=0x00, ATYP=0x01, DST.ADDR(4), DST.PORT(2)]
+						size_t needed = static_cast<size_t>(recvd + 10);
+						if (outBuf.size() < needed) {
+							outBuf.resize(needed);
 						}
-						// Datagram received from SOCKS5 relay
-						else if (recvd > 10 && fromAddr.host == relayAddress.host &&
-						         fromAddr.port == relayAddress.port) {
-							if (hasClient) {
-								size_t hdrLen = 10;
-								if (inBuf[3] == 0x03) { // Domain name in SOCKS5 header
-									hdrLen = 4 + 1 + static_cast<size_t>(inBuf[4]) + 2;
-								}
-								if (static_cast<size_t>(recvd) > hdrLen) {
-									ENetBuffer txBuf;
-									txBuf.data = inBuf.data() + hdrLen;
-									txBuf.dataLength = recvd - hdrLen;
-									enet_socket_send(localUdpSocket, &enetClientAddr, &txBuf, 1);
-								}
-							}
+						outBuf[0] = 0x00;
+						outBuf[1] = 0x00;
+						outBuf[2] = 0x00;
+						outBuf[3] = 0x01;
+						memcpy(outBuf.data() + 4, &targetServerAddress.host, 4);
+						enet_uint16 netPort = ENET_HOST_TO_NET_16(targetServerAddress.port);
+						memcpy(outBuf.data() + 8, &netPort, 2);
+						memcpy(outBuf.data() + 10, inBuf.data(), recvd);
+
+						ENetBuffer txBuf;
+						txBuf.data = outBuf.data();
+						txBuf.dataLength = needed;
+						enet_socket_send(proxyUdpSocket, &relayAddress, &txBuf, 1);
+					}
+				}
+
+				// 2. Datagram received from SOCKS5 proxy relay -> Decapsulate and forward to game client
+				if (FD_ISSET(sProxy, &readSet)) {
+					ENetAddress fromAddr;
+					ENetBuffer rxBuf;
+					rxBuf.data = inBuf.data();
+					rxBuf.dataLength = inBuf.size();
+					int recvd = enet_socket_receive(proxyUdpSocket, &fromAddr, &rxBuf, 1);
+					if (recvd > 10 && hasClient) {
+						size_t hdrLen = 10;
+						if (inBuf[3] == 0x03) { // Domain name in SOCKS5 header
+							hdrLen = 4 + 1 + static_cast<size_t>(inBuf[4]) + 2;
+						} else if (inBuf[3] == 0x04) { // IPv6 in SOCKS5 header
+							hdrLen = 22;
+						}
+						if (static_cast<size_t>(recvd) > hdrLen) {
+							ENetBuffer txBuf;
+							txBuf.data = inBuf.data() + hdrLen;
+							txBuf.dataLength = recvd - hdrLen;
+							enet_socket_send(clientUdpSocket, &enetClientAddr, &txBuf, 1);
 						}
 					}
 				}

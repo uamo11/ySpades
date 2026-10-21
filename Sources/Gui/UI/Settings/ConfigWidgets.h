@@ -33,11 +33,13 @@ namespace spades {
 	namespace gui {
 		/** A text field bound to a string config item. */
 		class ConfigField : public ui::Field {
+			std::string configName;
 			Settings::ItemHandle config;
 
 		public:
 			ConfigField(ui::UIManager* manager, const std::string& configName);
 			void OnChanged() override;
+			void Render() override;
 		};
 
 		/** A slider bound to a numeric config item, with a formatted value label. */

@@ -68,9 +68,11 @@ namespace spades {
 				std::string placeholder;
 				int markPosition = 0;
 				int cursorPosition = 0;
-				int maxLength = 255;
+				int maxLength = 512;
 				bool denyNonAscii = false;
 				bool removeNewlines = false;
+				bool allowOverflow = true;
+				float scrollOffset = 0.0F;
 
 				Vector4 textColor = MakeVector4(1, 1, 1, 1);
 				Vector4 disabledTextColor = MakeVector4(1.0F, 1.0F, 1.0F, 0.3F);

@@ -1328,7 +1328,27 @@ namespace spades {
 		}
 
 		void StartupScreenProxyTab::OnServerEdited(ui::UIElement&) {
-			net_proxyServer = serverField->GetText();
+			std::string val = serverField->GetText();
+			auto parsed = ProxyManager::ParseProxyString(val);
+			if (!parsed.host.empty() && parsed.port > 0) {
+				if (!parsed.user.empty()) {
+					net_proxyAuth = parsed.GetFormattedAuth();
+					authField->SetText(net_proxyAuth.CString());
+				}
+				if (!parsed.type.empty()) {
+					net_proxyType = parsed.type;
+					if (parsed.type == "http") {
+						typeHttp->toggled = true;
+						typeSocks5->toggled = false;
+					} else {
+						typeSocks5->toggled = true;
+						typeHttp->toggled = false;
+					}
+				}
+				val = parsed.GetFormattedServer();
+				serverField->SetText(val);
+			}
+			net_proxyServer = val;
 			UpdateHelpDisplay();
 		}
 
@@ -1341,7 +1361,10 @@ namespace spades {
 			net_proxyFile = fileField->GetText();
 			std::string f = fileField->GetText();
 			if (!f.empty()) {
-				ProxyManager::GetInstance().LoadProxyList(f, net_proxyType.CString());
+				if (ProxyManager::GetInstance().LoadProxyList(f, net_proxyType.CString())) {
+					serverField->SetText(net_proxyServer.CString());
+					authField->SetText(net_proxyAuth.CString());
+				}
 			}
 			UpdateHelpDisplay();
 		}

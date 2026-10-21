@@ -36,7 +36,8 @@ namespace spades {
 		 */
 		class Socks5UdpRelay {
 			ENetSocket tcpSocket{ENET_SOCKET_NULL};
-			ENetSocket localUdpSocket{ENET_SOCKET_NULL};
+			ENetSocket clientUdpSocket{ENET_SOCKET_NULL};
+			ENetSocket proxyUdpSocket{ENET_SOCKET_NULL};
 			ENetAddress relayAddress{};
 			ENetAddress targetServerAddress{};
 			ENetAddress localBindAddress{};

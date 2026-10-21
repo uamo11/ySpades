@@ -153,13 +153,14 @@ namespace spades {
 					return AABB2();
 				Vector2 textPos = textOrigin;
 				Vector2 siz = size;
-				float width = font->Measure(text.substr(0, cursorPosition)).x;
+				float width = font->Measure(text.substr(0, cursorPosition)).x * textScale;
 				float fontHeight = font->Measure("A").y;
-				return AABB2(textPos.x + width, textPos.y, siz.x - textPos.x - width, fontHeight);
+				return AABB2(textPos.x + width - scrollOffset, textPos.y, siz.x - textPos.x - width, fontHeight);
 			}
 
 			int FieldBase::PointToCharIndex(float x) const {
 				x -= textOrigin.x;
+				x += scrollOffset;
 				if (x < 0.0F)
 					return 0;
 				x /= textScale;
@@ -234,8 +235,8 @@ namespace spades {
 				std::string oldText = GetSelectedText();
 				SetSelectedText(t);
 
-				// if text overflows, deny the insertion
-				if (!FitsInBox(text) || static_cast<int>(text.size()) > maxLength) {
+				// if text overflows maxLength (or box if overflow is disallowed), deny the insertion
+				if ((!allowOverflow && !FitsInBox(text)) || static_cast<int>(text.size()) > maxLength) {
 					SetSelectedText(oldText);
 					return;
 				}
@@ -279,20 +280,23 @@ namespace spades {
 				}
 
 				if (manager.isControlPressed || manager.isMetaPressed /* for OSX; Cmd + [a-z] */) {
-					if (key == "A") {
+					if (key == "A" || key == "a") {
 						SelectAll();
 						return;
-					} else if (key == "V") {
+					} else if (key == "V" || key == "v") {
 						std::string clipboard = manager.Paste();
 						if (!clipboard.empty())
 							Insert(clipboard);
-					} else if (key == "C") {
+						return;
+					} else if (key == "C" || key == "c") {
 						manager.Copy(GetSelectedText());
-					} else if (key == "X") {
+						return;
+					} else if (key == "X" || key == "x") {
 						manager.Copy(GetSelectedText());
 						SetSelectedText("");
 						OnChanged();
-					} else if (key == "Z") {
+						return;
+					} else if (key == "Z" || key == "z") {
 						if (manager.isShiftPressed) {
 							if (Redo())
 								OnChanged();
@@ -300,9 +304,11 @@ namespace spades {
 							if (Undo())
 								OnChanged();
 						}
-					} else if (key == "W") {
+						return;
+					} else if (key == "W" || key == "w") {
 						if (Redo())
 							OnChanged();
+						return;
 					}
 				}
 
@@ -391,6 +397,7 @@ namespace spades {
 				Vector2 pos = GetScreenPosition();
 				std::string displayText = text;
 				Vector2 textPos = textOrigin + pos;
+				float availW = size.x - textOrigin.x - 4.0F;
 
 				std::string composition = GetEditingText();
 				int editStart = GetTextEditingRangeStart();
@@ -409,35 +416,62 @@ namespace spades {
 
 				if (IsFocused()) {
 					float fontHeight = font->Measure("A").y;
+					float cursorX = font->Measure(displayText.substr(0, cursorPosition)).x * textScale;
+
+					// Keep cursor visible within the visible text area
+					if (cursorX - scrollOffset > availW) {
+						scrollOffset = cursorX - availW;
+					}
+					if (cursorX - scrollOffset < 0.0F) {
+						scrollOffset = cursorX;
+					}
+					float textW = font->Measure(displayText).x * textScale;
+					float maxScroll = textW - availW;
+					if (maxScroll < 0.0F) maxScroll = 0.0F;
+					if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+					if (scrollOffset < 0.0F) scrollOffset = 0.0F;
+
+					r.BeginClippingRect(AABB2(pos.x + textOrigin.x, pos.y, availW + 2.0F, size.y));
 
 					// draw selection
 					int start = markStart;
 					int end = markEnd;
 					if (end == start) {
-						float x = font->Measure(displayText.substr(0, start)).x;
-						DrawBeam(r, x + textPos.x, textPos.y, fontHeight);
+						float x = font->Measure(displayText.substr(0, start)).x * textScale;
+						DrawBeam(r, x + textPos.x - scrollOffset, textPos.y, fontHeight);
 					} else {
-						float x1 = font->Measure(displayText.substr(0, start)).x;
-						float x2 = font->Measure(displayText.substr(0, end)).x;
-						DrawHighlight(r, textPos.x + x1, textPos.y, x2 - x1, fontHeight);
+						float x1 = font->Measure(displayText.substr(0, start)).x * textScale;
+						float x2 = font->Measure(displayText.substr(0, end)).x * textScale;
+						DrawHighlight(r, textPos.x + x1 - scrollOffset, textPos.y, x2 - x1, fontHeight);
 					}
 
 					// draw composition underline
 					if (composition.size() > 0) {
 						start = GetSelectionStart();
 						end = start + static_cast<int>(composition.size());
-						float x1 = font->Measure(displayText.substr(0, start)).x;
-						float x2 = font->Measure(displayText.substr(0, end)).x;
-						DrawEditingLine(r, textPos.x + x1, textPos.y, x2 - x1, fontHeight);
+						float x1 = font->Measure(displayText.substr(0, start)).x * textScale;
+						float x2 = font->Measure(displayText.substr(0, end)).x * textScale;
+						DrawEditingLine(r, textPos.x + x1 - scrollOffset, textPos.y, x2 - x1, fontHeight);
 					}
-				}
 
-				if (displayText.size() == 0) {
-					if (IsEnabled())
-						font->Draw(placeholder, textPos, textScale, placeholderColor);
+					if (displayText.size() == 0) {
+						if (IsEnabled())
+							font->Draw(placeholder, textPos, textScale, placeholderColor);
+					} else {
+						font->Draw(displayText, textPos - MakeVector2(scrollOffset, 0),
+						           textScale, IsEnabled() ? textColor : disabledTextColor);
+					}
+
+					r.EndClippingRect();
 				} else {
-					font->Draw(IsFocused() ? displayText : TruncateToFit(displayText), textPos,
-					           textScale, IsEnabled() ? textColor : disabledTextColor);
+					scrollOffset = 0.0F;
+					if (displayText.size() == 0) {
+						if (IsEnabled())
+							font->Draw(placeholder, textPos, textScale, placeholderColor);
+					} else {
+						font->Draw(TruncateToFit(displayText), textPos,
+						           textScale, IsEnabled() ? textColor : disabledTextColor);
+					}
 				}
 
 				UIElement::Render();

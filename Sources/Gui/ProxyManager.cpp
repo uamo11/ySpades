@@ -26,6 +26,8 @@
 #include <fstream>
 #include <sstream>
 #include <Core/Debug.h>
+#include <Core/FileManager.h>
+#include <Gui/Main.h>
 
 DEFINE_SPADES_SETTING(net_useProxy, "0");
 DEFINE_SPADES_SETTING(net_proxyType, "socks5");
@@ -209,30 +211,78 @@ namespace spades {
 		}
 
 		bool ProxyManager::LoadProxyList(const std::string& filePath, const std::string& defaultType) {
-			std::ifstream file(filePath);
+			std::string target = filePath;
+			if (target.empty()) {
+				target = "proxy.txt";
+			}
+
+			std::string exeDir;
+			size_t lastSlash = spades::g_executablePath.find_last_of("/\\");
+			if (lastSlash != std::string::npos) {
+				exeDir = spades::g_executablePath.substr(0, lastSlash);
+			}
+
+			std::vector<std::string> candidates;
+			candidates.push_back(target);
+			if (!exeDir.empty()) {
+				candidates.push_back(exeDir + "/" + target);
+				candidates.push_back(exeDir + "\\proxy.txt");
+				candidates.push_back(exeDir + "\\proxies.txt");
+				candidates.push_back(exeDir + "\\socks5.txt");
+			}
+			candidates.push_back("proxy.txt");
+			candidates.push_back("proxies.txt");
+			candidates.push_back("socks5.txt");
+
+			std::ifstream file;
+			std::string usedPath;
+			for (const auto& p : candidates) {
+				if (p.empty()) continue;
+				file.open(p);
+				if (file.is_open()) {
+					usedPath = p;
+					break;
+				}
+			}
+
+			std::string content;
 			if (!file.is_open()) {
+				try {
+					if (FileManager::FileExists(target.c_str())) {
+						content = FileManager::ReadAllBytes(target.c_str());
+						usedPath = target;
+					}
+				} catch (...) {}
+			} else {
+				std::stringstream ss;
+				ss << file.rdbuf();
+				content = ss.str();
+			}
+
+			if (content.empty()) {
 				SPLog("ProxyManager: Could not open proxy file '%s'", filePath.c_str());
 				return false;
 			}
 
 			loadedProxies.clear();
+			std::stringstream ss(content);
 			std::string line;
-			while (std::getline(file, line)) {
+			while (std::getline(ss, line)) {
 				ProxyEntry entry = ParseProxyString(line, defaultType);
 				if (!entry.host.empty() && entry.port > 0) {
 					loadedProxies.push_back(entry);
 				}
 			}
 
-			SPLog("ProxyManager: Loaded %zu proxies from '%s'", loadedProxies.size(), filePath.c_str());
+			SPLog("ProxyManager: Loaded %zu proxies from '%s'", loadedProxies.size(), usedPath.c_str());
 			if (loadedProxies.empty())
 				return false;
 
-			net_proxyFile = filePath;
-			if (currentProxyIndex >= loadedProxies.size()) {
-				currentProxyIndex = 0;
-			}
+			net_proxyFile = usedPath;
+			currentProxyIndex = 0;
+			SetActiveProxy(loadedProxies[0]);
 			net_proxyIndex = static_cast<int>(currentProxyIndex);
+			net_useProxy = 1;
 			return true;
 		}
 
@@ -322,7 +372,7 @@ namespace spades {
 			}
 
 			std::string proxyUrl = proxy.host + ":" + std::to_string(proxy.port);
-			curl_easy_setopt(handle.get(), CURLOPT_URL, "http://services.buildandshoot.com/");
+			curl_easy_setopt(handle.get(), CURLOPT_URL, "http://services.buildandshoot.com/serverlist.json");
 			curl_easy_setopt(handle.get(), CURLOPT_PROXY, proxyUrl.c_str());
 
 			if (proxy.type == "http") {

@@ -686,14 +686,17 @@ namespace spades {
 			l.AddButtonField(_Tr("Preferences", "Cargar desde Archivo"), _Tr("Preferences", "Cargar Archivo Opcional"),
 			    [](UIElement& btn) {
 				    std::string file = net_proxyFile.CString();
-				    if (!file.empty()) {
-					    ProxyManager::GetInstance().LoadProxyList(file, net_proxyType.CString());
-					    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
-						    b->caption = "¡Lista Cargada!";
+				    bool ok = ProxyManager::GetInstance().LoadProxyList(file, net_proxyType.CString());
+				    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
+					    if (ok) {
+						    size_t count = ProxyManager::GetInstance().GetLoadedProxies().size();
+						    b->caption = "¡" + std::to_string(count) + " Proxies Cargados!";
+					    } else {
+						    b->caption = "Error: no se encontró archivo";
 					    }
 				    }
 			    });
-			l.AddHelp(_Tr("Preferences", "Carga la lista de proxies desde el archivo .txt especificado en el campo de texto."));
+			l.AddHelp(_Tr("Preferences", "Carga la lista de proxies desde el archivo .txt especificado en el campo de texto (ej. proxy.txt)."));
 
 			l.AddButtonField(_Tr("Preferences", "Probar Proxy Activo"), _Tr("Preferences", "Comprobar Latencia"),
 			    [](UIElement& btn) {
@@ -707,11 +710,15 @@ namespace spades {
 
 			l.AddButtonField(_Tr("Preferences", "Confirmar Ajustes"), _Tr("Preferences", "¡Guardar y Aplicar Proxy!"),
 			    [](UIElement& btn) {
-				    Settings::GetInstance()->Flush();
+				    std::string srv = net_proxyServer.CString();
+				    if (!srv.empty()) {
+					    net_useProxy = 1;
+				    }
 				    std::string file = net_proxyFile.CString();
 				    if (!file.empty()) {
 					    ProxyManager::GetInstance().LoadProxyList(file, net_proxyType.CString());
 				    }
+				    Settings::GetInstance()->Flush();
 				    if (static_cast<int>(net_useProxy)) {
 					    ProxyManager::GetInstance().TestActiveProxy();
 				    }

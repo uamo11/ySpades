@@ -24,6 +24,7 @@
 #include <Client/IFont.h>
 #include <Client/IRenderer.h>
 #include <Core/Strings.h>
+#include <Gui/ProxyManager.h>
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/Widgets/DrawUtils.h>
 
@@ -34,13 +35,42 @@ namespace spades {
 		// -- ConfigField --
 
 		ConfigField::ConfigField(ui::UIManager* manager, const std::string& configName)
-		    : ui::Field(manager), config(configName, nullptr) {
+		    : ui::Field(manager), configName(configName), config(configName, nullptr) {
 			SetText(static_cast<std::string>(config));
 		}
 
 		void ConfigField::OnChanged() {
 			ui::Field::OnChanged();
-			config = GetText();
+			std::string val = GetText();
+			if (configName == "net_proxyServer") {
+				auto parsed = ProxyManager::ParseProxyString(val);
+				if (!parsed.host.empty() && parsed.port > 0) {
+					std::string formattedSrv = parsed.GetFormattedServer();
+					if (formattedSrv != val && (!parsed.user.empty() || !parsed.type.empty())) {
+						val = formattedSrv;
+						SetText(val);
+						if (!parsed.user.empty()) {
+							Settings::ItemHandle authItem("net_proxyAuth", nullptr);
+							authItem = parsed.GetFormattedAuth();
+						}
+						if (!parsed.type.empty()) {
+							Settings::ItemHandle typeItem("net_proxyType", nullptr);
+							typeItem = parsed.type;
+						}
+					}
+				}
+			}
+			config = val;
+		}
+
+		void ConfigField::Render() {
+			if (!IsFocused()) {
+				std::string cfgVal = static_cast<std::string>(config);
+				if (cfgVal != GetText()) {
+					SetText(cfgVal);
+				}
+			}
+			ui::Field::Render();
 		}
 
 		// -- ConfigSlider --
