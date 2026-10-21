@@ -44,20 +44,26 @@ namespace spades {
 			void ListViewBase::OnScrolled(UIElement&) { Layout(); }
 
 			int ListViewBase::GetNumVisibleRows() const {
+				if (rowHeight <= 0.0F)
+					return 0;
 				return static_cast<int>(std::floor(size.y / rowHeight));
 			}
 
 			int ListViewBase::GetMaxTopRowIndex() const {
+				if (!model)
+					return 0;
 				return std::max(0, model->GetNumRows() - GetNumVisibleRows());
 			}
 
 			int ListViewBase::GetTopRowIndex() const {
+				if (!scrollBar)
+					return 0;
 				int idx = static_cast<int>(std::floor(scrollBar->value + 0.5));
 				return Clamp(idx, 0, GetMaxTopRowIndex());
 			}
 
 			float ListViewBase::GetRowsOffsetY() const {
-				if (!bottomAligned)
+				if (!bottomAligned || !model)
 					return 0.0F;
 
 				int visibleStart = GetTopRowIndex();
@@ -72,6 +78,17 @@ namespace spades {
 			}
 
 			void ListViewBase::Layout() {
+				if (!scrollBar)
+					return;
+
+				if (!model) {
+					scrollBar->maxValue = 0.0;
+					scrollBar->ScrollTo(0.0);
+					scrollBar->largeChange = 1.0;
+					UnloadAll();
+					return;
+				}
+
 				scrollBar->maxValue = static_cast<double>(GetMaxTopRowIndex());
 				scrollBar->ScrollTo(scrollBar->value); // ensures value is in range
 				scrollBar->largeChange = static_cast<double>(GetNumVisibleRows());
@@ -145,14 +162,19 @@ namespace spades {
 				for (int i = 0; i < count; i++) {
 					UIElement* elem = items[i].GetPointerOrNull();
 					RemoveChild(elem);
-					model->RecycleElement(*elem);
+					if (model && elem)
+						model->RecycleElement(*elem);
 				}
 				items.clear();
 			}
 
 			void ListViewBase::SetModel(ListViewModel* value) {
 				UnloadAll();
-				model = value;
+				if (value != nullptr) {
+					model = value;
+				} else {
+					model = Handle<ListViewModel>::New();
+				}
 				Layout();
 			}
 
