@@ -63,7 +63,19 @@ namespace spades {
 			// If a proxy file was previously saved in settings, attempt to load it
 			std::string savedFile = net_proxyFile.CString();
 			if (!savedFile.empty()) {
+				int savedToggle = static_cast<int>(net_useProxy);
+				std::string savedServer = net_proxyServer.CString();
+				std::string savedAuth = net_proxyAuth.CString();
+				std::string savedType = net_proxyType.CString();
+
 				LoadProxyList(savedFile, net_proxyType.CString());
+
+				if (!savedServer.empty()) {
+					net_proxyServer = savedServer;
+					net_proxyAuth = savedAuth;
+					net_proxyType = savedType;
+				}
+				net_useProxy = savedToggle;
 			}
 		}
 
@@ -282,7 +294,6 @@ namespace spades {
 			currentProxyIndex = 0;
 			SetActiveProxy(loadedProxies[0]);
 			net_proxyIndex = static_cast<int>(currentProxyIndex);
-			net_useProxy = 1;
 			return true;
 		}
 

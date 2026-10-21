@@ -708,26 +708,25 @@ namespace spades {
 			    });
 			l.AddHelp(_Tr("Preferences", "Envía una solicitud al servidor maestro para verificar si el proxy responde y medir la latencia."));
 
-			l.AddButtonField(_Tr("Preferences", "Confirmar Ajustes"), _Tr("Preferences", "¡Guardar y Aplicar Proxy!"),
+			l.AddButtonField(_Tr("Preferences", "Confirmar Ajustes"), _Tr("Preferences", "¡Guardar Cambios!"),
 			    [](UIElement& btn) {
-				    std::string srv = net_proxyServer.CString();
-				    if (!srv.empty()) {
-					    net_useProxy = 1;
-				    }
-				    std::string file = net_proxyFile.CString();
-				    if (!file.empty()) {
-					    ProxyManager::GetInstance().LoadProxyList(file, net_proxyType.CString());
-				    }
 				    Settings::GetInstance()->Flush();
-				    if (static_cast<int>(net_useProxy)) {
+				    bool isEnabled = (static_cast<int>(net_useProxy) != 0);
+				    if (isEnabled) {
 					    ProxyManager::GetInstance().TestActiveProxy();
+					    SPLog("Proxy: Ajustes guardados. Proxy ACTIVADO.");
+				    } else {
+					    SPLog("Proxy: Ajustes guardados. Proxy APAGADO (conexión directa).");
 				    }
-				    SPLog("Proxy: ¡Ajustes guardados y aplicados con éxito!");
 				    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {
-					    b->caption = "¡Proxy Aplicado!";
+					    if (isEnabled) {
+						    b->caption = "¡Proxy Guardado (Activado)!";
+					    } else {
+						    b->caption = "¡Proxy Guardado (Apagado)!";
+					    }
 				    }
 			    });
-			l.AddHelp(_Tr("Preferences", "Guarda permanentemente los cambios de proxy en spades.json y activa la conexión de inmediato."));
+			l.AddHelp(_Tr("Preferences", "Guarda permanentemente el estado y ajustes de proxy en spades.json."));
 
 			l.FinishLayout();
 		}

@@ -24,6 +24,7 @@
 #include "PreferenceView.h"
 #include <Client/Fonts.h>
 #include <Client/IRenderer.h>
+#include <Core/Settings.h>
 #include <Core/Strings.h>
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/Widgets/DrawUtils.h>
@@ -478,6 +479,7 @@ namespace spades {
 			// Both Esc and the Back button route through Close(), so this is the
 			// single save point for the persisted position.
 			SavePersistedState();
+			Settings::GetInstance()->Flush();
 			owner->enable = true;
 			SetParent(nullptr);
 			OnClosed();

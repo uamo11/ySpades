@@ -322,6 +322,8 @@ namespace spades {
 						socks5Relay.reset();
 					}
 				}
+			} else {
+				SPLog("NetClient: Proxy is DISABLED. Connecting directly to server.");
 			}
 
 			savedPackets.clear();
