@@ -60,7 +60,23 @@ namespace spades {
 					}
 				}
 			}
+			if (configName == "cg_playerName") {
+				if (!val.empty() && val != "Deuce") {
+					Settings::ItemHandle isSetItem("cg_playerNameIsSet", nullptr);
+					isSetItem = 1;
+				}
+			}
 			config = val;
+		}
+
+		void ConfigField::KeyDown(const std::string& key) {
+			if (key == "Enter" || key == "Return") {
+				Settings::GetInstance()->Flush();
+				SPLog("ConfigField: '%s' saved via Enter key", configName.c_str());
+				GetManager().SetActiveElement(nullptr);
+				return;
+			}
+			ui::Field::KeyDown(key);
 		}
 
 		void ConfigField::Render() {

@@ -40,6 +40,7 @@ namespace spades {
 			ConfigField(ui::UIManager* manager, const std::string& configName);
 			void OnChanged() override;
 			void Render() override;
+			void KeyDown(const std::string& key) override;
 		};
 
 		/** A slider bound to a numeric config item, with a formatted value label. */

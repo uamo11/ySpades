@@ -39,6 +39,12 @@ namespace spades {
 		using ui::UIElement;
 		using ui::UIManager;
 
+		SPADES_SETTING(r_videoPreset);
+		SPADES_SETTING(r_videoWidth);
+		SPADES_SETTING(r_videoHeight);
+		SPADES_SETTING(cg_playerName);
+		SPADES_SETTING(cg_playerNameIsSet);
+
 		// -- HeadingNavButton --
 
 		void HeadingNavButton::SetTarget(ListView* list, int row) {
@@ -62,17 +68,38 @@ namespace spades {
 			Vector4 iconCol = MakeVector4(0.70F, 0.75F, 0.85F, 0.85F);
 			Vector4 textCol = MakeVector4(0.90F, 0.90F, 0.95F, 1.0F);
 
+			if (isAccentGreen) {
+				color = MakeVector4(0.06F, 0.18F, 0.10F, 0.75F);
+				iconCol = MakeVector4(0.40F, 0.95F, 0.55F, 1.0F);
+				textCol = MakeVector4(0.85F, 1.0F, 0.90F, 1.0F);
+			}
+
 			if (IsEnabled()) {
 				if (toggled) {
-					color = MakeVector4(0.18F, 0.28F, 0.44F, 0.95F);
-					iconCol = MakeVector4(0.40F, 0.85F, 1.0F, 1.0F);
+					if (isAccentGreen) {
+						color = MakeVector4(0.12F, 0.38F, 0.18F, 0.95F);
+						iconCol = MakeVector4(0.50F, 1.0F, 0.65F, 1.0F);
+					} else {
+						color = MakeVector4(0.18F, 0.28F, 0.44F, 0.95F);
+						iconCol = MakeVector4(0.40F, 0.85F, 1.0F, 1.0F);
+					}
 					textCol = MakeVector4(1.0F, 1.0F, 1.0F, 1.0F);
 				} else if (pressed && hover) {
-					color = MakeVector4(0.15F, 0.24F, 0.38F, 0.90F);
-					iconCol = MakeVector4(0.60F, 0.90F, 1.0F, 1.0F);
+					if (isAccentGreen) {
+						color = MakeVector4(0.14F, 0.44F, 0.22F, 0.95F);
+						iconCol = MakeVector4(0.60F, 1.0F, 0.75F, 1.0F);
+					} else {
+						color = MakeVector4(0.15F, 0.24F, 0.38F, 0.90F);
+						iconCol = MakeVector4(0.60F, 0.90F, 1.0F, 1.0F);
+					}
 				} else if (hover) {
-					color = MakeVector4(0.12F, 0.18F, 0.28F, 0.80F);
-					iconCol = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
+					if (isAccentGreen) {
+						color = MakeVector4(0.10F, 0.28F, 0.15F, 0.85F);
+						iconCol = MakeVector4(0.55F, 1.0F, 0.65F, 1.0F);
+					} else {
+						color = MakeVector4(0.12F, 0.18F, 0.28F, 0.80F);
+						iconCol = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
+					}
 				}
 			} else {
 				color.w *= 0.5F;
@@ -83,10 +110,15 @@ namespace spades {
 			SetColorNP(r, color);
 			r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
 
-			// Left accent bar when toggled (active tab)
+			// Left accent bar
 			if (toggled) {
-				SetColorNP(r, MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
+				SetColorNP(r, isAccentGreen ? MakeVector4(0.40F, 0.95F, 0.55F, 1.0F) : MakeVector4(0.40F, 0.85F, 1.0F, 1.0F));
 				r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + 4, pos.y + sz.y - 1);
+			} else if (isAccentGreen) {
+				SetColorNP(r, MakeVector4(0.30F, 0.85F, 0.45F, 0.85F));
+				r.DrawFilledRect(pos.x + 1, pos.y + 1, pos.x + 3, pos.y + sz.y - 1);
+				SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, color.w));
+				r.DrawOutlinedRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
 			} else {
 				SetColorNP(r, MakeVector4(0.0F, 0.0F, 0.0F, color.w));
 				r.DrawOutlinedRect(pos.x + 1, pos.y + 1, pos.x + sz.x - 1, pos.y + sz.y - 1);
@@ -226,10 +258,42 @@ namespace spades {
 				AddChild(button.GetPointerOrNull());
 			}
 
+			float applyButtonTop = backButtonTop + tabRowHeight + 4.0F;
+
+			{
+				Handle<PreferenceTabButton> btn =
+				    Handle<PreferenceTabButton>::New(manager, GuiIconType::Check);
+				btn->caption = _Tr("Preferences", "Aplicar");
+				btn->isAccentGreen = true;
+				btn->SetBounds(AABB2(tabLeft, applyButtonTop, tabWidth, tabRowHeight));
+				btn->activated = [this, btn](UIElement&) {
+					int preset = r_videoPreset;
+					switch (preset) {
+						case 0: r_videoWidth = 1920; r_videoHeight = 1080; break;
+						case 1: r_videoWidth = 1600; r_videoHeight = 900; break;
+						case 2: r_videoWidth = 1366; r_videoHeight = 768; break;
+						case 3: r_videoWidth = 1280; r_videoHeight = 720; break;
+						case 4: r_videoWidth = 1024; r_videoHeight = 768; break;
+						case 5: r_videoWidth = 800; r_videoHeight = 600; break;
+					}
+
+					std::string pName = cg_playerName.CString();
+					if (!pName.empty() && pName != "Deuce") {
+						cg_playerNameIsSet = 1;
+					}
+
+					Settings::GetInstance()->Flush();
+					SPLog("Preferences: Settings applied and flushed to disk!");
+					btn->caption = _Tr("Preferences", "¡Aplicado!");
+				};
+				AddChild(btn.GetPointerOrNull());
+				applyButton = btn.GetPointerOrNull();
+			}
+
 			// build navigation containers in the sidebar
 			{
 				float btnH = 24.0F;
-				float btnY = backButtonTop + tabRowHeight + btnH;
+				float btnY = applyButtonTop + tabRowHeight + 8.0F;
 				float btnGap = 2.0F;
 
 				for (size_t i = 0; i < tabs.size(); i++) {
@@ -265,7 +329,7 @@ namespace spades {
 			}
 
 			// help box shown in the sidebar space left below the navigation buttons
-			helpTop = backButtonTop + tabRowHeight + 12.0F;
+			helpTop = applyButtonTop + tabRowHeight + 12.0F;
 			{
 				Handle<ui::TextViewer> e = Handle<ui::TextViewer>::New(manager);
 				e->SetFont(&fontManager->GetSmallFont());
@@ -406,6 +470,10 @@ namespace spades {
 				tabs[i]->view->visible = selected;
 				if (tabs[i]->navPanel != nullptr)
 					tabs[i]->navPanel->visible = selected;
+			}
+
+			if (applyButton) {
+				applyButton->caption = _Tr("Preferences", "Aplicar");
 			}
 
 			// switching tabs must not keep the previous tab's help text

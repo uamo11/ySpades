@@ -51,6 +51,7 @@ namespace spades {
 		class PreferenceTabButton : public ui::Button {
 		public:
 			GuiIconType iconType = GuiIconType::None;
+			bool isAccentGreen = false;
 
 			PreferenceTabButton(ui::UIManager* manager, GuiIconType icon = GuiIconType::None)
 			    : ui::Button(manager), iconType(icon) {
@@ -99,6 +100,7 @@ namespace spades {
 
 			int selectedTabIndex = 0;
 
+			PreferenceTabButton* applyButton = nullptr; // weak; owned as a child
 			ui::TextViewer* helpView = nullptr; // weak; owned as a child
 			float helpTop = 0.0F;               // help box Y for tabs without nav buttons
 

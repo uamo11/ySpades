@@ -148,7 +148,10 @@ namespace spades {
 	namespace client {
 
 		bool Client::WantsToBeClosed() { return readyToClose; }
-		void Client::Closing() { SPADES_MARK_FUNCTION(); }
+		void Client::Closing() {
+			SPADES_MARK_FUNCTION();
+			Settings::GetInstance()->Flush();
+		}
 
 		bool Client::NeedsAbsoluteMouseCoordinate() {
 			SPADES_MARK_FUNCTION();

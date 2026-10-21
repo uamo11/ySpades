@@ -137,6 +137,7 @@ namespace spades {
 				return;
 			cg_playerName = nameField->GetText();
 			cg_playerNameIsSet = 1;
+			Settings::GetInstance()->Flush();
 			Close();
 		}
 

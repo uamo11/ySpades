@@ -626,7 +626,10 @@ namespace spades {
 			time += std::min(dt, 0.05F);
 		}
 
-		void MainScreenUI::Closing() { shouldExit = true; }
+		void MainScreenUI::Closing() {
+			Settings::GetInstance()->Flush();
+			shouldExit = true;
+		}
 
 		bool MainScreenUI::WantsToBeClosed() { return shouldExit; }
 	} // namespace gui

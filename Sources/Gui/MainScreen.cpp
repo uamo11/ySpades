@@ -290,6 +290,7 @@ namespace spades {
 			if (!ui)
 				return;
 
+			Settings::GetInstance()->Flush();
 			ui->Closing();
 		}
 
