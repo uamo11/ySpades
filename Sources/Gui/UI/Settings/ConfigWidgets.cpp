@@ -299,14 +299,14 @@ namespace spades {
 		// -- ConfigSwitchButton --
 
 		ConfigSwitchButton::ConfigSwitchButton(ui::UIManager* manager, const std::string& configName)
-		    : ui::Button(manager), config(configName, nullptr) {
+		    : ui::Button(manager), config(configName, nullptr), configName(configName) {
 			alignment = MakeVector2(0.5F, 0.5F);
 		}
 
 		void ConfigSwitchButton::OnActivated() {
 			int cur = static_cast<int>(config);
 			config = (cur != 0) ? 0 : 1;
-			if (config.GetName() == "r_fullscreen") {
+			if (configName == "r_fullscreen") {
 				SDLRunner::ApplyWindowVideoMode();
 			}
 			ui::Button::OnActivated();

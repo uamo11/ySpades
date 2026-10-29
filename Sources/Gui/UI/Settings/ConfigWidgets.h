@@ -86,6 +86,7 @@ namespace spades {
 		/** A modern tactile switch button (Green = ON, Red = OFF) for boolean settings. */
 		class ConfigSwitchButton : public ui::Button {
 			Settings::ItemHandle config;
+			std::string configName;
 
 		public:
 			ConfigSwitchButton(ui::UIManager* manager, const std::string& configName);
