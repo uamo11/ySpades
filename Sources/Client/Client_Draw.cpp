@@ -3352,12 +3352,12 @@ namespace spades {
 
 				// Dark sleek background
 				renderer->SetColorAlphaPremultiplied(MakeVector4(0.08F, 0.08F, 0.12F, 0.85F));
-				renderer->FillRect(AABB2(boxX, badgeY, boxW, boxH));
+				renderer->DrawFilledRect(boxX, badgeY, boxX + boxW, badgeY + boxH);
 
 				// Pulsing vivid green border
 				float pulse = 0.75F + 0.25F * fabsf(sinf(world->GetTime() * 4.0F));
 				renderer->SetColorAlphaPremultiplied(MakeVector4(0.20F * pulse, 1.0F * pulse, 0.40F * pulse, 0.95F));
-				renderer->DrawOutlineRect(AABB2(boxX, badgeY, boxW, boxH), 1.5F);
+				renderer->DrawOutlinedRect(boxX, badgeY, boxX + boxW, badgeY + boxH, 1);
 
 				// Text in vivid green
 				font.Draw(text, MakeVector2(boxX + 12.0F, badgeY + 5.0F), 1.0F,
@@ -3376,10 +3376,10 @@ namespace spades {
 				float specY = 195.0F;
 
 				renderer->SetColorAlphaPremultiplied(MakeVector4(0.05F, 0.05F, 0.08F, 0.65F));
-				renderer->FillRect(AABB2(boxX, specY, boxW, boxH));
+				renderer->DrawFilledRect(boxX, specY, boxX + boxW, specY + boxH);
 
 				renderer->SetColorAlphaPremultiplied(MakeVector4(0.40F, 0.60F, 0.80F, 0.50F));
-				renderer->DrawOutlineRect(AABB2(boxX, specY, boxW, boxH), 1.0F);
+				renderer->DrawOutlinedRect(boxX, specY, boxX + boxW, specY + boxH, 1);
 
 				font.Draw(text, MakeVector2(boxX + 8.0F, specY + 3.0F), 1.0F,
 				          MakeVector4(0.70F, 0.85F, 1.0F, 0.90F));
