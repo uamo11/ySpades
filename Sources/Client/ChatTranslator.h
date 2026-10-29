@@ -78,12 +78,19 @@ namespace spades {
 			// Instant tactical gaming dictionary (<0.001ms)
 			std::unordered_map<std::string, std::string> tacticalDict;
 
+			std::atomic<bool> hasCompletedTranslations{false};
+
 			void WorkerLoop();
 			void InitTacticalDictionary();
-			std::string QueryGoogleTranslate(const std::string& text);
+			std::string QueryGoogleTranslate(void* curlHandle, const std::string& text);
 
 		public:
 			static ChatTranslator& GetInstance();
+
+			// Check if any translations finished (lock-free 0-cost check for render loop)
+			bool HasCompletedTranslations() const {
+				return hasCompletedTranslations.load(std::memory_order_relaxed);
+			}
 
 			// Fast heuristics check to skip unnecessary translations and save CPU/network
 			bool ShouldTranslate(const std::string& msg);

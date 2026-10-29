@@ -41,7 +41,7 @@ namespace spades {
 		static const char MsgColorGray = 7;
 		static const char MsgColorYellow = 8;
 		static const char MsgImage = 9;
-		static const char MsgTranslateIcon = 10;
+		static const char MsgTranslateIcon = 14;
 		static const char MsgColorMax = MsgTranslateIcon;
 		static const char MsgColorFriendlyFire = MsgColorRed;
 		static const char MsgColorSysInfo = MsgColorYellow;
@@ -70,6 +70,7 @@ namespace spades {
 			float GetWidth();
 			float GetHeight();
 			float GetLineHeight();
+			float CalculateMessageHeight(const std::string& msg);
 
 			std::vector<IImage*> killImages;
 			IImage* GetKillImage(char);

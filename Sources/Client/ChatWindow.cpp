@@ -110,28 +110,46 @@ namespace spades {
 			return NULL;
 		}
 
+		float ChatWindow::CalculateMessageHeight(const std::string& msg) {
+			float lh = GetLineHeight();
+			if (killfeed)
+				return lh;
+			float h = lh;
+			for (char c : msg) {
+				if (c == '\n')
+					h += lh;
+			}
+			return h;
+		}
+
 		uint64_t ChatWindow::AddMessage(const std::string& msg, float fadeTime) {
 			SPADES_MARK_FUNCTION();
 
 			static uint64_t s_nextMessageId = 1;
 			uint64_t id = s_nextMessageId++;
 
-			float lh = GetLineHeight();
+			float entryH = CalculateMessageHeight(msg);
 			float fadeOut = killfeed ? 0.5F : 1.0F;
 
 			if (fadeTime < 0.0F)
 				fadeTime = killfeed ? cg_killfeedFadeTime : cg_chatFadeTime;
 
-			entries.push_front(ChatEntry(id, msg, lh, fadeTime + fadeOut));
+			entries.push_front(ChatEntry(id, msg, entryH, fadeTime + fadeOut));
 
-			firstY -= lh;
+			firstY -= entryH;
 			return id;
 		}
 
 		void ChatWindow::UpdateMessage(uint64_t id, const std::string& newMsg) {
 			for (auto& ent : entries) {
 				if (ent.id == id) {
+					float oldH = ent.height;
 					ent.msg = newMsg;
+					float newH = CalculateMessageHeight(newMsg);
+					if (newH != oldH) {
+						ent.height = newH;
+						firstY -= (newH - oldH);
+					}
 					return;
 				}
 			}
@@ -174,7 +192,7 @@ namespace spades {
 		}
 
 		void ChatWindow::Update(float dt) {
-			if (!killfeed) {
+			if (!killfeed && ChatTranslator::GetInstance().HasCompletedTranslations()) {
 				auto completed = ChatTranslator::GetInstance().PopCompletedTranslations();
 				for (const auto& item : completed) {
 					UpdateMessage(item.msgId, item.fullTranslatedText);
@@ -280,32 +298,32 @@ namespace spades {
 				}
 
 				for (size_t i = 0; i < msg.size(); i++) {
-					if ((msg[i] == '\r' || msg[i] == '\n') && !killfeed) {
+					if (msg[i] == MsgTranslateIcon) {
+						// Draw clean mini translator icon badge: small blue pill with white 'T' symbol
+						float iconW = 16.0F;
+						float iconH = 13.0F;
+						float iconX = tx + curPosX;
+						float iconY = ty + winY + (lh - iconH) * 0.5F;
+
+						Vector4 badgeBg = MakeVector4(0.12F, 0.42F, 0.78F, 0.85F * fade);
+						Vector4 badgeBorder = MakeVector4(0.40F, 0.82F, 1.0F, 0.95F * fade);
+						renderer.SetColorAlphaPremultiplied(badgeBg.Premultiplied());
+						renderer.DrawFilledRect(iconX, iconY, iconX + iconW, iconY + iconH);
+						renderer.SetColorAlphaPremultiplied(badgeBorder.Premultiplied());
+						renderer.DrawOutlinedRect(iconX, iconY, iconX + iconW, iconY + iconH);
+
+						Vector4 tCol = MakeVector4(1.0F, 1.0F, 1.0F, 0.95F * fade).Premultiplied();
+						renderer.SetColorAlphaPremultiplied(tCol);
+						renderer.DrawFilledRect(iconX + 3.0F, iconY + 3.0F, iconX + iconW - 3.0F, iconY + 5.0F);
+						renderer.DrawFilledRect(iconX + (iconW * 0.5F) - 1.0F, iconY + 5.0F, iconX + (iconW * 0.5F) + 1.0F, iconY + iconH - 3.0F);
+
+						tx += iconW + 4.0F;
+					} else if ((msg[i] == '\r' || msg[i] == '\n') && !killfeed) {
 						// new line
 						tx = 0.0F;
 						ty += lh;
 					} else if (msg[i] >= 1 && msg[i] <= MsgColorMax) {
-						if (msg[i] == MsgTranslateIcon) {
-							// Draw clean mini translator icon badge: small blue pill with white 'T' symbol
-							float iconW = 16.0F;
-							float iconH = 13.0F;
-							float iconX = tx + curPosX;
-							float iconY = ty + winY + (lh - iconH) * 0.5F;
-
-							Vector4 badgeBg = MakeVector4(0.12F, 0.42F, 0.78F, 0.85F * fade);
-							Vector4 badgeBorder = MakeVector4(0.40F, 0.82F, 1.0F, 0.95F * fade);
-							renderer.SetColorAlphaPremultiplied(badgeBg.Premultiplied());
-							renderer.DrawFilledRect(iconX, iconY, iconX + iconW, iconY + iconH);
-							renderer.SetColorAlphaPremultiplied(badgeBorder.Premultiplied());
-							renderer.DrawOutlinedRect(iconX, iconY, iconX + iconW, iconY + iconH);
-
-							Vector4 tCol = MakeVector4(1.0F, 1.0F, 1.0F, 0.95F * fade).Premultiplied();
-							renderer.SetColorAlphaPremultiplied(tCol);
-							renderer.DrawFilledRect(iconX + 3.0F, iconY + 3.0F, iconX + iconW - 3.0F, iconY + 5.0F);
-							renderer.DrawFilledRect(iconX + (iconW * 0.5F) - 1.0F, iconY + 5.0F, iconX + (iconW * 0.5F) + 1.0F, iconY + iconH - 3.0F);
-
-							tx += iconW + 4.0F;
-						} else if (msg[i] == MsgImage) {
+						if (msg[i] == MsgImage) {
 							IImage* img = NULL;
 							if (i + 1 < msg.size() && (img = GetKillImage(msg[i + 1]))) {
 								Vector4 colorP = color;
@@ -324,8 +342,10 @@ namespace spades {
 					} else {
 						size_t ln = 0;
 						GetCodePointFromUTF8String(msg, i, &ln);
+						if (ln == 0)
+							continue;
 						ch.resize(ln);
-						for (size_t k = 0; k < ln; k++)
+						for (size_t k = 0; k < ln && (i + k) < msg.size(); k++)
 							ch[k] = msg[i + k];
 						i += ln - 1;
 

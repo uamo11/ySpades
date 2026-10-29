@@ -67,31 +67,51 @@ namespace spades {
 			tacticalDict["rush intel"] = "vayan por la intel";
 			tacticalDict["push"] = "avancen / presionen";
 			tacticalDict["push bridge"] = "avancen por el puente";
+			tacticalDict["push base"] = "presionen la base";
+			tacticalDict["pushing"] = "avanzando";
+			tacticalDict["push now"] = "empujen ahora";
 			tacticalDict["fall back"] = "retrocedan";
 			tacticalDict["fallback"] = "retrocedan";
 			tacticalDict["retreat"] = "retírense";
 			tacticalDict["attack"] = "ataquen";
 			tacticalDict["attack base"] = "ataquen la base";
+			tacticalDict["attack now"] = "ataquen ahora";
 			tacticalDict["defend"] = "defiendan";
 			tacticalDict["defend base"] = "defiendan la base";
 			tacticalDict["defend intel"] = "defiendan la intel";
+			tacticalDict["defend here"] = "defiendan aquí";
+			tacticalDict["hold"] = "mantengan";
+			tacticalDict["hold here"] = "mantengan aquí";
+			tacticalDict["hold bridge"] = "mantengan el puente";
+			tacticalDict["hold base"] = "mantengan la base";
 			tacticalDict["cover me"] = "cúbreme";
 			tacticalDict["follow me"] = "sígueme";
 			tacticalDict["go go go"] = "vamos vamos";
 			tacticalDict["come here"] = "vengan aquí";
+			tacticalDict["come on"] = "vamos";
+			tacticalDict["lets go"] = "vamos";
+			tacticalDict["let's go"] = "vamos";
 			tacticalDict["wait"] = "esperen";
 			tacticalDict["wait for me"] = "espérenme";
 			tacticalDict["stop"] = "paren";
+			tacticalDict["dont stop"] = "no paren";
+			tacticalDict["regroup"] = "reagrúpense";
+			tacticalDict["group up"] = "júntense";
 
-			// Intel
+			// Intel & Objectives
 			tacticalDict["intel"] = "la intel";
 			tacticalDict["drop intel"] = "suelta la intel";
 			tacticalDict["take intel"] = "toma la intel";
 			tacticalDict["grab intel"] = "toma la intel";
+			tacticalDict["get intel"] = "ve por la intel";
 			tacticalDict["they have intel"] = "tienen la intel";
 			tacticalDict["enemy has intel"] = "el enemigo tiene la intel";
 			tacticalDict["we have intel"] = "tenemos la intel";
 			tacticalDict["intel in base"] = "la intel está en la base";
+			tacticalDict["intel dropped"] = "intel caída";
+			tacticalDict["flag"] = "bandera / intel";
+			tacticalDict["get flag"] = "ve por la bandera";
+			tacticalDict["drop flag"] = "suelta la bandera";
 
 			// Callouts & Locations
 			tacticalDict["sniper"] = "francotirador";
@@ -99,60 +119,115 @@ namespace spades {
 			tacticalDict["sniper hill"] = "francotirador en la colina";
 			tacticalDict["sniper tent"] = "francotirador en la tienda";
 			tacticalDict["sniper bridge"] = "francotirador en el puente";
+			tacticalDict["sniper tower"] = "francotirador en la torre";
+			tacticalDict["enemy"] = "enemigo";
+			tacticalDict["enemies"] = "enemigos";
+			tacticalDict["enemy here"] = "enemigo aquí";
+			tacticalDict["enemies here"] = "enemigos aquí";
 			tacticalDict["behind you"] = "detrás de ti";
 			tacticalDict["behind"] = "atrás";
 			tacticalDict["watch out"] = "cuidado";
 			tacticalDict["careful"] = "cuidado";
+			tacticalDict["look out"] = "cuidado";
+			tacticalDict["incoming"] = "vienen";
+			tacticalDict["they are coming"] = "vienen hacia aquí";
 			tacticalDict["help"] = "ayuda";
 			tacticalDict["help me"] = "ayúdenme";
 			tacticalDict["help here"] = "ayuda aquí";
-			tacticalDict["hacker"] = "tramposo / hacker";
-			tacticalDict["cheater"] = "tramposo / hacker";
+			tacticalDict["need backup"] = "necesito apoyo";
+			tacticalDict["need help"] = "necesito ayuda";
+			tacticalDict["on me"] = "conmigo / aquí";
 			tacticalDict["bridge"] = "puente";
 			tacticalDict["tunnel"] = "túnel";
 			tacticalDict["tent"] = "tienda / carpa";
 			tacticalDict["base"] = "base";
 			tacticalDict["our base"] = "nuestra base";
 			tacticalDict["enemy base"] = "base enemiga";
+			tacticalDict["spawn"] = "reaparición / base";
 			tacticalDict["water"] = "agua";
+			tacticalDict["hill"] = "colina";
+			tacticalDict["tower"] = "torre";
 			tacticalDict["left"] = "izquierda";
 			tacticalDict["right"] = "derecha";
 			tacticalDict["up"] = "arriba";
 			tacticalDict["down"] = "abajo";
-			tacticalDict["coming"] = "vienen";
-			tacticalDict["they are coming"] = "vienen hacia aquí";
+			tacticalDict["middle"] = "centro / medio";
+			tacticalDict["mid"] = "medio";
+
+			// Actions / Construction
 			tacticalDict["dig"] = "caven";
 			tacticalDict["dig down"] = "caven hacia abajo";
+			tacticalDict["dig here"] = "caven aquí";
 			tacticalDict["build"] = "construyan";
 			tacticalDict["build bridge"] = "construyan puente";
+			tacticalDict["build wall"] = "construyan muro";
+			tacticalDict["grenade"] = "granada";
+			tacticalDict["nade"] = "granada";
+			tacticalDict["nades"] = "granadas";
+			tacticalDict["throw nade"] = "tira granada";
+			tacticalDict["reload"] = "recargando";
+			tacticalDict["reloading"] = "recargando";
+			tacticalDict["shoot"] = "dispara";
+			tacticalDict["dont shoot"] = "no dispares";
+			tacticalDict["friendly"] = "soy aliado";
 
-			// Common chat / courtesies
+			// Status & Combat state
+			tacticalDict["im dead"] = "estoy muerto";
+			tacticalDict["i died"] = "morí";
+			tacticalDict["low hp"] = "poca vida";
+			tacticalDict["he is low"] = "está tocado / poca vida";
+			tacticalDict["one shot"] = "a un tiro";
+			tacticalDict["camper"] = "campero";
+			tacticalDict["camping"] = "campeando";
+			tacticalDict["hacker"] = "tramposo / hacker";
+			tacticalDict["cheater"] = "tramposo / hacker";
+			tacticalDict["aimbot"] = "aimbot / trampa";
+			tacticalDict["votekick"] = "voten para expulsar";
+			tacticalDict["kick him"] = "expúlsenlo";
+			tacticalDict["ban him"] = "baneenlo";
+			tacticalDict["teamkill"] = "fuego amigo";
+			tacticalDict["tk"] = "fuego amigo";
+
+			// Courtesies & Common chat
 			tacticalDict["nice"] = "bien hecho";
 			tacticalDict["nice shot"] = "buen tiro";
 			tacticalDict["good shot"] = "buen disparo";
+			tacticalDict["nice try"] = "buen intento";
+			tacticalDict["good try"] = "buen intento";
 			tacticalDict["good job"] = "bien hecho";
 			tacticalDict["well done"] = "bien jugado";
+			tacticalDict["good game"] = "buen juego";
 			tacticalDict["hello"] = "hola";
 			tacticalDict["hi"] = "hola";
 			tacticalDict["hey"] = "hola";
 			tacticalDict["bye"] = "adiós";
 			tacticalDict["goodbye"] = "adiós";
 			tacticalDict["see you"] = "nos vemos";
+			tacticalDict["see ya"] = "nos vemos";
+			tacticalDict["sorry"] = "perdón";
+			tacticalDict["sry"] = "perdón";
+			tacticalDict["my bad"] = "culpa mía";
+			tacticalDict["no problem"] = "sin problema";
+			tacticalDict["thanks"] = "gracias";
+			tacticalDict["thank you"] = "gracias";
+			tacticalDict["thx"] = "gracias";
+			tacticalDict["ty"] = "gracias";
+			tacticalDict["please"] = "por favor";
+			tacticalDict["pls"] = "por favor";
+			tacticalDict["plz"] = "por favor";
+			tacticalDict["ready"] = "listo";
+			tacticalDict["rdy"] = "listo";
+			tacticalDict["yes"] = "sí";
+			tacticalDict["yeah"] = "sí";
+			tacticalDict["no"] = "no";
+			tacticalDict["nope"] = "no";
 			tacticalDict["why"] = "por qué";
 			tacticalDict["who"] = "quién";
 			tacticalDict["where"] = "dónde";
 			tacticalDict["what"] = "qué";
 			tacticalDict["how"] = "cómo";
-			tacticalDict["yes"] = "sí";
-			tacticalDict["no"] = "no";
-			tacticalDict["ready"] = "listo";
-			tacticalDict["good game"] = "buen juego";
-			tacticalDict["revive"] = "reaparecer";
-			tacticalDict["sorry"] = "perdón";
-			tacticalDict["sry"] = "perdón";
-			tacticalDict["my bad"] = "culpa mía";
-			tacticalDict["teamkill"] = "fuego amigo";
-			tacticalDict["tk"] = "fuego amigo";
+			tacticalDict["what happened"] = "qué pasó";
+			tacticalDict["what are you doing"] = "qué haces";
 		}
 
 		bool ChatTranslator::ShouldTranslate(const std::string& msg) {
@@ -289,27 +364,37 @@ namespace spades {
 		}
 
 		bool ChatTranslator::TryFastTranslate(const std::string& msg, std::string& outTranslated) {
+			// Fast normalization: lower case and stripped trailing punctuation
+			std::string lower = msg;
+			for (char& c : lower) c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
+
+			size_t s = 0;
+			while (s < lower.size() && (lower[s] == ' ' || lower[s] == '\t')) s++;
+			size_t e = lower.size();
+			while (e > s && (lower[e - 1] == ' ' || lower[e - 1] == '\t' || lower[e - 1] == '!' || lower[e - 1] == '?' || lower[e - 1] == '.' || lower[e - 1] == ',')) e--;
+			std::string key = (s < e) ? lower.substr(s, e - s) : lower;
+
 			// 1. Check in-memory LRU cache
 			{
 				std::lock_guard<std::mutex> lock(cacheMutex);
-				auto it = cache.find(msg);
+				auto it = cache.find(key);
 				if (it != cache.end()) {
 					outTranslated = it->second;
+					return true;
+				}
+				auto itRaw = cache.find(msg);
+				if (itRaw != cache.end()) {
+					outTranslated = itRaw->second;
 					return true;
 				}
 			}
 
 			// 2. Check tactical dictionary
-			std::string lower = msg;
-			for (char& c : lower) c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
-			while (!lower.empty() && (lower.back() == '!' || lower.back() == '.' || lower.back() == '?'))
-				lower.pop_back();
-
-			auto dictIt = tacticalDict.find(lower);
+			auto dictIt = tacticalDict.find(key);
 			if (dictIt != tacticalDict.end()) {
 				outTranslated = dictIt->second;
 				std::lock_guard<std::mutex> lock(cacheMutex);
-				cache[msg] = outTranslated;
+				cache[key] = outTranslated;
 				return true;
 			}
 
@@ -338,11 +423,15 @@ namespace spades {
 		}
 
 		std::vector<CompletedTranslation> ChatTranslator::PopCompletedTranslations() {
+			if (!hasCompletedTranslations.load(std::memory_order_acquire)) {
+				return {};
+			}
 			std::vector<CompletedTranslation> result;
-			std::lock_guard<std::mutex> lock(completedMutex);
-			if (!completedList.empty()) {
+			{
+				std::lock_guard<std::mutex> lock(completedMutex);
 				result.swap(completedList);
 			}
+			hasCompletedTranslations.store(false, std::memory_order_release);
 			return result;
 		}
 
@@ -351,15 +440,12 @@ namespace spades {
 			cache.clear();
 		}
 
-		std::string ChatTranslator::QueryGoogleTranslate(const std::string& text) {
-			CURL* curl = curl_easy_init();
-			if (!curl) return "";
+		std::string ChatTranslator::QueryGoogleTranslate(void* curlHandle, const std::string& text) {
+			CURL* curl = static_cast<CURL*>(curlHandle);
+			if (!curl || text.empty()) return "";
 
 			char* escaped = curl_easy_escape(curl, text.c_str(), static_cast<int>(text.size()));
-			if (!escaped) {
-				curl_easy_cleanup(curl);
-				return "";
-			}
+			if (!escaped) return "";
 
 			std::string url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=" + std::string(escaped);
 			curl_free(escaped);
@@ -374,13 +460,11 @@ namespace spades {
 				return size * nmemb;
 			});
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-			curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 2L);
-			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L);
+			curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1L);
+			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 2L);
 			gui::ProxyManager::GetInstance().ApplyToCurl(curl);
 
 			CURLcode res = curl_easy_perform(curl);
-			curl_easy_cleanup(curl);
-
 			if (res != CURLE_OK || response.empty())
 				return "";
 
@@ -396,30 +480,46 @@ namespace spades {
 			if (p2 == std::string::npos || p2 <= p1 + 1)
 				return "";
 
-			std::string translated = response.substr(p1 + 1, p2 - p1 - 1);
+			std::string raw = response.substr(p1 + 1, p2 - p1 - 1);
 			std::string clean;
-			clean.reserve(translated.size());
-			for (size_t i = 0; i < translated.size(); i++) {
-				if (translated[i] == '\\' && i + 1 < translated.size()) {
+			clean.reserve(raw.size());
+			for (size_t i = 0; i < raw.size(); i++) {
+				if (raw[i] == '\\' && i + 1 < raw.size()) {
 					i++;
-					if (translated[i] == 'n') clean += ' ';
-					else clean += translated[i];
+					if (raw[i] == 'n' || raw[i] == 'r' || raw[i] == 't') {
+						if (!clean.empty() && clean.back() != ' ') clean += ' ';
+					} else {
+						clean += raw[i];
+					}
+				} else if (raw[i] == '\r' || raw[i] == '\n' || raw[i] == '\t') {
+					if (!clean.empty() && clean.back() != ' ') clean += ' ';
 				} else {
-					clean += translated[i];
+					clean += raw[i];
 				}
 			}
 
+			// Trim leading and trailing whitespace
+			while (!clean.empty() && clean.front() == ' ') clean.erase(clean.begin());
+			while (!clean.empty() && clean.back() == ' ') clean.pop_back();
+
 			if (clean.empty() || EqualsIgnoringCase(clean, text))
 				return "";
+
+			// Keep message compact to avoid HUD clipping
+			if (clean.size() > 95) {
+				clean = clean.substr(0, 92) + "...";
+			}
 
 			return clean;
 		}
 
 		void ChatTranslator::WorkerLoop() {
 #ifdef _WIN32
-			// Lower thread priority so rendering & engine gets 100% CPU priority
-			SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+			// Lowest thread priority so game rendering never gets interrupted
+			SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 #endif
+
+			CURL* workerCurl = curl_easy_init();
 
 			while (running) {
 				TranslationJob job;
@@ -441,8 +541,8 @@ namespace spades {
 						translated = it->second;
 				}
 
-				if (translated.empty()) {
-					translated = QueryGoogleTranslate(job.originalMsg);
+				if (translated.empty() && workerCurl) {
+					translated = QueryGoogleTranslate(workerCurl, job.originalMsg);
 					if (!translated.empty()) {
 						std::lock_guard<std::mutex> lock(cacheMutex);
 						if (cache.size() > 500)
@@ -466,9 +566,16 @@ namespace spades {
 					fullText += ": " + trPrefix + translated;
 					comp.fullTranslatedText = fullText;
 
-					std::lock_guard<std::mutex> lock(completedMutex);
-					completedList.push_back(std::move(comp));
+					{
+						std::lock_guard<std::mutex> lock(completedMutex);
+						completedList.push_back(std::move(comp));
+					}
+					hasCompletedTranslations.store(true, std::memory_order_release);
 				}
+			}
+
+			if (workerCurl) {
+				curl_easy_cleanup(workerCurl);
 			}
 		}
 

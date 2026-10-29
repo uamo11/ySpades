@@ -166,6 +166,9 @@ namespace spades {
 					it->original = it->displayed;
 					it->displayed = translated;
 					it->showingOriginal = false;
+					if (chatPanel) {
+						chatPanel->RebuildHistory();
+					}
 					break;
 				}
 			}
