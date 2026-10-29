@@ -94,7 +94,6 @@ namespace spades {
 			void BuildPanel();
 			void BuildHistory(float x, float y, float w, float h, float rowHeight,
 			                  bool interactive);
-			void RebuildHistory();
 			void OnHistoryRowClicked(int row);
 
 			void OnSetGlobal(gui::ui::UIElement& sender);
@@ -118,6 +117,7 @@ namespace spades {
 			                 ChatWindowMode mode = ChatWindowMode::Centered);
 
 			void UpdateState();
+			void RebuildHistory();
 
 			/** Appends a line to the history of the docked and peek views. */
 			void Record(const std::string& text, Vector4 color);
