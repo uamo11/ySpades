@@ -25,6 +25,7 @@
 #include <Gui/UI/MainScreen/SelectCountryScreen.h>
 #include <Gui/ProxyManager.h>
 #include <Gui/UI/Widgets/Button.h>
+#include <Gui/SDLRunner.h>
 
 SPADES_SETTING(cg_country);
 SPADES_SETTING(cg_countryIsSet);
@@ -638,7 +639,7 @@ namespace spades {
 					    case 5: r_videoWidth = 800; r_videoHeight = 600; break;
 				    }
 
-				    Settings::GetInstance()->Flush();
+				    SDLRunner::ApplyWindowVideoMode();
 
 				    SPLog("Ventana++: ¡Ajustes guardados y aplicados con éxito!");
 				    if (auto* b = dynamic_cast<SimpleButton*>(&btn)) {

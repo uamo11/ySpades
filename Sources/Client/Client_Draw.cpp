@@ -109,6 +109,7 @@ DEFINE_SPADES_SETTING(cg_espHeadRgb, "0");
 DEFINE_SPADES_SETTING(cg_espEnemiesOnly, "0");
 DEFINE_SPADES_SETTING(cg_espVisibleOnly, "0");
 DEFINE_SPADES_SETTING(cg_showFpsMs, "0");
+DEFINE_SPADES_SETTING(cg_spectatorHUD, "1");
 DEFINE_SPADES_SETTING(cg_playerNamesDead, "1");
 DEFINE_SPADES_SETTING(cg_debugHitTestSize, "128");
 DEFINE_SPADES_SETTING(cg_debugHitTestFadeTime, "10");
@@ -2959,6 +2960,9 @@ namespace spades {
 
 				if (static_cast<int>(cg_showFpsMs) > 0)
 					DrawFpsMsOverlay();
+
+				if (cg_spectatorHUD)
+					DrawSpectatorHUD();
 			}
 
 			// draw limbo view (above everything)
@@ -3271,6 +3275,115 @@ namespace spades {
 			Vector4 textCol = MakeVector4(0.95F, 0.96F, 0.98F, 0.95F);
 			Vector4 shadowCol = MakeVector4(0.0F, 0.0F, 0.0F, 0.85F);
 			font.DrawShadow(cachedText, cachedPos, 1.0F, textCol, shadowCol);
+		}
+
+		void Client::DrawSpectatorHUD() {
+			SPADES_MARK_FUNCTION();
+			if (!world)
+				return;
+
+			auto maybeLocal = world->GetLocalPlayer();
+			int localId = maybeLocal ? maybeLocal->GetId() : -1;
+
+			std::vector<std::string> watchingMe;
+			int flyingCount = 0;
+			int totalSpectators = 0;
+
+			for (size_t i = 0; i < world->GetNumPlayerSlots(); ++i) {
+				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
+				if (!maybePlayer)
+					continue;
+				Player& p = maybePlayer.value();
+				if (!p.IsSpectator())
+					continue;
+
+				totalSpectators++;
+				Vector3 specPos = p.GetPosition();
+
+				int bestTargetId = -1;
+				float closestDist = 3.5F;
+
+				for (size_t j = 0; j < world->GetNumPlayerSlots(); ++j) {
+					auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(j));
+					if (!maybeTarget)
+						continue;
+					Player& target = maybeTarget.value();
+					if (target.IsSpectator() || !target.IsAlive())
+						continue;
+
+					float d = (target.GetPosition() - specPos).GetLength();
+					if (d < closestDist) {
+						closestDist = d;
+						bestTargetId = static_cast<int>(j);
+					}
+				}
+
+				if (bestTargetId == localId && localId >= 0) {
+					watchingMe.push_back(p.GetName());
+				} else if (bestTargetId < 0) {
+					flyingCount++;
+				}
+			}
+
+			if (totalSpectators == 0 && watchingMe.empty())
+				return;
+
+			IFont& font = fontManager->GetGuiFont();
+			float sw = renderer->ScreenWidth();
+			float badgeY = 48.0F;
+
+			if (!watchingMe.empty()) {
+				// Alert: someone is watching YOU!
+				std::string text = "ESPECTADOR MIRANDOTE: ";
+				if (watchingMe.size() == 1) {
+					text += watchingMe[0];
+				} else {
+					text = ToString(watchingMe.size()) + " ESPECTADORES MIRANDOTE: ";
+					for (size_t k = 0; k < watchingMe.size(); ++k) {
+						if (k > 0) text += ", ";
+						text += watchingMe[k];
+					}
+				}
+
+				Vector2 txtSize = font.Measure(text);
+				float boxW = txtSize.x + 24.0F;
+				float boxH = txtSize.y + 10.0F;
+				float boxX = (sw - boxW) * 0.5F;
+
+				// Dark sleek background
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0.08F, 0.08F, 0.12F, 0.85F));
+				renderer->FillRect(AABB2(boxX, badgeY, boxW, boxH));
+
+				// Pulsing vivid green border
+				float pulse = 0.75F + 0.25F * fabsf(sinf(world->GetTime() * 4.0F));
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0.20F * pulse, 1.0F * pulse, 0.40F * pulse, 0.95F));
+				renderer->DrawOutlineRect(AABB2(boxX, badgeY, boxW, boxH), 1.5F);
+
+				// Text in vivid green
+				font.Draw(text, MakeVector2(boxX + 12.0F, badgeY + 5.0F), 1.0F,
+				          MakeVector4(0.30F, 1.0F, 0.50F, 1.0F));
+			} else if (totalSpectators > 0) {
+				// Subtle indicator when spectators are flying / watching others
+				std::string text = "Espectadores: " + ToString(totalSpectators);
+				if (flyingCount > 0) {
+					text += " (" + ToString(flyingCount) + " volando)";
+				}
+
+				Vector2 txtSize = font.Measure(text);
+				float boxW = txtSize.x + 16.0F;
+				float boxH = txtSize.y + 6.0F;
+				float boxX = sw - boxW - 16.0F;
+				float specY = 195.0F;
+
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0.05F, 0.05F, 0.08F, 0.65F));
+				renderer->FillRect(AABB2(boxX, specY, boxW, boxH));
+
+				renderer->SetColorAlphaPremultiplied(MakeVector4(0.40F, 0.60F, 0.80F, 0.50F));
+				renderer->DrawOutlineRect(AABB2(boxX, specY, boxW, boxH), 1.0F);
+
+				font.Draw(text, MakeVector2(boxX + 8.0F, specY + 3.0F), 1.0F,
+				          MakeVector4(0.70F, 0.85F, 1.0F, 0.90F));
+			}
 		}
 
 		void Client::DrawNetGraph() {

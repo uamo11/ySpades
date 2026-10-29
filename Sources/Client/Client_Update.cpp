@@ -733,59 +733,140 @@ namespace spades {
 
 						Player::HitBoxes hb = target.GetHitBoxes(false);
 						Vector3 hitPos;
-						if (hb.head.RayCast(eye, dir * blockDist, &hitPos) ||
-						    hb.torso.RayCast(eye, dir * blockDist, &hitPos) ||
-						    hb.limbs[0].RayCast(eye, dir * blockDist, &hitPos) ||
-						    hb.limbs[1].RayCast(eye, dir * blockDist, &hitPos) ||
-						    hb.limbs[2].RayCast(eye, dir * blockDist, &hitPos)) {
-							winp.primary = true;
-							break;
+						bool hit = hb.head.RayCast(eye, dir * blockDist, &hitPos) ||
+						           hb.torso.RayCast(eye, dir * blockDist, &hitPos) ||
+						           hb.limbs[0].RayCast(eye, dir * blockDist, &hitPos) ||
+						           hb.limbs[1].RayCast(eye, dir * blockDist, &hitPos) ||
+						           hb.limbs[2].RayCast(eye, dir * blockDist, &hitPos);
+
+						if (hit) {
+							float hitDist = (hitPos - eye).GetLength();
+							// Verify terrain line of sight ("SI NO ESTA NO DISPARA VERIFICA DNV DNV")
+							bool isVisible = true;
+							if (world->GetMap()) {
+								GameMap::RayCastResult mapRes = world->GetMap()->CastRay2(
+								    eye, dir, static_cast<int>(hitDist * 2.5F) + 32);
+								if ((mapRes.hit && (mapRes.hitPos - eye).GetLength() < hitDist - 0.35F) || mapRes.startSolid) {
+									isVisible = false;
+								}
+							}
+							if (isVisible) {
+								winp.primary = true;
+								break;
+							}
 						}
 					}
 				}
 
-				// Aimbot / Aim Assist (locks or smoothly assists aim to nearest enemy head)
-				if (cg_aimbot && (winp.primary || winp.secondary)) {
+				// Aimbot target tracking & lock persistence
+				static int s_aimbotLockedTargetId = -1;
+				static bool s_aimbotWaitingReacquire = false;
+
+				if (!cg_aimbot || !(winp.primary || winp.secondary)) {
+					s_aimbotLockedTargetId = -1;
+					s_aimbotWaitingReacquire = false;
+				} else {
 					Vector3 eye = player.GetEye();
 					Vector3 front = player.GetFront();
-					float bestAngle = DEG2RAD(static_cast<float>(cg_aimbotFov) * 0.5F);
-					Vector3 bestTargetPos;
+					Vector3 targetAimPos;
 					bool hasTarget = false;
 
-					for (size_t i = 0; i < world->GetNumPlayerSlots(); ++i) {
-						auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(i));
-						if (!maybeTarget)
-							continue;
-						Player& target = maybeTarget.value();
-						if (!target.IsAlive() || &target == &player || player.IsTeammate(target))
-							continue;
+					// If an enemy was recently eliminated, do NOT immediately jump to another enemy!
+					// Require the user to manually aim towards a new enemy ("SI LE APUNTO A UNO")
+					float maxAllowedAngle = DEG2RAD(static_cast<float>(cg_aimbotFov) * 0.5F);
+					if (s_aimbotWaitingReacquire) {
+						// Only acquire if the user deliberately points near another enemy (within tight cone)
+						maxAllowedAngle = std::min(maxAllowedAngle, DEG2RAD(12.0F));
+					}
 
-						Vector3 headPos = target.GetEye();
-						Vector3 diff = headPos - eye;
-						float dist = diff.GetLength();
-						if (dist < 0.1F || dist > 128.0F)
-							continue;
+					// 1. If currently tracking a locked target, verify them first
+					if (s_aimbotLockedTargetId >= 0) {
+						auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(s_aimbotLockedTargetId));
+						if (!maybeTarget || !maybeTarget->IsAlive() || player.IsTeammate(maybeTarget.value())) {
+							// ENEMY WAS ELIMINATED / KILLED!
+							// Do NOT jump to another enemy while holding fire!
+							s_aimbotLockedTargetId = -1;
+							s_aimbotWaitingReacquire = true;
+						} else {
+							Player& target = maybeTarget.value();
+							Vector3 headPos = target.GetEye();
+							Vector3 diff = headPos - eye;
+							float dist = diff.GetLength();
+							if (dist >= 0.1F && dist <= 128.0F) {
+								Vector3 dir = diff * (1.0F / dist);
+								// Check line of sight dynamically every single frame ("VERIFICA DNV DNV")
+								bool isVisible = true;
+								if (world->GetMap()) {
+									GameMap::RayCastResult mapRes = world->GetMap()->CastRay2(
+									    eye, dir, static_cast<int>(dist * 2.5F) + 32);
+									if ((mapRes.hit && (mapRes.hitPos - eye).GetLength() < dist - 0.35F) || mapRes.startSolid) {
+										isVisible = false;
+									}
+								}
 
-						Vector3 dir = diff * (1.0F / dist);
-						float dot = Vector3::Dot(front, dir);
-						float angle = acosf(Clamp(dot, -1.0F, 1.0F));
-						if (angle > bestAngle)
-							continue;
+								if (isVisible) {
+									hasTarget = true;
+									targetAimPos = headPos;
+								} else {
+									// Obstacle in the way: "SI NO ESTA NO DISPARA"
+									// Enemy is behind a wall. Do NOT assist through wall!
+									hasTarget = false;
+								}
+							} else {
+								s_aimbotLockedTargetId = -1;
+							}
+						}
+					}
 
-						// Check line of sight
-						if (world->GetMap()) {
-							GameMap::RayCastResult mapRes = world->GetMap()->CastRay2(eye, diff, static_cast<int>(dist) + 1);
-							if (mapRes.hit && (mapRes.hitPos - eye).GetLength() < dist - 0.4F)
+					// 2. If no target is currently locked, acquire only if aiming at one ("SI LE APUNTO A UNO")
+					if (!hasTarget && (!s_aimbotWaitingReacquire || maxAllowedAngle > 0.01F)) {
+						float bestAngle = maxAllowedAngle;
+						int bestId = -1;
+						Vector3 bestPos;
+
+						for (size_t i = 0; i < world->GetNumPlayerSlots(); ++i) {
+							auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(i));
+							if (!maybeTarget)
 								continue;
+							Player& target = maybeTarget.value();
+							if (!target.IsAlive() || &target == &player || player.IsTeammate(target))
+								continue;
+
+							Vector3 headPos = target.GetEye();
+							Vector3 diff = headPos - eye;
+							float dist = diff.GetLength();
+							if (dist < 0.1F || dist > 128.0F)
+								continue;
+
+							Vector3 dir = diff * (1.0F / dist);
+							float dot = Vector3::Dot(front, dir);
+							float angle = acosf(Clamp(dot, -1.0F, 1.0F));
+							if (angle > bestAngle)
+								continue;
+
+							// Comprehensive line of sight verification
+							if (world->GetMap()) {
+								GameMap::RayCastResult mapRes = world->GetMap()->CastRay2(
+								    eye, dir, static_cast<int>(dist * 2.5F) + 32);
+								if ((mapRes.hit && (mapRes.hitPos - eye).GetLength() < dist - 0.35F) || mapRes.startSolid)
+									continue;
+							}
+
+							bestAngle = angle;
+							bestPos = headPos;
+							bestId = static_cast<int>(i);
 						}
 
-						bestAngle = angle;
-						bestTargetPos = headPos;
-						hasTarget = true;
+						if (bestId >= 0) {
+							s_aimbotLockedTargetId = bestId;
+							s_aimbotWaitingReacquire = false;
+							hasTarget = true;
+							targetAimPos = bestPos;
+						}
 					}
 
 					if (hasTarget) {
-						Vector3 diff = bestTargetPos - eye;
+						Vector3 diff = targetAimPos - eye;
 						float dist = diff.GetLength();
 						if (dist > 0.01F) {
 							float targetYaw = atan2f(diff.y, diff.x);

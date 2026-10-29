@@ -55,6 +55,42 @@ static int lastMouseX = 0, lastMouseY = 0;
 namespace spades {
 	namespace gui {
 
+		static SDL_Window* s_activeWindow = nullptr;
+
+		SDL_Window* SDLRunner::GetActiveWindow() {
+			return s_activeWindow;
+		}
+
+		void SDLRunner::ApplyWindowVideoMode() {
+			SDL_Window* window = s_activeWindow;
+			if (!window)
+				window = SDL_GL_GetCurrentWindow();
+			if (!window)
+				return;
+
+			int fs = static_cast<int>(r_fullscreen);
+			if (fs != 0) {
+				SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+			} else {
+				SDL_SetWindowFullscreen(window, 0);
+				int w = static_cast<int>(r_videoWidth);
+				int h = static_cast<int>(r_videoHeight);
+				if (w <= 0) w = 1280;
+				if (h <= 0) h = 720;
+
+				SDL_DisplayMode dm;
+				if (SDL_GetDesktopDisplayMode(0, &dm) == 0) {
+					if (w >= dm.w && h >= dm.h) {
+						w = dm.w * 9 / 10;
+						h = dm.h * 9 / 10;
+					}
+				}
+				SDL_SetWindowSize(window, w, h);
+				SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+			}
+			Settings::GetInstance()->Flush();
+		}
+
 		SDLRunner::SDLRunner() : m_hasSystemMenu(false) {}
 
 		SDLRunner::~SDLRunner() {}
@@ -148,17 +184,34 @@ namespace spades {
 						// Toggle fullscreen mode
 						if (keysym.mod & KMOD_ALT && keysym.sym == SDLK_RETURN) {
 							SDL_Window* window = SDL_GetWindowFromID(event.key.windowID);
+							if (!window)
+								window = s_activeWindow;
 							if (r_fullscreen) {
-								if (!SDL_SetWindowFullscreen(window, 0))
+								if (!SDL_SetWindowFullscreen(window, 0)) {
 									r_fullscreen = 0;
-								else
+									int w = static_cast<int>(r_videoWidth);
+									int h = static_cast<int>(r_videoHeight);
+									if (w <= 0) w = 1280;
+									if (h <= 0) h = 720;
+									SDL_DisplayMode dm;
+									if (SDL_GetDesktopDisplayMode(0, &dm) == 0) {
+										if (w >= dm.w && h >= dm.h) {
+											w = dm.w * 9 / 10;
+											h = dm.h * 9 / 10;
+										}
+									}
+									SDL_SetWindowSize(window, w, h);
+									SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+								} else {
 									SPLog("Couldn't exit fullscreen mode: %s", SDL_GetError());
+								}
 							} else {
-								if (!SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN))
+								if (!SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP))
 									r_fullscreen = 1;
 								else
 									SPLog("Couldn't enter fullscreen mode: %s", SDL_GetError());
 							}
+							Settings::GetInstance()->Flush();
 							return;
 						}
 						view.KeyEvent(TranslateKey(keysym), true);
@@ -491,8 +544,18 @@ namespace spades {
 				}
 
 				if (!m_hasSystemMenu) {
-					if (r_fullscreen)
-						sdlFlags |= SDL_WINDOW_FULLSCREEN;
+					if (r_fullscreen) {
+						sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+					} else {
+						sdlFlags |= SDL_WINDOW_RESIZABLE;
+						SDL_DisplayMode dm;
+						if (SDL_GetDesktopDisplayMode(0, &dm) == 0) {
+							if (width >= dm.w && height >= dm.h) {
+								width = dm.w * 9 / 10;
+								height = dm.h * 9 / 10;
+							}
+						}
+					}
 #ifdef __MACOSX__
 					if (!r_fullscreen)
 						sdlFlags |= SDL_WINDOW_BORDERLESS;
@@ -502,6 +565,7 @@ namespace spades {
 				SDL_Window* window = SDL_CreateWindow(caption.c_str(),
 					SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 					width, height, sdlFlags);
+				s_activeWindow = window;
 
 				if (!window) {
 					std::string msg = SDL_GetError();
@@ -544,6 +608,9 @@ namespace spades {
 					}
 
 					RunClientLoop(window, renderer.GetPointerOrNull(), audio.GetPointerOrNull());
+
+					if (s_activeWindow == window)
+						s_activeWindow = nullptr;
 
 					// `SDL_Window` and its associated resources will be inaccessible
 					// past this point. Some referencing objects might be still alive due to

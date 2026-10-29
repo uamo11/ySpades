@@ -587,6 +587,7 @@ namespace spades {
 			void DrawPubOVL();
 			void DrawKillerTracer();
 			void DrawFpsMsOverlay();
+			void DrawSpectatorHUD();
 			void DrawDeadPlayers();
 
 			void DrawBlockPaletteHUD(float y);

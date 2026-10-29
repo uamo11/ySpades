@@ -30,6 +30,7 @@
 #include <Gui/UI/Widgets/DrawUtils.h>
 #include <Gui/UI/Widgets/Label.h>
 #include <Gui/UI/Widgets/ListView.h>
+#include <Gui/SDLRunner.h>
 
 namespace spades {
 	namespace gui {
@@ -282,7 +283,7 @@ namespace spades {
 						cg_playerNameIsSet = 1;
 					}
 
-					Settings::GetInstance()->Flush();
+					SDLRunner::ApplyWindowVideoMode();
 					SPLog("Preferences: Settings applied and flushed to disk!");
 					btn->caption = _Tr("Preferences", "¡Aplicado!");
 				};

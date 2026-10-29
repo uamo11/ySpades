@@ -61,6 +61,8 @@ namespace spades {
 			virtual ~SDLRunner();
 			void Run(int width, int height);
 			void SetHasSystemMenu(bool b) { m_hasSystemMenu = b; }
+			static void ApplyWindowVideoMode();
+			static SDL_Window* GetActiveWindow();
 		};
 	} // namespace gui
 } // namespace spades

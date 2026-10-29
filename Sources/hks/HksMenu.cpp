@@ -286,6 +286,11 @@ namespace spades {
 				layouter->AddHelp(_Tr("Preferences",
 				    "Filters ESP by line of sight: OFF shows everyone through walls, VISIBLE hides occluded enemies, and DIM reduces their brightness."));
 
+				layouter->AddHeading(_Tr("Preferences", "Spectator Alerts"));
+				layouter->AddToggleField(_Tr("Preferences", "Spectator HUD Alert"), "cg_spectatorHUD");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Displays real-time notifications on screen when spectators are watching you or flying in the match."));
+
 				layouter->FinishLayout();
 				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Visuals"), nav.GetPointerOrNull(),
 				       gui::GuiIconType::Visuals);

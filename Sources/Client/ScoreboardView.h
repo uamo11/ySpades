@@ -48,6 +48,17 @@ namespace spades {
 			void DrawSpectators(float left, float top) const;
 
 		public:
+			struct SpectatorState {
+				int id;
+				std::string name;
+				bool watchingLocal;
+				int targetId; // -1 if flying
+				std::string targetName;
+				bool isFlying;
+			};
+
+			std::vector<SpectatorState> GetSpectatorStates() const;
+
 			ScoreboardView(Client*);
 			~ScoreboardView();
 

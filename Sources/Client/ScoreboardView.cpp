@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 
 #include "CTFGameMode.h"
 #include "Client.h"
@@ -326,6 +327,14 @@ namespace spades {
 
 			const int colorMode = cg_minimapPlayerColor;
 
+			auto specStates = GetSpectatorStates();
+			std::map<int, std::vector<std::string>> watchingMap;
+			for (const auto& st : specStates) {
+				if (!st.isFlying && st.targetId >= 0) {
+					watchingMap[st.targetId].push_back(st.name);
+				}
+			}
+
 			for (const auto& ent : entries) {
 				float rowY = top + 6.0F + row * rowHeight;
 				float colX = left + col * colWidth;
@@ -348,7 +357,8 @@ namespace spades {
 
 				// draw player name
 				Vector4 color = ent.alive ? white : gray;
-				if (stmp::make_optional(ent.id) == world->GetLocalPlayerIndex()) {
+				bool isLocal = (stmp::make_optional(ent.id) == world->GetLocalPlayerIndex());
+				if (isLocal) {
 					color = GetTeamColor(team);
 
 					// make it brighter for darker colors
@@ -359,6 +369,21 @@ namespace spades {
 						color += (white - color) * 0.5F;
 				}
 				font.Draw(ent.name, MakeVector2(colX + 40.0F, rowY), 1.0F, color);
+
+				// Draw spectator badge next to player name if someone is watching them
+				if (watchingMap.count(ent.id)) {
+					const auto& watchers = watchingMap[ent.id];
+					std::string badge = "[ojo " + watchers[0];
+					if (watchers.size() > 1) {
+						badge += " +" + ToString(watchers.size() - 1);
+					}
+					badge += "]";
+					Vector2 nameSize = font.Measure(ent.name);
+					Vector4 badgeColor = isLocal
+					    ? MakeVector4(0.20F, 1.0F, 0.40F, 1.0F)
+					    : MakeVector4(1.0F, 0.85F, 0.20F, 0.95F);
+					font.Draw(badge, MakeVector2(colX + 46.0F + nameSize.x, rowY), 1.0F, badgeColor);
+				}
 
 				// draw player score
 				snprintf(buf, sizeof(buf), "%d", ent.score);
@@ -384,15 +409,14 @@ namespace spades {
 			}
 		}
 
-		void ScoreboardView::DrawSpectators(float centerX, float top) const {
-			IFont& font = client->fontManager->GetGuiFont();
-			char buf[16];
-			
-			static const float xPixelSpectatorOffset = 20.0F;
-			float totalPixelWidth = 0;
+		std::vector<ScoreboardView::SpectatorState> ScoreboardView::GetSpectatorStates() const {
+			std::vector<SpectatorState> states;
+			if (!world)
+				return states;
 
-			int numSpectators = 0;
-			std::vector<ScoreboardEntry> entries;
+			auto maybeLocal = world->GetLocalPlayer();
+			int localId = maybeLocal ? maybeLocal->GetId() : -1;
+
 			for (size_t i = 0; i < world->GetNumPlayerSlots(); i++) {
 				auto maybePlayer = world->GetPlayer(static_cast<unsigned int>(i));
 				if (!maybePlayer)
@@ -401,20 +425,49 @@ namespace spades {
 				if (player.GetTeamId() != spectatorTeamId)
 					continue;
 
-				ScoreboardEntry ent;
-				ent.name = player.GetName();
-				ent.id = static_cast<int>(i);
-				entries.push_back(ent);
-				numSpectators++;
+				SpectatorState st;
+				st.id = static_cast<int>(i);
+				st.name = player.GetName();
+				st.watchingLocal = false;
+				st.targetId = -1;
+				st.targetName = "";
+				st.isFlying = true;
 
-				// Measure total width in pixels so that we can center align all the spectators
-				snprintf(buf, sizeof(buf), "#%d", ent.id);
-				totalPixelWidth += font.Measure(buf).x + font.Measure(ent.name).x + xPixelSpectatorOffset;
+				Vector3 specPos = player.GetPosition();
+				float closestDist = 3.5F;
+
+				for (size_t j = 0; j < world->GetNumPlayerSlots(); j++) {
+					auto maybeTarget = world->GetPlayer(static_cast<unsigned int>(j));
+					if (!maybeTarget)
+						continue;
+					Player& target = maybeTarget.value();
+					if (target.IsSpectator() || !target.IsAlive())
+						continue;
+
+					float d = (target.GetPosition() - specPos).GetLength();
+					if (d < closestDist) {
+						closestDist = d;
+						st.targetId = static_cast<int>(j);
+						st.targetName = target.GetName();
+						st.watchingLocal = (st.targetId == localId);
+						st.isFlying = false;
+					}
+				}
+
+				states.push_back(st);
 			}
+			return states;
+		}
 
-			if (numSpectators == 0)
+		void ScoreboardView::DrawSpectators(float centerX, float top) const {
+			IFont& font = client->fontManager->GetGuiFont();
+			char buf[64];
+
+			auto states = GetSpectatorStates();
+			if (states.empty())
 				return;
 
+			int numSpectators = static_cast<int>(states.size());
 			strcpy(buf, _TrN("Client", "Spectator{1}", "Spectators{1}", numSpectators, "").c_str());
 
 			auto sizeSpecString = spectatorFont->Measure(buf);
@@ -422,18 +475,79 @@ namespace spades {
 			spectatorFont->Draw(buf, pos + MakeVector2(1, 2), 1.0F, MakeVector4(0, 0, 0, 0.5));
 			spectatorFont->Draw(buf, pos, 1.0F, spectatorTextColor);
 
-			float currentXoffset = centerX - totalPixelWidth * 0.5F;
 			float yOffset = pos.y + sizeSpecString.y + 10.0F;
 
-			for (const auto& ent : entries) {
-				snprintf(buf, sizeof(buf), "#%d", ent.id);
-				font.Draw(buf, MakeVector2(currentXoffset, yOffset), 1.0F, spectatorIdColor);
+			struct FormattedSpec {
+				std::string idStr;
+				std::string nameStr;
+				std::string statusStr;
+				Vector4 statusCol;
+				float totalWidth;
+			};
+			std::vector<FormattedSpec> formatted;
+			formatted.reserve(states.size());
 
-				auto sizeName = font.Measure(ent.name);
-				auto sizeID = font.Measure(buf);
-				font.Draw(ent.name, MakeVector2(currentXoffset + sizeID.x + 5.0F, yOffset), 1.0F, white);
+			for (const auto& st : states) {
+				FormattedSpec item;
+				item.idStr = "#" + ToString(st.id);
+				item.nameStr = st.name;
+				if (st.watchingLocal) {
+					item.statusStr = "[Mirandote]";
+					item.statusCol = MakeVector4(0.20F, 1.0F, 0.40F, 1.0F); // Vivid green
+				} else if (!st.isFlying && st.targetId >= 0) {
+					item.statusStr = "[Viendo a " + st.targetName + "]";
+					item.statusCol = MakeVector4(1.0F, 0.85F, 0.20F, 1.0F); // Gold
+				} else {
+					item.statusStr = "[Volando]";
+					item.statusCol = MakeVector4(0.60F, 0.85F, 1.0F, 1.0F); // Soft cyan
+				}
 
-				currentXoffset += sizeID.x + sizeName.x + xPixelSpectatorOffset;
+				float w = font.Measure(item.idStr).x + 4.0F +
+				          font.Measure(item.nameStr).x + 5.0F +
+				          font.Measure(item.statusStr).x + 16.0F;
+				item.totalWidth = w;
+				formatted.push_back(item);
+			}
+
+			// Render formatted spectators in clean wrapped lines
+			const float maxLineWidth = 800.0F;
+			std::vector<std::vector<FormattedSpec>> lines;
+			std::vector<FormattedSpec> curLine;
+			float curLineWidth = 0.0F;
+
+			for (const auto& item : formatted) {
+				if (!curLine.empty() && curLineWidth + item.totalWidth > maxLineWidth) {
+					lines.push_back(curLine);
+					curLine.clear();
+					curLineWidth = 0.0F;
+				}
+				curLine.push_back(item);
+				curLineWidth += item.totalWidth;
+			}
+			if (!curLine.empty()) {
+				lines.push_back(curLine);
+			}
+
+			float currentRowY = yOffset;
+			for (const auto& line : lines) {
+				float lineWidth = 0.0F;
+				for (const auto& item : line) lineWidth += item.totalWidth;
+
+				float drawX = centerX - lineWidth * 0.5F;
+				for (const auto& item : line) {
+					auto sId = font.Measure(item.idStr);
+					font.Draw(item.idStr, MakeVector2(drawX, currentRowY), 1.0F, spectatorIdColor);
+					drawX += sId.x + 4.0F;
+
+					auto sName = font.Measure(item.nameStr);
+					font.Draw(item.nameStr, MakeVector2(drawX, currentRowY), 1.0F, white);
+					drawX += sName.x + 5.0F;
+
+					auto sStat = font.Measure(item.statusStr);
+					font.Draw(item.statusStr, MakeVector2(drawX, currentRowY), 1.0F, item.statusCol);
+					drawX += sStat.x + 16.0F;
+				}
+				currentRowY += 18.0F;
 			}
 		}
 	} // namespace client

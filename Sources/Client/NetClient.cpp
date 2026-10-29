@@ -981,7 +981,7 @@ namespace spades {
 							if (GetWorld()) {
 								auto p = GetWorld()->GetPlayer(idx);
 								if (p && p != GetWorld()->GetLocalPlayer()
-									&& p->IsAlive() && !p->IsSpectator()) {
+									&& (p->IsAlive() || p->IsSpectator())) {
 									p->RepositionPlayer(pos);
 									p->SetOrientation(front);
 								}

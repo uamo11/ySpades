@@ -27,6 +27,7 @@
 #include <Gui/ProxyManager.h>
 #include <Gui/UI/Framework/UIManager.h>
 #include <Gui/UI/Widgets/DrawUtils.h>
+#include <Gui/SDLRunner.h>
 
 namespace spades {
 	namespace gui {
@@ -305,6 +306,9 @@ namespace spades {
 		void ConfigSwitchButton::OnActivated() {
 			int cur = static_cast<int>(config);
 			config = (cur != 0) ? 0 : 1;
+			if (config.GetName() == "r_fullscreen") {
+				SDLRunner::ApplyWindowVideoMode();
+			}
 			ui::Button::OnActivated();
 		}
 
