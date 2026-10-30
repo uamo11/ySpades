@@ -1240,31 +1240,9 @@ namespace spades {
 
 			std::string state = "";
 			if (!p.IsAlive()) {
-				state = _Tr("Client", "(DEAD)");
+				state = std::string(1, ChatWindow::MsgDeadIcon);
 			} else if (p.IsSpectator()) {
 				state = _Tr("Client", "(SPEC)");
-			}
-
-			{
-				std::string s;
-
-				// add prefix
-				if (global) {
-					s += _Tr("Client", "[Global]");
-					s += " ";
-				}
-
-				// add player name
-				s += playerNameStr;
-
-				// add player state
-				if (!state.empty()) {
-					s += " ";
-					s += state;
-				}
-
-				s += ": ";
-				s += msg;
 			}
 
 			// filters chat messages (but they can still be found in logs)
@@ -1273,7 +1251,8 @@ namespace spades {
 
 			{
 				std::string s;
-				std::string prefix = global ? (_Tr("Client", "[Global]") + " ") : "";
+				// For global chat, do not display [Global]. For team chat, display [Team].
+				std::string prefix = global ? "" : (_Tr("Client", "[Team]") + " ");
 
 				// add prefix
 				s += prefix;

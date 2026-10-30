@@ -299,23 +299,84 @@ namespace spades {
 
 				for (size_t i = 0; i < msg.size(); i++) {
 					if (msg[i] == MsgTranslateIcon) {
-						// Draw clean mini translator icon badge: small blue pill with white 'T' symbol
-						float iconW = 16.0F;
-						float iconH = 13.0F;
+						// Mini flag badge of the translated language (Spanish flag 🇪🇸: Red - Gold - Red)
+						float flagW = 16.0F;
+						float flagH = 11.0F;
+						float flagX = tx + curPosX;
+						float flagY = ty + winY + (lh - flagH) * 0.5F;
+
+						// Shadow
+						Vector4 shadow = MakeVector4(0.0F, 0.0F, 0.0F, 0.65F * fade);
+						renderer.SetColorAlphaPremultiplied(shadow.Premultiplied());
+						renderer.DrawFilledRect(flagX + 1.0F, flagY + 1.0F, flagX + flagW + 1.0F, flagY + flagH + 1.0F);
+
+						// Spanish flag stripes: 1:2:1 ratio (top red 27%, middle gold 46%, bottom red 27%)
+						float rTop = floorf(flagH * 0.27F);
+						float rBot = floorf(flagH * 0.73F);
+
+						Vector4 redColor = MakeVector4(0.85F, 0.12F, 0.12F, 0.95F * fade).Premultiplied();
+						Vector4 goldColor = MakeVector4(0.98F, 0.78F, 0.06F, 0.95F * fade).Premultiplied();
+
+						// Top red stripe
+						renderer.SetColorAlphaPremultiplied(redColor);
+						renderer.DrawFilledRect(flagX, flagY, flagX + flagW, flagY + rTop);
+
+						// Middle gold stripe
+						renderer.SetColorAlphaPremultiplied(goldColor);
+						renderer.DrawFilledRect(flagX, flagY + rTop, flagX + flagW, flagY + rBot);
+
+						// Bottom red stripe
+						renderer.SetColorAlphaPremultiplied(redColor);
+						renderer.DrawFilledRect(flagX, flagY + rBot, flagX + flagW, flagY + flagH);
+
+						// Subtle coat-of-arms crest detail on left side of gold stripe
+						float coatX = flagX + 3.0F;
+						float coatY = flagY + rTop + 1.0F;
+						Vector4 coatCol = MakeVector4(0.72F, 0.15F, 0.12F, 0.90F * fade).Premultiplied();
+						renderer.SetColorAlphaPremultiplied(coatCol);
+						renderer.DrawFilledRect(coatX, coatY, coatX + 2.0F, coatY + 3.0F);
+
+						// Crisp dark outline border
+						Vector4 flagBorder = MakeVector4(0.12F, 0.12F, 0.16F, 0.85F * fade).Premultiplied();
+						renderer.SetColorAlphaPremultiplied(flagBorder);
+						renderer.DrawOutlinedRect(flagX, flagY, flagX + flagW, flagY + flagH);
+
+						tx += flagW + 5.0F;
+					} else if (msg[i] == MsgDeadIcon) {
+						// Clean vector dead skull icon 💀
+						float iconW = 13.0F;
+						float iconH = 12.0F;
 						float iconX = tx + curPosX;
 						float iconY = ty + winY + (lh - iconH) * 0.5F;
 
-						Vector4 badgeBg = MakeVector4(0.12F, 0.42F, 0.78F, 0.85F * fade);
-						Vector4 badgeBorder = MakeVector4(0.40F, 0.82F, 1.0F, 0.95F * fade);
-						renderer.SetColorAlphaPremultiplied(badgeBg.Premultiplied());
-						renderer.DrawFilledRect(iconX, iconY, iconX + iconW, iconY + iconH);
-						renderer.SetColorAlphaPremultiplied(badgeBorder.Premultiplied());
-						renderer.DrawOutlinedRect(iconX, iconY, iconX + iconW, iconY + iconH);
+						// Skull shadow
+						Vector4 skullShadow = MakeVector4(0.0F, 0.0F, 0.0F, 0.70F * fade).Premultiplied();
+						renderer.SetColorAlphaPremultiplied(skullShadow);
+						renderer.DrawFilledRect(iconX + 1.0F, iconY + 1.0F, iconX + iconW + 1.0F, iconY + iconH + 1.0F);
 
-						Vector4 tCol = MakeVector4(1.0F, 1.0F, 1.0F, 0.95F * fade).Premultiplied();
-						renderer.SetColorAlphaPremultiplied(tCol);
-						renderer.DrawFilledRect(iconX + 3.0F, iconY + 3.0F, iconX + iconW - 3.0F, iconY + 5.0F);
-						renderer.DrawFilledRect(iconX + (iconW * 0.5F) - 1.0F, iconY + 5.0F, iconX + (iconW * 0.5F) + 1.0F, iconY + iconH - 3.0F);
+						// Bone white cranium and jaw
+						Vector4 skullCol = MakeVector4(0.92F, 0.92F, 0.95F, 0.95F * fade).Premultiplied();
+						Vector4 eyeCol = MakeVector4(0.12F, 0.12F, 0.15F, 0.95F * fade).Premultiplied();
+
+						// Cranium
+						renderer.SetColorAlphaPremultiplied(skullCol);
+						renderer.DrawFilledRect(iconX + 1.5F, iconY, iconX + iconW - 1.5F, iconY + 7.5F);
+						renderer.DrawFilledRect(iconX, iconY + 1.5F, iconX + iconW, iconY + 6.5F);
+
+						// Jaw
+						renderer.DrawFilledRect(iconX + 3.0F, iconY + 7.5F, iconX + iconW - 3.0F, iconY + 11.0F);
+
+						// Eye sockets (dark)
+						renderer.SetColorAlphaPremultiplied(eyeCol);
+						renderer.DrawFilledRect(iconX + 2.5F, iconY + 2.5F, iconX + 5.0F, iconY + 5.0F);
+						renderer.DrawFilledRect(iconX + iconW - 5.0F, iconY + 2.5F, iconX + iconW - 2.5F, iconY + 5.0F);
+
+						// Nose cavity slit
+						renderer.DrawFilledRect(iconX + (iconW * 0.5F) - 0.75F, iconY + 5.5F, iconX + (iconW * 0.5F) + 0.75F, iconY + 7.0F);
+
+						// Teeth slits
+						renderer.DrawFilledRect(iconX + 4.5F, iconY + 8.5F, iconX + 5.5F, iconY + 11.0F);
+						renderer.DrawFilledRect(iconX + iconW - 5.5F, iconY + 8.5F, iconX + iconW - 4.5F, iconY + 11.0F);
 
 						tx += iconW + 4.0F;
 					} else if ((msg[i] == '\r' || msg[i] == '\n') && !killfeed) {
