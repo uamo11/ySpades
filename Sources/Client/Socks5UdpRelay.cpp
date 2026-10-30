@@ -120,6 +120,15 @@ namespace spades {
 				return false;
 			}
 
+			enet_socket_set_option(tcpSocket, ENET_SOCKOPT_NODELAY, 1);
+#ifdef _WIN32
+			BOOL keepalive = TRUE;
+			setsockopt(static_cast<SOCKET>(tcpSocket), SOL_SOCKET, SO_KEEPALIVE, (const char*)&keepalive, sizeof(keepalive));
+#else
+			int keepalive = 1;
+			setsockopt(tcpSocket, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive));
+#endif
+
 			// Greeting: VER 5, 2 methods (0=No Auth, 2=User/Pass)
 			uint8_t greeting[] = {0x05, 0x02, 0x00, 0x02};
 			if (!SendAllTcp(greeting, sizeof(greeting))) {
@@ -238,6 +247,8 @@ namespace spades {
 			}
 
 			enet_socket_set_option(clientUdpSocket, ENET_SOCKOPT_NONBLOCK, 1);
+			enet_socket_set_option(clientUdpSocket, ENET_SOCKOPT_RCVBUF, 1024 * 1024);
+			enet_socket_set_option(clientUdpSocket, ENET_SOCKOPT_SNDBUF, 1024 * 1024);
 			enet_address_set_host_ip(&localBindAddress, "127.0.0.1");
 			localBindAddress.port = 0;
 
@@ -266,6 +277,8 @@ namespace spades {
 			}
 
 			enet_socket_set_option(proxyUdpSocket, ENET_SOCKOPT_NONBLOCK, 1);
+			enet_socket_set_option(proxyUdpSocket, ENET_SOCKOPT_RCVBUF, 1024 * 1024);
+			enet_socket_set_option(proxyUdpSocket, ENET_SOCKOPT_SNDBUF, 1024 * 1024);
 			ENetAddress anyAddr;
 			anyAddr.host = ENET_HOST_ANY;
 			anyAddr.port = 0;
@@ -317,17 +330,34 @@ namespace spades {
 				FD_ZERO(&readSet);
 				SOCKET sClient = static_cast<SOCKET>(clientUdpSocket);
 				SOCKET sProxy = static_cast<SOCKET>(proxyUdpSocket);
+				SOCKET sTcp = static_cast<SOCKET>(tcpSocket);
 				SOCKET maxFd = (sClient > sProxy) ? sClient : sProxy;
+				if (sTcp != INVALID_SOCKET && sTcp > maxFd) {
+					maxFd = sTcp;
+				}
 				FD_SET(sClient, &readSet);
 				FD_SET(sProxy, &readSet);
+				if (sTcp != INVALID_SOCKET) {
+					FD_SET(sTcp, &readSet);
+				}
 
 				struct timeval tv;
 				tv.tv_sec = 0;
-				tv.tv_usec = 15000; // 15ms poll
+				tv.tv_usec = 3000; // 3ms fast poll for ultra-low relay jitter
 
 				int sel = select(static_cast<int>(maxFd + 1), &readSet, nullptr, nullptr, &tv);
 				if (sel <= 0) {
 					continue;
+				}
+
+				// Check TCP control socket status (detect if proxy server closed session)
+				if (sTcp != INVALID_SOCKET && FD_ISSET(sTcp, &readSet)) {
+					char probeBuf[64];
+					int recvd = recv(sTcp, probeBuf, sizeof(probeBuf), 0);
+					if (recvd <= 0) {
+						SPLog("Socks5UdpRelay: SOCKS5 control TCP socket disconnected or EOF received (code %d)", recvd);
+						break;
+					}
 				}
 
 				// 1. Datagram received from local game client -> Encapsulate and send to proxy

@@ -244,6 +244,10 @@ namespace spades {
 			if (!host)
 				SPRaise("Failed to create ENet host");
 
+			// Buffer sizing for stability: 1MB recv/send buffer to absorb packet bursts
+			enet_socket_set_option(host->socket, ENET_SOCKOPT_RCVBUF, 1024 * 1024);
+			enet_socket_set_option(host->socket, ENET_SOCKOPT_SNDBUF, 1024 * 1024);
+
 			if (enet_host_compress_with_range_coder(host) < 0)
 				SPRaise("Failed to enable ENet Range coder.");
 
@@ -335,10 +339,10 @@ namespace spades {
 				SPRaise("Failed to create ENet peer");
 
 			// Network optimizations for low latency, jitter reduction, and WiFi stability:
-			// Ping interval: 250ms (keeps NAT/WiFi state active and ping accurate)
-			enet_peer_ping_interval(peer, 250);
-			// Timeout: minimum 1000ms, max 4000ms, retry limit 32
-			enet_peer_timeout(peer, 32, 1000, 4000);
+			// Ping interval: 500ms (maintains NAT binding and keeps ping accurate without spam)
+			enet_peer_ping_interval(peer, 500);
+			// Timeout: minimum 8000ms, max 25000ms, retry limit 32 (resilient to map loads, server GC, explosions, and WiFi jitter)
+			enet_peer_timeout(peer, 32, 8000, 25000);
 
 			properties.reset(new GameProperties(hostname.GetProtocolVersion()));
 
@@ -434,12 +438,23 @@ namespace spades {
 					if (GetWorld())
 						client->SetWorld(NULL);
 
+					bool wasTimeout = (peer && peer->earliestTimeout != 0);
 					enet_peer_reset(peer);
 					peer = NULL;
 					status = NetClientStatusNotConnected;
 
-					std::string reasonStr = DisconnectReasonString(event.data);
-					SPLog("Disconnected (data = 0x%08x)", (unsigned int)event.data);
+					std::string reasonStr;
+					if (!customKickReasonString.empty()) {
+						reasonStr = customKickReasonString;
+					} else if (event.data != 0) {
+						reasonStr = DisconnectReasonString(event.data);
+					} else if (wasTimeout) {
+						reasonStr = _Tr("NetClient", "Connection timed out (server lost / high latency)");
+					} else {
+						reasonStr = _Tr("NetClient", "Connection closed by server or network lost");
+					}
+					SPLog("Disconnected (data = 0x%08x, wasTimeout = %d): %s",
+					      (unsigned int)event.data, wasTimeout ? 1 : 0, reasonStr.c_str());
 					statusString = "Disconnected: " + reasonStr;
 					SPRaise("Disconnected: %s", reasonStr.c_str());
 				}
@@ -1678,7 +1693,6 @@ namespace spades {
 			NetPacketWriter w(PacketTypePositionData);
 			w.WriteVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
-			enet_host_flush(host);
 		}
 
 		void NetClient::SendOrientation(spades::Vector3 v) {
@@ -1687,7 +1701,6 @@ namespace spades {
 			NetPacketWriter w(PacketTypeOrientationData);
 			w.WriteVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
-			enet_host_flush(host);
 		}
 
 		void NetClient::SendPlayerInput(PlayerInput inp) {
@@ -1719,7 +1732,6 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
-			enet_host_flush(host);
 		}
 
 		void NetClient::SendWeaponInput(WeaponInput inp) {
@@ -1743,7 +1755,6 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
-			enet_host_flush(host);
 		}
 
 		void NetClient::SendHit(int targetPlayerId, HitType type) {
