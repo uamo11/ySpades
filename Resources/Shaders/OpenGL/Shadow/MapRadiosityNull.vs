@@ -21,9 +21,12 @@
 varying float hemisphereLighting;
 
 void PrepareForMapRadiosity(vec3 vertexCoord, vec3 normal) {
-	hemisphereLighting = 1.0 - normal.z * 0.2;
+	// Smooth sky-to-ground ambient hemisphere lighting (-Z is UP in OpenSpades)
+	float skyFactor = clamp(-normal.z * 0.5 + 0.5, 0.0, 1.0);
+	hemisphereLighting = mix(0.74, 1.18, skyFactor);
 }
 
 void PrepareForMapRadiosityForMap(vec3 vertexCoord, vec3 centerCoord, vec3 normal) {
-	hemisphereLighting = 1.0 - normal.z * 0.2;
+	float skyFactor = clamp(-normal.z * 0.5 + 0.5, 0.0, 1.0);
+	hemisphereLighting = mix(0.74, 1.18, skyFactor);
 }

@@ -22,7 +22,13 @@ uniform vec3 fogColor;
 varying float hemisphereLighting;
 
 vec3 EvaluateRadiosity(float detailAmbientOcclusion, float ssao) {
-	return mix(fogColor, vec3(1.0), 0.5) * (0.5 * detailAmbientOcclusion * hemisphereLighting * ssao);
+	// Micro-contrast curve on voxel ambient occlusion for deeper crevices and contact shadows
+	float ao = detailAmbientOcclusion * (0.75 + 0.25 * detailAmbientOcclusion);
+
+	// Ambient skylight with natural atmosphere tone
+	vec3 skyAmb = mix(fogColor * 1.08, vec3(0.92, 0.95, 1.0), 0.38);
+
+	return skyAmb * (0.52 * ao * hemisphereLighting * ssao);
 }
 
 vec3 EvaluateSoftReflections(float detailAmbientOcclusion, vec3 direction, float ssao) {

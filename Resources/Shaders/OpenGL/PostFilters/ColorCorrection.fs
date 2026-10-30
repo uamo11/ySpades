@@ -107,7 +107,7 @@ void main() {
 	// Apply tinting and manual exposure
 	gl_FragColor.xyz *= tint;
 
-	vec3 gray = vec3(dot(gl_FragColor.xyz, vec3(1. / 3.)));
+	vec3 gray = vec3(dot(gl_FragColor.xyz, vec3(0.2126, 0.7152, 0.0722)));
 	gl_FragColor.xyz = mix(gray, gl_FragColor.xyz, saturation);
 
 #if USE_HDR
@@ -118,9 +118,19 @@ void main() {
 						   smoothstep(0., 1., gl_FragColor.xyz),
 						   enhancement);
 #else
+	// Modern ACES filmic tonemapping curve - gives clean dynamic range, prevents harsh highlight clipping
+	vec3 filmic = acesToneMapping(gl_FragColor.xyz * 1.05);
+	gl_FragColor.xyz = mix(gl_FragColor.xyz, filmic, 0.42);
+
+	// Crisp contrast enhancement
 	gl_FragColor.xyz = mix(gl_FragColor.xyz,
-						   smoothstep(0., 1., gl_FragColor.xyz),
-						   enhancement);
+						   smoothstep(0.0, 1.0, gl_FragColor.xyz),
+						   enhancement * 0.85);
+
+	// Subtle, high-performance lens vignette for modern depth (virtually 0 cost)
+	vec2 vigCoord = (texCoord - 0.5) * 1.25;
+	float vig = clamp(1.0 - dot(vigCoord, vigCoord) * 0.22, 0.0, 1.0);
+	gl_FragColor.xyz *= vig;
 #endif
 
 	gl_FragColor.w = 1.0;

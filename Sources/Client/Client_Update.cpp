@@ -395,14 +395,19 @@ namespace spades {
 
 				// local entities should be done in the client thread
 				{
-					decltype(localEntities)::iterator it;
-					std::vector<decltype(it)> its;
-					for (it = localEntities.begin(); it != localEntities.end(); it++) {
-						if (!(*it)->Update(gameplayDt))
-							its.push_back(it);
+					for (auto it = localEntities.begin(); it != localEntities.end();) {
+						if (!(*it)->Update(gameplayDt)) {
+							it = localEntities.erase(it);
+						} else {
+							++it;
+						}
 					}
-					for (const auto& it : its)
-						localEntities.erase(it);
+
+					// Soft cap pruning: if mass bombardments or /apoc occurred,
+					// gently retire the oldest entities from the front to maintain rock-solid FPS.
+					while (localEntities.size() > 350) {
+						localEntities.pop_front();
+					}
 				}
 
 				// update blood marks

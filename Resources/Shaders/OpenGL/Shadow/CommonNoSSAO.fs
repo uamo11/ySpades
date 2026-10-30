@@ -30,7 +30,9 @@ float VisibilityOfSunLight() {
 }
 
 vec3 EvaluateSunLight() {
-	return vec3(0.6) * VisibilityOfSunLight();
+	// Warm natural sunlight spectrum (5800K daylight) with crisp contrast
+	const vec3 sunColor = vec3(0.66, 0.63, 0.56);
+	return sunColor * (1.1 * VisibilityOfSunLight());
 }
 
 vec3 EvaluateAmbientLight(float detailAmbientOcclusion) {

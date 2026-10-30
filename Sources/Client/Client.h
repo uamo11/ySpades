@@ -777,6 +777,8 @@ namespace spades {
 			ViewState SaveViewState() const;
 			void RestoreViewState(const ViewState&);
 			void AddLocalEntity(std::unique_ptr<ILocalEntity>&& ent) {
+				if (localEntities.size() > 450)
+					return;
 				localEntities.emplace_back(std::move(ent));
 			}
 

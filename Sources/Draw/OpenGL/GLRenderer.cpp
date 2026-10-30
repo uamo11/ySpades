@@ -509,6 +509,10 @@ namespace spades {
 			EnsureInitialized();
 			EnsureSceneStarted();
 
+			// Cap maximum active dynamic lights to avoid GPU stall during cluster explosions
+			if (lights.size() >= 12)
+				return;
+
 			lights.push_back(GLDynamicLight(light));
 		}
 

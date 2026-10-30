@@ -88,6 +88,12 @@ namespace spades {
 			position += velocity * dt;
 			velocity.z += 32.0F * dt * gravityScale;
 
+			// If particle has settled on ground, stop running costly map collision queries
+			if (blockHitAction == BlockHitAction::BounceWeak && velocity.GetSquaredLength() < 0.09F) {
+				velocity = MakeVector3(0, 0, 0);
+				blockHitAction = BlockHitAction::Ignore;
+			}
+
 			// TODO: control clip action
 			if (blockHitAction != BlockHitAction::Ignore && map) {
 				IntVector3 lp = position.Floor();
@@ -142,6 +148,9 @@ namespace spades {
 				fade *= time / fadeInDuration;
 			if (time > lifetime - fadeOutDuration)
 				fade *= (lifetime - time) / fadeOutDuration;
+
+			if (fade <= 0.01F)
+				return;
 
 			Vector4 col = color;
 			col.w *= fade;

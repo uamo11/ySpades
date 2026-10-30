@@ -154,11 +154,14 @@ namespace spades {
 
 				Vector3 velBias = {0, 0, -1.0F};
 
-				for (int x = 0; x < w; x++) {
+				int spawnedCount = 0;
+				const int maxSpawnedLimit = 32;
+
+				for (int x = 0; x < w && spawnedCount < maxSpawnedLimit; x++) {
 					Vector3 p1 = vmOrigin + vmAxis1 * (float)x;
-					for (int y = 0; y < h; y++) {
+					for (int y = 0; y < h && spawnedCount < maxSpawnedLimit; y++) {
 						Vector3 p2 = p1 + vmAxis2 * (float)y;
-						for (int z = 0; z < d; z++) {
+						for (int z = 0; z < d && spawnedCount < maxSpawnedLimit; z++) {
 							if (!vmodel->IsSolid(x, y, z))
 								continue;
 
@@ -178,7 +181,7 @@ namespace spades {
 
 							Vector3 p3 = p2 + vmAxis3 * (float)z;
 
-							for (int i = 0; i < 4; i++) {
+							for (int i = 0; i < 2; i++) {
 								auto ent = stmp::make_unique<ParticleSpriteEntity>(*client, img, color);
 								ent->SetTrajectory(p3, (RandomVector() + velBias * 0.5F) * 8.0F, 1.0F, 0.6F);
 								ent->SetRadius(0.4F + getRandom() * getRandom() * 0.1F);
@@ -186,9 +189,10 @@ namespace spades {
 								if (usePrecisePhysics)
 									ent->SetBlockHitAction(BlockHitAction::BounceWeak);
 								client->AddLocalEntity(std::move(ent));
+								spawnedCount++;
 							}
 
-							if (particleMode >= 2) {
+							if (particleMode >= 2 && (spawnedCount % 4 == 0)) {
 								auto ent = stmp::make_unique<SmokeSpriteEntity>(*client, color, 70.0F);
 								ent->SetTrajectory(p3, RandomVector() * 0.2F, 1.0F, 0.0F);
 								ent->SetRotation(getRandom() * kTwoPi);

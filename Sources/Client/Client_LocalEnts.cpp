@@ -384,13 +384,16 @@ namespace spades {
 			if (dist > FOG_DISTANCE + 16.0F)
 				return;
 
-			DynamicLightParam l;
-			l.type = DynamicLightTypePoint;
-			l.origin = pos;
-			l.radius = 16.0F;
-			l.color = MakeVector3(3.0F, 1.6F, 0.5F);
-			l.useLensFlare = true;
-			flashDlights.push_back(l);
+			// Cap active dynamic lights per frame to avoid GPU stall during mass explosions
+			if (flashDlights.size() < 12) {
+				DynamicLightParam l;
+				l.type = DynamicLightTypePoint;
+				l.origin = pos;
+				l.radius = 16.0F;
+				l.color = MakeVector3(3.0F, 1.6F, 0.5F);
+				l.useLensFlare = flashDlights.empty();
+				flashDlights.push_back(l);
+			}
 
 			if (dist <= FOG_DISTANCE)
 				KickCamera(2.0F / (dist + 5.0F));
@@ -398,6 +401,28 @@ namespace spades {
 			int particleLevel = cg_particles;
 			if (!particleLevel)
 				return;
+
+			// Smart adaptive particle scaling under load (e.g. /apoc mass explosions)
+			size_t entCount = localEntities.size();
+			int particlesNum = cg_particlesGrenadeNum;
+			int rapidSmokeCount = 4;
+			int slowSmokeCount = 8;
+			int fireSmokeCount = 4;
+			float smokeLifeScale = 1.0F;
+
+			if (entCount > 250) {
+				particlesNum = std::min(particlesNum, 8);
+				rapidSmokeCount = 1;
+				slowSmokeCount = 2;
+				fireSmokeCount = 1;
+				smokeLifeScale = 0.35F;
+			} else if (entCount > 120) {
+				particlesNum = std::min(particlesNum, 20);
+				rapidSmokeCount = 2;
+				slowSmokeCount = 4;
+				fireSmokeCount = 2;
+				smokeLifeScale = 0.65F;
+			}
 
 			// determines free space around for SetTrajectory
 			Vector3 velBias = {0, 0, 0};
@@ -423,14 +448,13 @@ namespace spades {
 			col = map->GetColorJit(col); // jit the colour
 			Vector4 color = ConvertColorRGBA(IntVectorFromColor(col));
 
-			int particlesNum = cg_particlesGrenadeNum;
 			for (int i = 0; i < particlesNum; i++) {
 				auto ent = stmp::make_unique<ParticleSpriteEntity>(*this, img, color);
 				Vector3 dir = RandomUnitVector() + velBias * 0.5F;
 				float radius = 0.3F + SampleRandomFloat() * SampleRandomFloat() * 0.3F;
 				ent->SetTrajectory(pos + dir * 0.2F, dir * 16.0F, 0.1F + radius * 3.0F);
 				ent->SetRadius(radius);
-				ent->SetLifeTime(3.5F + SampleRandomFloat() * 2.0F, 0.0F, 1.0F);
+				ent->SetLifeTime((3.5F + SampleRandomFloat() * 2.0F) * smokeLifeScale, 0.0F, 1.0F);
 				if (dist < PARTICLE_BOUNCE_DIST)
 					ent->SetBlockHitAction(BlockHitAction::BounceWeak);
 				localEntities.emplace_back(std::move(ent));
@@ -440,20 +464,20 @@ namespace spades {
 				return;
 
 			// rapid smoke
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < rapidSmokeCount; i++) {
 				auto ent = stmp::make_unique<SmokeSpriteEntity>(*this, color, 60.0F,
 					SmokeSpriteEntity::Type::Explosion);
 				ent->SetTrajectory(pos, (RandomUnitVector() + velBias * 0.5F) * 2.0F, 1.0F, 0.0F);
 				ent->SetRotation(SampleRandomFloat() * kTwoPi);
 				ent->SetRadius(0.6F + SampleRandomFloat() * SampleRandomFloat() * 0.4F, 2.0F, 0.2F);
-				ent->SetLifeTime(1.8F + SampleRandomFloat() * 0.1F, 0.0F, 0.2F);
+				ent->SetLifeTime((1.8F + SampleRandomFloat() * 0.1F) * smokeLifeScale, 0.0F, 0.2F);
 				ent->SetBlockHitAction(BlockHitAction::Ignore);
 				localEntities.emplace_back(std::move(ent));
 			}
 
 			// slow smoke
 			color.w = 0.25F;
-			for (int i = 0; i < 8; i++) {
+			for (int i = 0; i < slowSmokeCount; i++) {
 				auto ent = stmp::make_unique<SmokeSpriteEntity>(*this, color, 30.0F);
 				ent->SetTrajectory(pos, (MakeVector3(SampleRandomFloat() - SampleRandomFloat(),
 							   SampleRandomFloat() - SampleRandomFloat(),
@@ -461,10 +485,10 @@ namespace spades {
 				ent->SetRotation(SampleRandomFloat() * kTwoPi);
 				ent->SetRadius(1.5F + SampleRandomFloat() * SampleRandomFloat() * 0.8F, 0.2F);
 				switch (particleLevel) {
-					case 1: ent->SetLifeTime(0.8F + SampleRandomFloat() * 1.0F, 0.1F, 8.0F); break;
-					case 2: ent->SetLifeTime(1.5F + SampleRandomFloat() * 2.0F, 0.1F, 8.0F); break;
+					case 1: ent->SetLifeTime((0.8F + SampleRandomFloat() * 1.0F) * smokeLifeScale, 0.1F, 8.0F); break;
+					case 2: ent->SetLifeTime((1.5F + SampleRandomFloat() * 2.0F) * smokeLifeScale, 0.1F, 8.0F); break;
 					case 3:
-					default: ent->SetLifeTime(2.0F + SampleRandomFloat() * 5.0F, 0.1F, 8.0F); break;
+					default: ent->SetLifeTime((2.0F + SampleRandomFloat() * 5.0F) * smokeLifeScale, 0.1F, 8.0F); break;
 				}
 				ent->SetBlockHitAction(BlockHitAction::Ignore);
 				localEntities.emplace_back(std::move(ent));
@@ -472,7 +496,7 @@ namespace spades {
 
 			// fire smoke
 			color = MakeVector4(1, 0.7F, 0.4F, 0.2F) * 5.0F;
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < fireSmokeCount; i++) {
 				auto ent = stmp::make_unique<SmokeSpriteEntity>(*this, color, 120.0F,
 					SmokeSpriteEntity::Type::Explosion);
 				ent->SetTrajectory(pos, (RandomUnitVector() + velBias) * 6.0F, 1.0F, 0.0F);
@@ -497,6 +521,23 @@ namespace spades {
 			if (!particleLevel)
 				return;
 
+			size_t entCount = localEntities.size();
+			int particlesNum = cg_particlesGrenadeNum;
+			int water1Count = 7;
+			int water2Count = 16;
+			int slowSmokeCount = 4;
+			if (entCount > 250) {
+				particlesNum = std::min(particlesNum, 8);
+				water1Count = 2;
+				water2Count = 4;
+				slowSmokeCount = 1;
+			} else if (entCount > 120) {
+				particlesNum = std::min(particlesNum, 20);
+				water1Count = 4;
+				water2Count = 8;
+				slowSmokeCount = 2;
+			}
+
 			Vector3 velBias = {0, 0, -1.0F};
 
 			// fragments
@@ -504,7 +545,6 @@ namespace spades {
 
 			Vector4 color = MakeVector4(1, 1, 1, 0.6F);
 
-			int particlesNum = cg_particlesGrenadeNum;
 			for (int i = 0; i < particlesNum; i++) {
 				auto ent = stmp::make_unique<ParticleSpriteEntity>(*this, img, color);
 				Vector3 dir = RandomUnitVector() + velBias * 0.5F;
@@ -523,7 +563,7 @@ namespace spades {
 			// water1
 			img = renderer->RegisterImage("Textures/WaterExpl.png");
 			color = MakeVector4(0.95F, 0.95F, 0.95F, 0.6F);
-			for (int i = 0; i < 7; i++) {
+			for (int i = 0; i < water1Count; i++) {
 				auto ent = stmp::make_unique<ParticleSpriteEntity>(*this, img, color);
 				ent->SetTrajectory(pos, (MakeVector3(0.0F, 0.0F, -SampleRandomFloat() * 7.0F)) * 2.5F, 0.3F);
 				ent->SetRadius(1.2F + SampleRandomFloat() * SampleRandomFloat() * 0.4F, 0.6F);
@@ -535,7 +575,7 @@ namespace spades {
 			// water2
 			img = renderer->RegisterImage("Textures/Fluid.png");
 			color.w = 0.9F;
-			for (int i = 0; i < 16; i++) {
+			for (int i = 0; i < water2Count; i++) {
 				auto ent = stmp::make_unique<ParticleSpriteEntity>(*this, img, color);
 				ent->SetTrajectory(pos, (MakeVector3(SampleRandomFloat() - SampleRandomFloat(),
 													 SampleRandomFloat() - SampleRandomFloat(),
@@ -549,7 +589,7 @@ namespace spades {
 
 			// slow smoke
 			color.w = 0.3F;
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < slowSmokeCount; i++) {
 				auto ent = stmp::make_unique<SmokeSpriteEntity>(*this, color, 10.0F);
 				ent->SetTrajectory(pos, (MakeVector3(SampleRandomFloat() - SampleRandomFloat(),
 							   SampleRandomFloat() - SampleRandomFloat(),
