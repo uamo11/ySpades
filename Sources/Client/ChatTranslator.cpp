@@ -41,6 +41,23 @@
 namespace spades {
 	namespace client {
 
+		namespace {
+			/** Normalizes a backend language tag ("es", "PT-br", "zh-CN", ...) to a 2 letter code. */
+			std::string NormalizeLanguageCode(const std::string& code) {
+				std::string out;
+				for (char c : code) {
+					if (c == '-' || c == '_')
+						break;
+					if (c >= 'A' && c <= 'Z')
+						c = static_cast<char>(c - 'A' + 'a');
+					if (c < 'a' || c > 'z')
+						return "xx";
+					out += c;
+				}
+				return out.size() == 2 ? out : std::string("xx");
+			}
+		} // namespace
+
 		ChatTranslator& ChatTranslator::GetInstance() {
 			static ChatTranslator instance;
 			return instance;
@@ -363,7 +380,10 @@ namespace spades {
 			return true;
 		}
 
-		bool ChatTranslator::TryFastTranslate(const std::string& msg, std::string& outTranslated) {
+		bool ChatTranslator::TryFastTranslate(const std::string& msg, std::string& outTranslated,
+		                                      std::string& outLang) {
+			outLang = "xx";
+
 			// Fast normalization: lower case and stripped trailing punctuation
 			std::string lower = msg;
 			for (char& c : lower) c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
@@ -378,23 +398,26 @@ namespace spades {
 			{
 				std::lock_guard<std::mutex> lock(cacheMutex);
 				auto it = cache.find(key);
-				if (it != cache.end()) {
-					outTranslated = it->second;
+				if (it != cache.end() && !it->second.text.empty()) {
+					outTranslated = it->second.text;
+					outLang = it->second.lang.empty() ? "xx" : it->second.lang;
 					return true;
 				}
 				auto itRaw = cache.find(msg);
-				if (itRaw != cache.end()) {
-					outTranslated = itRaw->second;
+				if (itRaw != cache.end() && !itRaw->second.text.empty()) {
+					outTranslated = itRaw->second.text;
+					outLang = itRaw->second.lang.empty() ? "xx" : itRaw->second.lang;
 					return true;
 				}
 			}
 
-			// 2. Check tactical dictionary
+			// 2. Check tactical dictionary (the keys are English, so that is the source language)
 			auto dictIt = tacticalDict.find(key);
 			if (dictIt != tacticalDict.end()) {
 				outTranslated = dictIt->second;
+				outLang = "en";
 				std::lock_guard<std::mutex> lock(cacheMutex);
-				cache[key] = outTranslated;
+				cache[key] = CachedTranslation{ outTranslated, outLang };
 				return true;
 			}
 
@@ -423,15 +446,19 @@ namespace spades {
 		}
 
 		std::vector<CompletedTranslation> ChatTranslator::PopCompletedTranslations() {
-			if (!hasCompletedTranslations.load(std::memory_order_acquire)) {
-				return {};
-			}
 			std::vector<CompletedTranslation> result;
 			{
 				std::lock_guard<std::mutex> lock(completedMutex);
+				if (completedList.empty()) {
+					hasCompletedTranslations.store(false, std::memory_order_release);
+					return {};
+				}
 				result.swap(completedList);
+				// Recompute the flag while still holding the lock: the worker may have pushed
+				// another translation between the first check and the swap, and clearing the
+				// flag would strand it until the next unrelated translation completed.
+				hasCompletedTranslations.store(!completedList.empty(), std::memory_order_release);
 			}
-			hasCompletedTranslations.store(false, std::memory_order_release);
 			return result;
 		}
 
@@ -440,12 +467,19 @@ namespace spades {
 			cache.clear();
 		}
 
-		std::string ChatTranslator::QueryGoogleTranslate(void* curlHandle, const std::string& text) {
+		bool ChatTranslator::QueryGoogleTranslate(void* curlHandle, const std::string& text,
+		                                          std::string& outTranslation,
+		                                          std::string& outLang) {
+			outTranslation.clear();
+			outLang = "xx";
+
 			CURL* curl = static_cast<CURL*>(curlHandle);
-			if (!curl || text.empty()) return "";
+			if (!curl || text.empty())
+				return false;
 
 			char* escaped = curl_easy_escape(curl, text.c_str(), static_cast<int>(text.size()));
-			if (!escaped) return "";
+			if (!escaped)
+				return false;
 
 			std::string url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=" + std::string(escaped);
 			curl_free(escaped);
@@ -466,19 +500,30 @@ namespace spades {
 
 			CURLcode res = curl_easy_perform(curl);
 			if (res != CURLE_OK || response.empty())
-				return "";
+				return false;
+
+			// Detected source language: the third element of the top level array,
+			// e.g. [[["hola","hello",...]],null,"en"].
+			size_t langPos = response.find("]],");
+			if (langPos != std::string::npos) {
+				size_t q1 = response.find('"', langPos + 3);
+				size_t q2 = (q1 == std::string::npos) ? std::string::npos
+				                                      : response.find('"', q1 + 1);
+				if (q1 != std::string::npos && q2 != std::string::npos && q2 > q1 + 1)
+					outLang = NormalizeLanguageCode(response.substr(q1 + 1, q2 - q1 - 1));
+			}
 
 			// Parse JSON: [[["translated text","original text",...
 			size_t p1 = response.find("\"");
 			if (p1 == std::string::npos)
-				return "";
+				return false;
 
 			size_t p2 = response.find("\"", p1 + 1);
 			while (p2 != std::string::npos && response[p2 - 1] == '\\') {
 				p2 = response.find("\"", p2 + 1);
 			}
 			if (p2 == std::string::npos || p2 <= p1 + 1)
-				return "";
+				return false;
 
 			std::string raw = response.substr(p1 + 1, p2 - p1 - 1);
 			std::string clean;
@@ -503,14 +548,15 @@ namespace spades {
 			while (!clean.empty() && clean.back() == ' ') clean.pop_back();
 
 			if (clean.empty() || EqualsIgnoringCase(clean, text))
-				return "";
+				return false;
 
 			// Keep message compact to avoid HUD clipping
 			if (clean.size() > 95) {
 				clean = clean.substr(0, 92) + "...";
 			}
 
-			return clean;
+			outTranslation = clean;
+			return true;
 		}
 
 		void ChatTranslator::WorkerLoop() {
@@ -534,20 +580,22 @@ namespace spades {
 
 				// Check cache in worker thread
 				std::string translated;
+				std::string lang;
 				{
 					std::lock_guard<std::mutex> lock(cacheMutex);
 					auto it = cache.find(job.originalMsg);
-					if (it != cache.end())
-						translated = it->second;
+					if (it != cache.end() && !it->second.text.empty()) {
+						translated = it->second.text;
+						lang = it->second.lang;
+					}
 				}
 
 				if (translated.empty() && workerCurl) {
-					translated = QueryGoogleTranslate(workerCurl, job.originalMsg);
-					if (!translated.empty()) {
+					if (QueryGoogleTranslate(workerCurl, job.originalMsg, translated, lang)) {
 						std::lock_guard<std::mutex> lock(cacheMutex);
 						if (cache.size() > 500)
 							cache.clear();
-						cache[job.originalMsg] = translated;
+						cache[job.originalMsg] = CachedTranslation{ translated, lang };
 					}
 				}
 
@@ -556,14 +604,13 @@ namespace spades {
 					comp.msgId = job.msgId;
 					comp.originalMsg = job.originalMsg;
 					comp.translatedMsg = translated;
+					comp.sourceLang = lang.empty() ? "xx" : lang;
 
 					std::string fullText = job.prefix + ChatWindow::TeamColorMessage(job.playerName, job.teamId);
 					if (!job.state.empty()) {
 						fullText += " " + job.state;
 					}
-					std::string trPrefix;
-					trPrefix += ChatWindow::MsgTranslateIcon;
-					fullText += ": " + trPrefix + translated;
+					fullText += ": " + ChatWindow::TranslateMarker(comp.sourceLang) + translated;
 					comp.fullTranslatedText = fullText;
 
 					{

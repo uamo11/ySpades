@@ -487,6 +487,7 @@ namespace spades {
 				}
 				pressedLinkId = -1;
 				pressedLinkUrl.clear();
+				ClearRowHover();
 				ApplyTextCursor();
 			}
 
@@ -559,6 +560,36 @@ namespace spades {
 				}
 			}
 
+			void TextViewer::UpdateRowHover(Vector2 clientPosition) {
+				int row = -1;
+				if (textmodel) {
+					int line = static_cast<int>(std::floor((clientPosition.y - GetRowsOffsetY()) / rowHeight)) + GetTopRowIndex();
+					int totalRows = textmodel->GetNumRows();
+					if (line >= 0 && line < totalRows)
+						row = line;
+				}
+				if (row == hoverRow)
+					return;
+
+				hoverRow = row;
+				if (rowHovered) {
+					// copy the handler: it may rebuild this viewer
+					std::function<void(int, Vector2)> handler = rowHovered;
+					handler(row, clientPosition);
+				}
+			}
+
+			void TextViewer::ClearRowHover() {
+				if (hoverRow < 0)
+					return;
+
+				hoverRow = -1;
+				if (rowHovered) {
+					std::function<void(int, Vector2)> handler = rowHovered;
+					handler(-1, MakeVector2(0.0F, 0.0F));
+				}
+			}
+
 			void TextViewer::RefreshHover() {
 				// hover is not tracked while a selection is being dragged
 				if (dragging || !IsVisible())
@@ -594,10 +625,12 @@ namespace spades {
 			}
 
 			void TextViewer::MouseMove(Vector2 clientPosition) {
-				if (dragging)
+				if (dragging) {
 					selection->cursorPosition = PointToCharIndex(clientPosition);
-				else
-					UpdateHover(clientPosition);
+					return;
+				}
+				UpdateHover(clientPosition);
+				UpdateRowHover(clientPosition);
 			}
 
 			void TextViewer::MouseUp(MouseButton button, Vector2 clientPosition) {
@@ -636,6 +669,7 @@ namespace spades {
 
 			void TextViewer::MouseLeave() {
 				selection->hoverLinkId = -1;
+				ClearRowHover();
 				SetCursor(nullptr);
 			}
 
@@ -643,6 +677,7 @@ namespace spades {
 				dragging = false;
 				pressedLinkId = -1;
 				pressedLinkUrl.clear();
+				ClearRowHover();
 			}
 
 			void TextViewer::KeyDown(const std::string& key) {

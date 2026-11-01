@@ -19,6 +19,7 @@
  */
 
 #include <cctype>
+#include <initializer_list>
 
 #include "ChatTranslator.h"
 #include "ChatWindow.h"
@@ -43,6 +44,168 @@ SPADES_SETTING(cg_statsSmallFont);
 
 namespace spades {
 	namespace client {
+
+		namespace {
+			/**
+			 * Draws a small flag for a two-letter language code. Only flat rectangles are
+			 * available, so the more elaborate designs are approximated.
+			 */
+			void DrawLanguageFlag(IRenderer& renderer, const std::string& lang, float x,
+			                      float y, float w, float h, float fade) {
+				auto fill = [&](float x0, float y0, float x1, float y1, const Vector4& c) {
+					Vector4 col = MakeVector4(c.x, c.y, c.z, c.w * fade).Premultiplied();
+					renderer.SetColorAlphaPremultiplied(col);
+					renderer.DrawFilledRect(x0, y0, x1, y1);
+				};
+				auto bandsH = [&](std::initializer_list<Vector4> bands) {
+					const float n = static_cast<float>(bands.size());
+					int i = 0;
+					for (const Vector4& c : bands) {
+						fill(x, y + h * i / n, x + w, y + h * (i + 1) / n, c);
+						++i;
+					}
+				};
+				auto bandsV = [&](std::initializer_list<Vector4> bands) {
+					const float n = static_cast<float>(bands.size());
+					int i = 0;
+					for (const Vector4& c : bands) {
+						fill(x + w * i / n, y, x + w * (i + 1) / n, y + h, c);
+						++i;
+					}
+				};
+				auto nordicCross = [&](const Vector4& bg, const Vector4& cross,
+				                       const Vector4* inner) {
+					fill(x, y, x + w, y + h, bg);
+					const float t = h * 0.28F;
+					const float vx = x + w * 0.36F;
+					const float cy = y + h * 0.5F;
+					fill(vx - t * 0.5F, y, vx + t * 0.5F, y + h, cross);
+					fill(x, cy - t * 0.5F, x + w, cy + t * 0.5F, cross);
+					if (inner) {
+						const float ti = t * 0.45F;
+						fill(vx - ti * 0.5F, y, vx + ti * 0.5F, y + h, *inner);
+						fill(x, cy - ti * 0.5F, x + w, cy + ti * 0.5F, *inner);
+					}
+				};
+
+				const Vector4 white = MakeVector4(1.00F, 1.00F, 1.00F, 0.95F);
+				const Vector4 red = MakeVector4(0.82F, 0.11F, 0.14F, 0.95F);
+				const Vector4 gold = MakeVector4(0.98F, 0.78F, 0.06F, 0.95F);
+				const Vector4 blue = MakeVector4(0.05F, 0.16F, 0.55F, 0.95F);
+				const Vector4 black = MakeVector4(0.07F, 0.07F, 0.08F, 0.95F);
+				const Vector4 green = MakeVector4(0.00F, 0.45F, 0.22F, 0.95F);
+
+				const float cx = x + w * 0.5F;
+				const float cy = y + h * 0.5F;
+
+				if (lang == "es") {
+					bandsH({ red, gold, red });
+					fill(x + 3.0F, cy - 2.0F, x + 5.0F, cy + 1.0F,
+					     MakeVector4(0.72F, 0.15F, 0.12F, 0.90F));
+				} else if (lang == "en") {
+					// Union Jack approximation: the diagonals cannot be drawn with rectangles.
+					fill(x, y, x + w, y + h, MakeVector4(0.05F, 0.13F, 0.45F, 0.95F));
+					fill(cx - w * 0.11F, y, cx + w * 0.11F, y + h, white);
+					fill(x, cy - h * 0.20F, x + w, cy + h * 0.20F, white);
+					fill(cx - w * 0.06F, y, cx + w * 0.06F, y + h, red);
+					fill(x, cy - h * 0.10F, x + w, cy + h * 0.10F, red);
+				} else if (lang == "fr") {
+					bandsV({ blue, white, red });
+				} else if (lang == "it") {
+					bandsV({ green, white, red });
+				} else if (lang == "de") {
+					bandsH({ black, red, gold });
+				} else if (lang == "nl") {
+					bandsH({ red, white, blue });
+				} else if (lang == "ru") {
+					bandsH({ white, blue, red });
+				} else if (lang == "pl") {
+					bandsH({ white, red });
+				} else if (lang == "id") {
+					bandsH({ red, white });
+				} else if (lang == "ro") {
+					bandsV({ blue, gold, red });
+				} else if (lang == "hu") {
+					bandsH({ red, white, green });
+				} else if (lang == "ua") {
+					bandsH({ blue, gold });
+				} else if (lang == "bg") {
+					bandsH({ white, green, red });
+				} else if (lang == "cs") {
+					bandsH({ white, red });
+					fill(x, y, x + w * 0.45F, y + h, MakeVector4(0.04F, 0.20F, 0.50F, 0.95F));
+				} else if (lang == "tr") {
+					fill(x, y, x + w, y + h, red);
+					// Crescent: a white disc with a red one biting into it.
+					fill(x + 3.0F, cy - 3.5F, x + 9.0F, cy + 3.5F, white);
+					fill(x + 5.0F, cy - 3.0F, x + 9.0F, cy + 3.0F, red);
+					fill(x + 10.0F, cy - 1.5F, x + 13.0F, cy + 1.5F, white);
+				} else if (lang == "pt") {
+					fill(x, y, x + w * 0.40F, y + h, green);
+					fill(x + w * 0.40F, y, x + w, y + h, red);
+					fill(x + w * 0.40F - 2.0F, cy - 2.0F, x + w * 0.40F + 2.0F, cy + 2.0F, gold);
+				} else if (lang == "ja") {
+					fill(x, y, x + w, y + h, white);
+					fill(cx - w * 0.22F, cy - h * 0.28F, cx + w * 0.22F, cy + h * 0.28F, red);
+				} else if (lang == "zh") {
+					fill(x, y, x + w, y + h, red);
+					fill(x + 2.0F, y + 1.5F, x + 5.0F, y + 4.5F, gold);
+					fill(x + 6.0F, y + 2.0F, x + 8.0F, y + 4.0F, gold);
+				} else if (lang == "ko") {
+					fill(x, y, x + w, y + h, white);
+					fill(cx - 3.0F, cy - 3.0F, cx + 3.0F, cy, red);
+					fill(cx - 3.0F, cy, cx + 3.0F, cy + 3.0F, blue);
+				} else if (lang == "vi") {
+					fill(x, y, x + w, y + h, red);
+					fill(cx - 2.0F, cy - 2.0F, cx + 2.0F, cy + 2.0F, gold);
+				} else if (lang == "sv") {
+					nordicCross(blue, gold, nullptr);
+				} else if (lang == "fi") {
+					nordicCross(white, blue, nullptr);
+				} else if (lang == "da") {
+					nordicCross(red, white, nullptr);
+				} else if (lang == "no" || lang == "nb" || lang == "nn") {
+					nordicCross(red, white, &blue);
+				} else if (lang == "el") {
+					bandsH({ blue, white, blue });
+				} else if (lang == "he") {
+					fill(x, y, x + w, y + h, white);
+					fill(x, y, x + w, y + 2.0F, blue);
+					fill(x, y + h - 2.0F, x + w, y + h, blue);
+				} else if (lang == "ar") {
+					bandsH({ green, white, black });
+				} else if (lang == "th") {
+					bandsH({ red, white, blue });
+				} else {
+					// Unknown language: neutral badge with a light "translate" bar.
+					fill(x, y, x + w, y + h, MakeVector4(0.28F, 0.30F, 0.34F, 0.92F));
+					fill(x + 2.0F, cy - 1.0F, x + w - 2.0F, cy + 1.0F,
+					     MakeVector4(0.90F, 0.90F, 0.92F, 0.70F));
+				}
+
+				renderer.SetColorAlphaPremultiplied(
+				  MakeVector4(0.12F, 0.12F, 0.16F, 0.85F * fade).Premultiplied());
+				renderer.DrawOutlinedRect(x, y, x + w, y + h);
+			}
+		} // namespace
+
+		std::string ChatWindow::TranslateMarker(const std::string& lang) {
+			std::string code = "xx";
+			if (lang.size() >= 2) {
+				code.clear();
+				for (size_t i = 0; i < 2; i++) {
+					char c = lang[i];
+					if (c >= 'A' && c <= 'Z')
+						c = static_cast<char>(c - 'A' + 'a');
+					if (c < 'a' || c > 'z') {
+						code = "xx";
+						break;
+					}
+					code += c;
+				}
+			}
+			return std::string(1, MsgTranslateIcon) + code;
+		}
 
 		ChatWindow::ChatWindow(Client* c, IFont* fnt, bool killfeed)
 		    : client(c), renderer(c->GetRenderer()), font(fnt), killfeed(killfeed) {
@@ -197,7 +360,9 @@ namespace spades {
 				for (const auto& item : completed) {
 					UpdateMessage(item.msgId, item.fullTranslatedText);
 					if (client && client->GetUI()) {
-						client->GetUI()->UpdateChatLogTranslation(item.originalMsg, item.translatedMsg);
+						client->GetUI()->UpdateChatLogTranslation(item.originalMsg,
+						                                          item.translatedMsg,
+						                                          item.sourceLang);
 					}
 				}
 			}
@@ -299,7 +464,16 @@ namespace spades {
 
 				for (size_t i = 0; i < msg.size(); i++) {
 					if (msg[i] == MsgTranslateIcon) {
-						// Mini flag badge of the translated language (Spanish flag 🇪🇸: Red - Gold - Red)
+						// Two lowercase letters right after the marker name the language the
+						// message was written in, so the flag shows the source language and not
+						// the one it was translated to.
+						std::string lang = "xx";
+						if (i + 2 < msg.size() && msg[i + 1] >= 'a' && msg[i + 1] <= 'z' &&
+						    msg[i + 2] >= 'a' && msg[i + 2] <= 'z') {
+							lang.assign(msg, i + 1, 2);
+							i += 2;
+						}
+
 						float flagW = 16.0F;
 						float flagH = 11.0F;
 						float flagX = tx + curPosX;
@@ -310,36 +484,7 @@ namespace spades {
 						renderer.SetColorAlphaPremultiplied(shadow.Premultiplied());
 						renderer.DrawFilledRect(flagX + 1.0F, flagY + 1.0F, flagX + flagW + 1.0F, flagY + flagH + 1.0F);
 
-						// Spanish flag stripes: 1:2:1 ratio (top red 27%, middle gold 46%, bottom red 27%)
-						float rTop = floorf(flagH * 0.27F);
-						float rBot = floorf(flagH * 0.73F);
-
-						Vector4 redColor = MakeVector4(0.85F, 0.12F, 0.12F, 0.95F * fade).Premultiplied();
-						Vector4 goldColor = MakeVector4(0.98F, 0.78F, 0.06F, 0.95F * fade).Premultiplied();
-
-						// Top red stripe
-						renderer.SetColorAlphaPremultiplied(redColor);
-						renderer.DrawFilledRect(flagX, flagY, flagX + flagW, flagY + rTop);
-
-						// Middle gold stripe
-						renderer.SetColorAlphaPremultiplied(goldColor);
-						renderer.DrawFilledRect(flagX, flagY + rTop, flagX + flagW, flagY + rBot);
-
-						// Bottom red stripe
-						renderer.SetColorAlphaPremultiplied(redColor);
-						renderer.DrawFilledRect(flagX, flagY + rBot, flagX + flagW, flagY + flagH);
-
-						// Subtle coat-of-arms crest detail on left side of gold stripe
-						float coatX = flagX + 3.0F;
-						float coatY = flagY + rTop + 1.0F;
-						Vector4 coatCol = MakeVector4(0.72F, 0.15F, 0.12F, 0.90F * fade).Premultiplied();
-						renderer.SetColorAlphaPremultiplied(coatCol);
-						renderer.DrawFilledRect(coatX, coatY, coatX + 2.0F, coatY + 3.0F);
-
-						// Crisp dark outline border
-						Vector4 flagBorder = MakeVector4(0.12F, 0.12F, 0.16F, 0.85F * fade).Premultiplied();
-						renderer.SetColorAlphaPremultiplied(flagBorder);
-						renderer.DrawOutlinedRect(flagX, flagY, flagX + flagW, flagY + flagH);
+						DrawLanguageFlag(renderer, lang, flagX, flagY, flagW, flagH, fade);
 
 						tx += flagW + 5.0F;
 					} else if (msg[i] == MsgDeadIcon) {

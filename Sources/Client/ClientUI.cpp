@@ -141,31 +141,47 @@ namespace spades {
 		bool ClientUI::WantsClientToBeClosed() { return shouldExit; }
 		bool ClientUI::NeedsInput() { return static_cast<bool>(activeUI) && !peeking; }
 
-		void ClientUI::RecordChatLog(const std::string& msg, Vector4 color, const std::string& original) {
+		namespace {
+			/** `[EN]` style tag used by the chat history for a translated line. */
+			std::string TranslationTag(const std::string& lang, bool showingOriginal) {
+				if (showingOriginal)
+					return "[Original] ";
+				std::string code = "??";
+				if (lang.size() >= 2)
+					code = ToUpperCase(lang.substr(0, 2));
+				return "[" + code + "] ";
+			}
+		} // namespace
+
+		void ClientUI::RecordChatLog(const std::string& msg, Vector4 color, const std::string& original,
+		                             const std::string& language) {
 			ChatLogRecord rec;
 			rec.displayed = msg;
 			rec.original = original.empty() ? msg : original;
 			rec.isTranslated = !original.empty() && original != msg;
 			rec.showingOriginal = false;
+			rec.language = language;
 			rec.color = color;
 			chatLogRecords.push_back(rec);
 
 			std::string drawLine = rec.displayed;
 			if (rec.isTranslated) {
-				drawLine = "[Tr] " + rec.displayed;
+				drawLine = TranslationTag(rec.language, false) + rec.displayed;
 			}
 			chatLogWindow->Record(drawLine, color);
 			if (chatPanel)
 				chatPanel->Record(drawLine, color);
 		}
 
-		void ClientUI::UpdateChatLogTranslation(const std::string& original, const std::string& translated) {
+		void ClientUI::UpdateChatLogTranslation(const std::string& original, const std::string& translated,
+		                                        const std::string& language) {
 			for (auto it = chatLogRecords.rbegin(); it != chatLogRecords.rend(); ++it) {
 				if (it->original.find(original) != std::string::npos || it->displayed.find(original) != std::string::npos) {
 					it->isTranslated = true;
 					it->original = it->displayed;
 					it->displayed = translated;
 					it->showingOriginal = false;
+					it->language = language;
 					if (chatPanel) {
 						chatPanel->RebuildHistory();
 					}

@@ -88,6 +88,13 @@ namespace spades {
 			static std::string TeamColorMessage(const std::string&, int);
 			static std::string KillImage(int killType, int weaponType = -1);
 
+			/**
+			 * Builds the translated-message marker: `MsgTranslateIcon` followed by the
+			 * two-letter code of the language the message was written in. The HUD chat
+			 * draws the flag of that language, not of the translation target.
+			 */
+			static std::string TranslateMarker(const std::string& lang);
+
 			/** Returns the color that a message color control byte selects. */
 			Vector4 GetColor(char);
 

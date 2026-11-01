@@ -95,6 +95,23 @@ namespace spades {
 			void BuildHistory(float x, float y, float w, float h, float rowHeight,
 			                  bool interactive);
 			void OnHistoryRowClicked(int row);
+			void OnHistoryRowHovered(int row, Vector2 position);
+			void DrawHoverOriginal();
+
+			/**
+			 * Maps a history row (visual row, after word wrapping) to the index of the
+			 * record in `ClientUI::chatLogRecords` it was built from, or -1.
+			 */
+			int RecordIndexForRow(int row) const;
+
+			// Row index -> record index. A single message may span several rows when it
+			// wraps, so `row` cannot be used directly to index the records.
+			std::vector<int> historyRowRecord;
+
+			// Original text of the translated line under the mouse, shown as a tooltip while
+			// the composer is open (that is when the cursor is available in game).
+			std::string hoveredOriginal;
+			Vector2 hoveredAt;
 
 			void OnSetGlobal(gui::ui::UIElement& sender);
 			void OnSetTeam(gui::ui::UIElement& sender);

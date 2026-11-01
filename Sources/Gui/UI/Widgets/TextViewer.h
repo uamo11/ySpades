@@ -166,11 +166,16 @@ namespace spades {
 				int pressedLinkId = -1;
 				std::string pressedLinkUrl;
 
+				// row under the mouse, -1 if none
+				int hoverRow = -1;
+
 				const TextViewerLink* FindLinkAt(Vector2 clientPosition) const;
 
 				int PointToCharIndex(Vector2 clientPosition) const;
 				void ApplyTextCursor();
 				void UpdateHover(Vector2 clientPosition);
+				void UpdateRowHover(Vector2 clientPosition);
+				void ClearRowHover();
 
 				/** Re-evaluates the hovered link for a mouse that did not move but whose content did. */
 				void RefreshHover();
@@ -193,6 +198,12 @@ namespace spades {
 
 				/** Called with the 0-based row index of a clicked text row. */
 				std::function<void(int)> rowActivated;
+
+				/**
+				 * Called with the 0-based row index under the mouse (-1 when there is none)
+				 * and the mouse position in this element's space, every time it changes.
+				 */
+				std::function<void(int, Vector2)> rowHovered;
 
 				TextViewer(UIManager* manager);
 

@@ -1283,13 +1283,12 @@ namespace spades {
 				// Check if chat translation is enabled and eligible for incoming foreign player messages
 				if (cg_chatTranslate && !p.IsLocalPlayer() && !isPlayerName && ChatTranslator::GetInstance().ShouldTranslate(msg)) {
 					std::string fastTranslation;
-					if (ChatTranslator::GetInstance().TryFastTranslate(msg, fastTranslation)) {
+					std::string sourceLang;
+					if (ChatTranslator::GetInstance().TryFastTranslate(msg, fastTranslation, sourceLang)) {
 						// Instant 0ms translation from tactical gaming dictionary or in-memory LRU cache
-						std::string trPrefix;
-						trPrefix += ChatWindow::MsgTranslateIcon;
-						s += trPrefix + fastTranslation;
+						s += ChatWindow::TranslateMarker(sourceLang) + fastTranslation;
 						chatWindow->AddMessage(s);
-						scriptedUI->RecordChatLog(playerNameStr + ": " + fastTranslation, ConvertColorRGBA(p.GetColor()), playerNameStr + ": " + msg);
+						scriptedUI->RecordChatLog(playerNameStr + ": " + fastTranslation, ConvertColorRGBA(p.GetColor()), playerNameStr + ": " + msg, sourceLang);
 					} else {
 						// Display original message immediately so there is zero delay in receiving chat
 						s += msg;

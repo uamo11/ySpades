@@ -438,6 +438,9 @@ namespace spades {
 				viewer->rowActivated = [this](int row) {
 					OnHistoryRowClicked(row);
 				};
+				viewer->rowHovered = [this](int row, Vector2 position) {
+					OnHistoryRowHovered(row, position);
+				};
 			}
 
 			RebuildHistory();
@@ -446,32 +449,132 @@ namespace spades {
 		void ClientChatWindow::RebuildHistory() {
 			if (!viewer || !ui)
 				return;
+			hoveredOriginal.clear();
+			historyRowRecord.clear();
 			viewer->Clear();
 			const size_t maxReplayed = 150;
 			const auto& records = ui->chatLogRecords;
 			size_t first = records.size() > maxReplayed ? records.size() - maxReplayed : 0;
 			for (size_t i = first; i < records.size(); i++) {
 				const auto& r = records[i];
-				std::string line = r.isTranslated
-				    ? (r.showingOriginal ? ("[Original] " + r.original) : ("[Tr] " + r.displayed))
-				    : r.displayed;
+				std::string line = r.displayed;
+				if (r.isTranslated) {
+					std::string tag = "[??] ";
+					if (r.showingOriginal) {
+						tag = "[Original] ";
+					} else if (r.language.size() >= 2) {
+						tag = "[" + ToUpperCase(r.language.substr(0, 2)) + "] ";
+					}
+					line = tag + (r.showingOriginal ? r.original : r.displayed);
+				}
+				int startRow = viewer->GetModel() ? viewer->GetModel()->GetNumRows() : 0;
 				viewer->AddLine(line, false, HistoryColor(r.color));
+				int endRow = viewer->GetModel() ? viewer->GetModel()->GetNumRows() : 0;
+				for (int row = startRow; row < endRow; row++)
+					historyRowRecord.push_back(static_cast<int>(i));
 			}
 			viewer->Layout();
 			viewer->ScrollToEnd();
 		}
 
+		int ClientChatWindow::RecordIndexForRow(int row) const {
+			if (row < 0 || static_cast<size_t>(row) >= historyRowRecord.size())
+				return -1;
+			return historyRowRecord[static_cast<size_t>(row)];
+		}
+
+		void ClientChatWindow::OnHistoryRowHovered(int row, Vector2 position) {
+			hoveredOriginal.clear();
+			if (!ui || !viewer)
+				return;
+
+			int index = RecordIndexForRow(row);
+			if (index < 0 || static_cast<size_t>(index) >= ui->chatLogRecords.size())
+				return;
+
+			const auto& item = ui->chatLogRecords[static_cast<size_t>(index)];
+			if (!item.isTranslated || item.original == item.displayed)
+				return;
+
+			hoveredOriginal = item.original;
+			hoveredAt = viewer->GetScreenPosition() + position;
+		}
+
+		void ClientChatWindow::DrawHoverOriginal() {
+			if (hoveredOriginal.empty() || mode != ChatWindowMode::Docked || !IsEnabled())
+				return;
+
+			client::IFont* font = GetFont();
+			if (!font)
+				return;
+
+			UIManager& manager = GetManager();
+			client::IRenderer& r = manager.GetRenderer();
+
+			const float maxWidth = std::min(560.0F, manager.screenWidth - 32.0F);
+			const float pad = 7.0F;
+			const float lineHeight = 19.0F;
+			const std::string prefix = _Tr("Client", "[Original] ");
+
+			// Word wrap, keeping the prefix on the first line.
+			std::vector<std::string> lines;
+			std::string current = prefix;
+			size_t start = 0;
+			while (start < hoveredOriginal.size()) {
+				size_t space = hoveredOriginal.find(' ', start);
+				if (space == std::string::npos)
+					space = hoveredOriginal.size();
+				std::string word = hoveredOriginal.substr(start, space - start);
+				start = space + 1;
+				if (word.empty())
+					continue;
+
+				std::string candidate = (current == prefix) ? current + word : current + " " + word;
+				if (current != prefix && font->Measure(candidate).x > maxWidth) {
+					lines.push_back(current);
+					current = word;
+				} else {
+					current = candidate;
+				}
+			}
+			if (current != prefix)
+				lines.push_back(current);
+			if (lines.empty())
+				return;
+
+			float textW = 0.0F;
+			for (const std::string& line : lines)
+				textW = std::max(textW, font->Measure(line).x);
+
+			const float boxW = textW + pad * 2.0F;
+			const float boxH = static_cast<float>(lines.size()) * lineHeight + pad * 2.0F;
+
+			float bx = Clamp(hoveredAt.x + 14.0F, 4.0F,
+			                 std::max(4.0F, manager.screenWidth - boxW - 4.0F));
+			float by = Clamp(hoveredAt.y - boxH - 10.0F, 4.0F,
+			                 std::max(4.0F, manager.screenHeight - boxH - 4.0F));
+
+			SetColorNP(r, MakeVector4(0.05F, 0.05F, 0.07F, 0.94F));
+			r.DrawFilledRect(bx, by, bx + boxW, by + boxH);
+			SetColorNP(r, MakeVector4(1.0F, 1.0F, 1.0F, 0.25F));
+			r.DrawOutlinedRect(bx, by, bx + boxW, by + boxH);
+
+			float ty = by + pad;
+			for (const std::string& line : lines) {
+				font->Draw(line, MakeVector2(bx + pad, ty), 1.0F, MakeVector4(1.0F, 1.0F, 1.0F, 0.95F));
+				ty += lineHeight;
+			}
+		}
+
 		void ClientChatWindow::OnHistoryRowClicked(int row) {
 			if (!ui)
 				return;
-			const size_t maxReplayed = 150;
-			const auto& records = ui->chatLogRecords;
-			size_t first = records.size() > maxReplayed ? records.size() - maxReplayed : 0;
-			size_t targetIdx = first + static_cast<size_t>(row);
-			if (targetIdx >= ui->chatLogRecords.size())
+
+			int index = RecordIndexForRow(row);
+			if (index < 0 || static_cast<size_t>(index) >= ui->chatLogRecords.size())
 				return;
 
-			auto& item = ui->chatLogRecords[targetIdx];
+			auto& item = ui->chatLogRecords[static_cast<size_t>(index)];
 			if (!item.isTranslated)
 				return;
 
@@ -480,8 +583,18 @@ namespace spades {
 		}
 
 		void ClientChatWindow::Record(const std::string& text, Vector4 color) {
-			if (viewer)
-				viewer->AddLine(text, true, HistoryColor(color));
+			if (!viewer)
+				return;
+
+			// The record was appended to the log right before this call, so the new rows
+			// belong to the last one.
+			int recordIndex =
+			  ui ? static_cast<int>(ui->chatLogRecords.size()) - 1 : -1;
+			int startRow = viewer->GetModel() ? viewer->GetModel()->GetNumRows() : 0;
+			viewer->AddLine(text, true, HistoryColor(color));
+			int endRow = viewer->GetModel() ? viewer->GetModel()->GetNumRows() : 0;
+			for (int row = startRow; row < endRow; row++)
+				historyRowRecord.push_back(recordIndex);
 		}
 
 		void ClientChatWindow::ScrollBy(float delta) {
@@ -579,6 +692,7 @@ namespace spades {
 				r.DrawImage(nullptr, AABB2(pos.x + frameX + 8.0F, pos.y + headerSeparatorY,
 				                           frameW - 16.0F, 1.0F));
 				r.DrawImage(nullptr, AABB2(pos.x + frameX + 8.0F, pos.y + separatorY, frameW - 16.0F, 1.0F));
+				DrawHoverOriginal();
 			}
 		}
 

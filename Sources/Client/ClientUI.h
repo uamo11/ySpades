@@ -46,6 +46,8 @@ namespace spades {
 			std::string original;
 			bool isTranslated = false;
 			bool showingOriginal = false;
+			/** Two-letter code of the language the message was written in ("" if untranslated). */
+			std::string language;
 			Vector4 color = MakeVector4(1.0F, 1.0F, 1.0F, 0.8F);
 		};
 
@@ -137,8 +139,10 @@ namespace spades {
 			void ExitChatPeek();
 
 			void RecordChatLog(const std::string&, Vector4 col = {1, 1, 1, 0.8F},
-			                   const std::string& original = "");
-			void UpdateChatLogTranslation(const std::string& original, const std::string& translated);
+			                   const std::string& original = "",
+			                   const std::string& language = "");
+			void UpdateChatLogTranslation(const std::string& original, const std::string& translated,
+			                              const std::string& language = "");
 
 			bool IsChatEnabled();
 

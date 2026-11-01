@@ -46,6 +46,14 @@ namespace spades {
 			std::string fullTranslatedText;
 			std::string originalMsg;
 			std::string translatedMsg;
+			/** ISO 639-1 code of the language the message was written in ("xx" if unknown). */
+			std::string sourceLang;
+		};
+
+		/** A cached translation together with the language it was written in. */
+		struct CachedTranslation {
+			std::string text;
+			std::string lang;
 		};
 
 		/**
@@ -73,7 +81,7 @@ namespace spades {
 
 			// In-memory cache for ultra-fast 0ms repeated phrases
 			std::mutex cacheMutex;
-			std::unordered_map<std::string, std::string> cache;
+			std::unordered_map<std::string, CachedTranslation> cache;
 
 			// Instant tactical gaming dictionary (<0.001ms)
 			std::unordered_map<std::string, std::string> tacticalDict;
@@ -82,7 +90,12 @@ namespace spades {
 
 			void WorkerLoop();
 			void InitTacticalDictionary();
-			std::string QueryGoogleTranslate(void* curlHandle, const std::string& text);
+			/**
+			 * Translates `text` and reports the detected source language.
+			 * @return false when the backend failed or the text was left unchanged.
+			 */
+			bool QueryGoogleTranslate(void* curlHandle, const std::string& text,
+			                          std::string& outTranslation, std::string& outLang);
 
 		public:
 			static ChatTranslator& GetInstance();
@@ -95,8 +108,10 @@ namespace spades {
 			// Fast heuristics check to skip unnecessary translations and save CPU/network
 			bool ShouldTranslate(const std::string& msg);
 
-			// Fast-path instant translate from offline dictionary or memory cache
-			bool TryFastTranslate(const std::string& msg, std::string& outTranslated);
+			// Fast-path instant translate from offline dictionary or memory cache.
+			// `outLang` receives the language the message was written in ("xx" if unknown).
+			bool TryFastTranslate(const std::string& msg, std::string& outTranslated,
+			                      std::string& outLang);
 
 			// Queue background translation
 			void QueueTranslation(uint64_t msgId, const std::string& prefix,
