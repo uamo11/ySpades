@@ -371,11 +371,11 @@ namespace spades {
 			if (peer == NULL)
 				SPRaise("Failed to create ENet peer");
 
-			// Network optimizations for low latency, jitter reduction, and WiFi stability:
-			// Ping interval: 500ms (maintains NAT binding and keeps ping accurate without spam)
-			enet_peer_ping_interval(peer, 500);
-			// Timeout: minimum 8000ms, max 25000ms, retry limit 32 (resilient to map loads, server GC, explosions, and WiFi jitter)
-			enet_peer_timeout(peer, 32, 8000, 25000);
+			// Network optimizations for lowest latency, jitter reduction, and WiFi stability:
+			// Ping interval: 250ms (keeps NAT/WiFi active and ping accurate at 4Hz)
+			enet_peer_ping_interval(peer, 250);
+			// Timeout: minimum 1000ms, max 4000ms, retry limit 32 (keeps RTT bounded to real latency)
+			enet_peer_timeout(peer, 32, 1000, 4000);
 
 			properties.reset(new GameProperties(hostname.GetProtocolVersion()));
 
@@ -538,11 +538,12 @@ namespace spades {
 				if (status == NetClientStatusConnecting) {
 					if (event.type == ENET_EVENT_TYPE_CONNECT) {
 						statusString = _Tr("NetClient", "Awaiting for state");
-						// Handshake VERIFY_CONNECT succeeded; safe to apply local throttle tuning
+						// Handshake VERIFY_CONNECT succeeded; lock throttle at 100% full throughput:
 						if (peer) {
-							peer->packetThrottleInterval = 2000;
-							peer->packetThrottleAcceleration = 4;
-							peer->packetThrottleDeceleration = 2;
+							peer->packetThrottle = peer->packetThrottleLimit; // 32 (100% full bandwidth)
+							peer->packetThrottleInterval = 5000;
+							peer->packetThrottleAcceleration = 2;
+							peer->packetThrottleDeceleration = 0; // Never throttle down game traffic!
 						}
 					} else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
 						auto& reader = readerOrNone.value();
@@ -1737,6 +1738,7 @@ namespace spades {
 			NetPacketWriter w(PacketTypePositionData);
 			w.WriteVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendOrientation(spades::Vector3 v) {
@@ -1745,6 +1747,7 @@ namespace spades {
 			NetPacketWriter w(PacketTypeOrientationData);
 			w.WriteVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendPlayerInput(PlayerInput inp) {
@@ -1776,6 +1779,7 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendWeaponInput(WeaponInput inp) {
@@ -1799,6 +1803,7 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendHit(int targetPlayerId, HitType type) {
@@ -1815,6 +1820,7 @@ namespace spades {
 				default: SPInvalidEnum("type", type);
 			}
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendGrenade(const Grenade& g) {
@@ -1833,6 +1839,7 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendTool() {
@@ -1881,6 +1888,7 @@ namespace spades {
 			}
 			w.WriteIntVector3(v);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendBlockLine(spades::IntVector3 v1, spades::IntVector3 v2) {
@@ -1891,6 +1899,7 @@ namespace spades {
 			w.WriteIntVector3(v1);
 			w.WriteIntVector3(v2);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendChat(std::string text, bool global) {
@@ -1902,6 +1911,7 @@ namespace spades {
 			w.WriteString(text);
 			w.WriteByte((uint8_t)0);
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendReload() {
@@ -1919,6 +1929,7 @@ namespace spades {
 			}
 
 			enet_peer_send(peer, 0, w.CreatePacket());
+			enet_host_flush(host);
 		}
 
 		void NetClient::SendTeamChange(int team) {
