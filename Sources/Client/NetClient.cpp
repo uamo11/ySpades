@@ -377,8 +377,11 @@ namespace spades {
 			// Timeout: minimum 8000ms, max 25000ms, retry limit 32 (resilient to map loads, server GC, explosions, and WiFi jitter)
 			enet_peer_timeout(peer, 32, 8000, 25000);
 			// Gentler throttle: recover full send rate quickly after a loss burst
-			// instead of crawling back, which feels like lingering lag.
-			enet_peer_throttle_configure(peer, 2000, 4, 2);
+			// Configured directly on the peer without transmitting wire commands
+			// (AoS/piqueserver servers reject THROTTLE_CONFIGURE wire commands during handshake).
+			peer->packetThrottleInterval = 2000;
+			peer->packetThrottleAcceleration = 4;
+			peer->packetThrottleDeceleration = 2;
 
 			properties.reset(new GameProperties(hostname.GetProtocolVersion()));
 
