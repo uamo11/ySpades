@@ -461,19 +461,24 @@ namespace spades {
 
 		void ScoreboardView::DrawSpectators(float centerX, float top) const {
 			IFont& font = client->fontManager->GetGuiFont();
-			char buf[64];
 
 			auto states = GetSpectatorStates();
 			if (states.empty())
 				return;
 
 			int numSpectators = static_cast<int>(states.size());
-			strcpy(buf, _TrN("Client", "Spectator{1}", "Spectators{1}", numSpectators, "").c_str());
+			// The catalog entries use `{1}`, i.e. the *second* format argument, so the
+			// count is passed twice: once to pick the plural form, once for the
+			// placeholder itself. Stored in a std::string: the old fixed `char[64]`
+			// buffer plus strcpy() could overflow with long translations.
+			std::string specLabel =
+			  _TrN("Client", "Spectator{1}", "Spectators{1}", numSpectators, numSpectators);
 
-			auto sizeSpecString = spectatorFont->Measure(buf);
+			auto sizeSpecString = spectatorFont->Measure(specLabel);
 			Vector2 pos = MakeVector2(centerX, top + 10.0F) - sizeSpecString * 0.5F;
-			spectatorFont->Draw(buf, pos + MakeVector2(1, 2), 1.0F, MakeVector4(0, 0, 0, 0.5));
-			spectatorFont->Draw(buf, pos, 1.0F, spectatorTextColor);
+			spectatorFont->Draw(specLabel, pos + MakeVector2(1, 2), 1.0F,
+			                    MakeVector4(0, 0, 0, 0.5));
+			spectatorFont->Draw(specLabel, pos, 1.0F, spectatorTextColor);
 
 			float yOffset = pos.y + sizeSpecString.y + 10.0F;
 

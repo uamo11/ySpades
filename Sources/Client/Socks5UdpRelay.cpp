@@ -28,6 +28,10 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 typedef int SOCKET;
+// POSIX has no `INVALID_SOCKET`; ENet uses -1 for an invalid descriptor.
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET (-1)
+#endif
 #endif
 
 namespace spades {

@@ -56,6 +56,10 @@ DEFINE_SPADES_SETTING(cg_unicode, "1");
 DEFINE_SPADES_SETTING(cl_customClientName, "ySpades");
 DEFINE_SPADES_SETTING(cl_customLocale, "");
 
+// Opt-in escape hatch: when a configured proxy cannot be used, allow the client to
+// connect directly (exposing the real IP) instead of aborting the connection.
+DEFINE_SPADES_SETTING(cg_proxyAllowDirectFallback, "0");
+
 DEFINE_SPADES_SETTING(cg_defaultBlockColorR, "111");
 DEFINE_SPADES_SETTING(cg_defaultBlockColorG, "111");
 DEFINE_SPADES_SETTING(cg_defaultBlockColorB, "111");
@@ -308,23 +312,52 @@ namespace spades {
 			ENetAddress addr = hostname.GetENetAddress();
 			SPLog("Connecting to %u:%u", (unsigned int)addr.host, (unsigned int)addr.port);
 
-			if (gui::ProxyManager::GetInstance().IsProxyEnabled() &&
-			    gui::ProxyManager::GetInstance().GetProxyType() == "socks5") {
-				gui::ProxyEntry proxy = gui::ProxyManager::GetInstance().GetActiveProxy();
-				if (!proxy.host.empty() && proxy.port > 0) {
-					socks5Relay.reset(new Socks5UdpRelay());
-					uint16_t localPort = 0;
-					SPLog("NetClient: Establishing SOCKS5 UDP Relay through %s:%d...",
-					      proxy.host.c_str(), proxy.port);
-					if (socks5Relay->Start(proxy.host, proxy.port, proxy.user, proxy.pass, addr, localPort)) {
-						SPLog("NetClient: SOCKS5 UDP Relay active on 127.0.0.1:%u", (unsigned int)localPort);
-						enet_address_set_host_ip(&addr, "127.0.0.1");
-						addr.port = localPort;
+			// Only fall back to a direct connection when the user explicitly asks for it.
+			// Silently connecting without the proxy leaks the real IP while the UI still
+			// shows the proxy as active.
+			if (gui::ProxyManager::GetInstance().IsProxyEnabled()) {
+				std::string relayError;
+
+				const std::string proxyType = gui::ProxyManager::GetInstance().GetProxyType();
+				if (proxyType != "socks5") {
+					relayError = _Tr("NetClient",
+					                 "Unsupported proxy type '{0}' (only SOCKS5 can tunnel game traffic)",
+					                 proxyType);
+				} else {
+					gui::ProxyEntry proxy = gui::ProxyManager::GetInstance().GetActiveProxy();
+					if (proxy.host.empty() || proxy.port <= 0) {
+						relayError = _Tr("NetClient", "No proxy server is configured");
 					} else {
-						SPLog("NetClient: Warning: Failed to initialize SOCKS5 UDP Relay: %s",
-						      socks5Relay->GetLastError().c_str());
-						socks5Relay.reset();
+						socks5Relay.reset(new Socks5UdpRelay());
+						uint16_t localPort = 0;
+						SPLog("NetClient: Establishing SOCKS5 UDP Relay through %s:%d...",
+						      proxy.host.c_str(), proxy.port);
+						if (socks5Relay->Start(proxy.host, proxy.port, proxy.user, proxy.pass,
+						                       addr, localPort)) {
+							SPLog("NetClient: SOCKS5 UDP Relay active on 127.0.0.1:%u",
+							      (unsigned int)localPort);
+							enet_address_set_host_ip(&addr, "127.0.0.1");
+							addr.port = localPort;
+						} else {
+							relayError = socks5Relay->GetLastError();
+							if (relayError.empty())
+								relayError = _Tr("NetClient", "Unknown SOCKS5 relay error");
+							socks5Relay.reset();
+						}
 					}
+				}
+
+				if (!relayError.empty()) {
+					if (!cg_proxyAllowDirectFallback) {
+						SPLog("NetClient: Proxy connection failed, aborting: %s",
+						      relayError.c_str());
+						status = NetClientStatusNotConnected;
+						statusString = _Tr("NetClient", "Proxy connection failed: {0}", relayError);
+						SPRaise("Proxy connection failed: %s", relayError.c_str());
+					}
+					SPLog("NetClient: WARNING: proxy unavailable, connecting DIRECTLY "
+					      "(real IP exposed): %s",
+					      relayError.c_str());
 				}
 			} else {
 				SPLog("NetClient: Proxy is DISABLED. Connecting directly to server.");
