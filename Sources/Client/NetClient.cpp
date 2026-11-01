@@ -252,6 +252,22 @@ namespace spades {
 			enet_socket_set_option(host->socket, ENET_SOCKOPT_RCVBUF, 1024 * 1024);
 			enet_socket_set_option(host->socket, ENET_SOCKOPT_SNDBUF, 1024 * 1024);
 
+#ifdef _WIN32
+			{
+				SOCKET s = static_cast<SOCKET>(host->socket);
+				// Ignore ICMP "port unreachable" resets so a single stray ICMP packet
+				// (common on NAT/WiFi when the route flaps) can't stall the receive loop.
+				BOOL noConnReset = FALSE;
+				DWORD bytesRet = 0;
+				WSAIoctl(s, _WSAIOW(IOC_VENDOR, 12) /* SIO_UDP_CONNRESET */, &noConnReset,
+				         sizeof(noConnReset), NULL, 0, &bytesRet, NULL, NULL);
+				// Mark game traffic as low-latency (DSCP EF). Routers/WMM that honor QoS
+				// prioritize it over downloads/streams; others simply ignore it.
+				int tos = 0xB8;
+				setsockopt(s, IPPROTO_IP, 3 /* IP_TOS */, (const char*)&tos, sizeof(tos));
+			}
+#endif
+
 			if (enet_host_compress_with_range_coder(host) < 0)
 				SPRaise("Failed to enable ENet Range coder.");
 
@@ -376,6 +392,9 @@ namespace spades {
 			enet_peer_ping_interval(peer, 500);
 			// Timeout: minimum 8000ms, max 25000ms, retry limit 32 (resilient to map loads, server GC, explosions, and WiFi jitter)
 			enet_peer_timeout(peer, 32, 8000, 25000);
+			// Gentler throttle: recover full send rate quickly after a loss burst
+			// instead of crawling back, which feels like lingering lag.
+			enet_peer_throttle_configure(peer, 2000, 4, 2);
 
 			properties.reset(new GameProperties(hostname.GetProtocolVersion()));
 
@@ -453,6 +472,11 @@ namespace spades {
 
 		void NetClient::DoEvents(float /*dt*/) {
 			DoEvents(status == NetClientStatusConnected ? 0 : 10);
+		}
+
+		void NetClient::Flush() {
+			if (host && peer && status != NetClientStatusNotConnected)
+				enet_host_flush(host);
 		}
 
 		void NetClient::DoEvents(int timeout) {

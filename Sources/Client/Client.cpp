@@ -853,6 +853,10 @@ namespace spades {
 				float gameplayDt = isDemoMode ? dt * demoNet->GetSpeed() : dt;
 				UpdateWorld(dt, gameplayDt);
 				mumbleLink.Update(world->GetLocalPlayer().get_pointer());
+
+				// Ship this frame's inputs/position right now, batched into one datagram.
+				if (activeNet)
+					activeNet->Flush();
 			} else {
 				renderer->SetFogColor(MakeVector3(0, 0, 0));
 			}

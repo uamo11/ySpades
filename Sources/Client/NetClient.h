@@ -214,6 +214,7 @@ namespace spades {
 			void DoEvents(float dt) override;
 			// Direct timeout control for internal/test use.
 			void DoEvents(int timeout);
+			void Flush() override;
 
 			void SendJoin(int team, WeaponType, std::string name, int score) override;
 			void SendPosition(Vector3) override;

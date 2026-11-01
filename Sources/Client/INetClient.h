@@ -63,6 +63,11 @@ namespace spades {
 			// DemoNetClient uses it to advance playback time.
 			virtual void DoEvents(float dt) = 0;
 
+			// Sends everything queued during this frame in one datagram batch.
+			// Called once at the end of the frame so inputs leave immediately
+			// instead of waiting for the next DoEvents (saves one frame of latency).
+			virtual void Flush() {}
+
 			// ── Network stats (stubs return 0 in demo mode) ─────────────────
 			virtual int GetPing() = 0;
 			virtual float GetPacketLoss() = 0;
